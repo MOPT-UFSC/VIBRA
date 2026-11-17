@@ -118,10 +118,7 @@ class MainWindow(MainWindow_UI):
         self.render_widgets_stack.currentChanged.connect(self.render_changed_callback)
         self.visualization_changed.connect(self.reload_visualization_filter)
         self.render_widget_changed.connect(self.reload_visualization_filter)
-
-        self.visualization_changed.connect(self.geometry_render_widget.update_visualization)
-        # self.visualization_changed.connect(self.mesh_render_widget.update_visualization)
-        # self.visualization_changed.connect(self.results_render_widget.update_visualization)
+        self.visualization_changed.connect(self.update_visualization_callback)
 
         self.stacked_setup.addWidget(self.model_setup_widget)
         self.stacked_setup.addWidget(self.results_viewer_widget)
@@ -339,7 +336,7 @@ class MainWindow(MainWindow_UI):
         self.last_render_index = new_index
 
     def selection_changed_callback(self):
-        self.geometry_render_widget.update_visualization()
+        self.update_visualization_callback()
 
         self.status_bar.set_selection(
             self.selection.geometry_points,
@@ -368,8 +365,10 @@ class MainWindow(MainWindow_UI):
         section_plane = self.section_plane.get_section_plane(bounding_box)
 
         self.geometry_render_widget.set_section_plane(section_plane)
+        self.mesh_render_widget.set_section_plane(section_plane)
 
         self.geometry_render_widget.update_plot()
+        self.mesh_render_widget.update_plot()
 
     def action_theme_callback(self):
         self.theme_sun_icon = Icon(":/icons/sun_icon.png")
@@ -480,11 +479,11 @@ class MainWindow(MainWindow_UI):
         self.selection.set_model(model)
         self.entity_visibility.set_model(model)
         self.geometry_render_widget.set_model(model)
-        # self.mesh_render_widget.set_model(model)
+        self.mesh_render_widget.set_model(model)
         # self.results_render_widget.set_model(model)
 
         self.geometry_render_widget.set_user_preferences(app().config.user_preferences)
-        # self.mesh_render_widget.set_user_preferences(app().config.user_preferences)
+        self.mesh_render_widget.set_user_preferences(app().config.user_preferences)
         # self.results_render_widget.set_user_preferences(app().config.user_preferences)
 
     def update_plots(self, reset_camera=True):
@@ -495,6 +494,10 @@ class MainWindow(MainWindow_UI):
             widget = self.render_widgets_stack.widget(i)
             if isinstance(widget, CommonRenderWidget):
                 widget.update_plot(reset_camera)
+
+    def update_visualization_callback(self):
+        self.geometry_render_widget.update_visualization()
+        self.mesh_render_widget.update_visualization()
 
     def update_symbols(self):
         self.model_setup_widget.model_setup_items.update_items_appearance()
@@ -571,7 +574,7 @@ class MainWindow(MainWindow_UI):
 
         self.update_mesh_information()
         self.stacked_setup.setCurrentWidget(self.model_setup_widget)
-        self.render_widgets_stack.setCurrentWidget(self.mesh_widget)
+        self.render_widgets_stack.setCurrentWidget(self.mesh_render_widget)
         self.model_setup_widget.model_setup_items.expand_menu_items()
 
         self.splitter.widget(0).setVisible(True)
@@ -875,6 +878,9 @@ class MainWindow(MainWindow_UI):
         # Interface update
         self.update_dependency_injection()
         self.geometry_render_widget.update_plot()
+        self.mesh_render_widget.update_plot()
+        self.results_render_widget.update_plot()
+
         self.update_geometry_information()
         self.update_toolbar_and_menu_items_after_load_project()
         self.set_toolbars_visible(True)
@@ -892,6 +898,8 @@ class MainWindow(MainWindow_UI):
         self.update_dependency_injection()
         self.geometry_render_widget.update_plot()
         self.mesh_widget.update_plot()
+        self.results_render_widget.update_plot()
+
         self.update_geometry_information()
         self.update_toolbar_and_menu_items_after_load_project()
         self.set_toolbars_visible(True)
@@ -1277,7 +1285,7 @@ class MainWindow(MainWindow_UI):
         ExportElementTransferDataInputs()
 
     def update_hidden_plots(self):
-        self.geometry_render_widget.update_visualization()
+        self.update_visualization_callback()
 
         def update_plot_callback():
             N = self.render_widgets_stack.count()
