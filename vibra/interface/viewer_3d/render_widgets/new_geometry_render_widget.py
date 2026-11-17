@@ -1,6 +1,5 @@
 from datetime import datetime
 
-import numpy as np
 from molde.interactor_styles import BoxSelectionInteractorStyle
 from molde.render_widgets import CommonRenderWidget
 from PySide6.QtCore import Qt
@@ -13,7 +12,6 @@ from vibra.interface.user_preferences import UserPreferences
 from vibra.interface.viewer_3d.actors.geometry_actor import GeometryActor
 from vibra.interface.viewer_3d.actors.symbols_actor_acoustic import SymbolsActorAcoustic
 from vibra.interface.viewer_3d.actors.symbols_actor_structural import SymbolsActorStructural
-from vibra.interface.viewer_3d.render_tools.selection_tool import SelectionTool
 from vibra.utils.interface_utils import SectionPlane, VisualizationFilter
 from vibra.utils.time_utils import function_timer
 
