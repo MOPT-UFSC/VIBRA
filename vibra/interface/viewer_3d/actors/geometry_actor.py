@@ -244,8 +244,6 @@ class GeometryActor(vtkPropAssembly):
             mapper.RemoveAllClippingPlanes()
 
         if (self.section_plane is None) or (self.section_plane.mode == SectionPlane.SectionPlaneMode.DISABLED):
-            self.section_data.SetLines(vtkCellArray())
-            self.section_data.Modified()
             self.section_actor.VisibilityOff()
             return
 
