@@ -1,10 +1,12 @@
-from PySide6.QtWidgets import QWidget
+import numpy as np
 from PySide6.QtCore import Qt, Signal
+from PySide6.QtWidgets import QWidget
 
 from vibra import app
 from vibra.interface.ui_generated.render.section_plane_inputs_ui import SectionPlaneInputs_UI
+from vibra.utils.interface_utils import SectionPlane
+from vibra.utils.math_functions import lerp
 
-import numpy as np
 
 class SectionPlaneWidget(SectionPlaneInputs_UI):
     value_changed = Signal()
@@ -34,13 +36,40 @@ class SectionPlaneWidget(SectionPlaneInputs_UI):
         self.setWindowIcon(app().main_window.vibra_icon)
         self.setWindowTitle("Vibra")
         self.setGeometry(200, 200, 400, 400)
-    
+
     def showEvent(self, event):
         super().showEvent(event)
         app().processEvents()
         self.keep_section_plane = False
         self.cutting = True
         self.value_changed.emit()
+
+    def get_section_plane(self, bounding_box: tuple[float, float, float, float, float, float]) -> SectionPlane:
+        from vibra.utils.math_functions import rotation_matrices
+
+        percentual_position = self.get_position()
+        x = lerp(bounding_box[0], bounding_box[1], percentual_position[0] / 100)
+        y = lerp(bounding_box[2], bounding_box[3], percentual_position[1] / 100)
+        z = lerp(bounding_box[4], bounding_box[5], percentual_position[2] / 100)
+        position = (x, y, z)
+
+        orientation = np.array(self.get_rotation()) * np.pi / 180
+        rx, ry, rz = rotation_matrices(*orientation)
+        normal = rz @ rx @ ry @ np.array([1, 0, 0, 1])
+        normal = normal[:3]
+
+        if self.editing:
+            mode = SectionPlane.SectionPlaneMode.PREVIEWING
+        elif self.cutting:
+            mode = SectionPlane.SectionPlaneMode.CUTTING
+        else:
+            mode = SectionPlane.SectionPlaneMode.DISABLED
+
+        return SectionPlane(
+            origin=tuple(position),
+            normal=tuple(normal),
+            mode=mode,
+        )
 
     def _create_connections(self):
         #
@@ -128,12 +157,12 @@ class SectionPlaneWidget(SectionPlaneInputs_UI):
         self.value_changed.emit()
 
     def reset_button_callback(self):
-        self.relative_plane_position_x_slider.setValue(50),
-        self.relative_plane_position_y_slider.setValue(50),
-        self.relative_plane_position_z_slider.setValue(50),
-        self.plane_rotation_x_slider.setValue(0),
-        self.plane_rotation_y_slider.setValue(90),
-        self.plane_rotation_z_slider.setValue(0),
+        (self.relative_plane_position_x_slider.setValue(50),)
+        (self.relative_plane_position_y_slider.setValue(50),)
+        (self.relative_plane_position_z_slider.setValue(50),)
+        (self.plane_rotation_x_slider.setValue(0),)
+        (self.plane_rotation_y_slider.setValue(90),)
+        (self.plane_rotation_z_slider.setValue(0),)
 
         self.invert_value = False
         self.value_changed.emit()
@@ -166,10 +195,7 @@ class SectionPlaneWidget(SectionPlaneInputs_UI):
         faces_to_highlight = app().project.model.mesh.efaces_to_highlight
 
         if nodes_to_highlight or faces_to_highlight:
-            app().main_window.selection.set_mesh_selection(
-                                                nodes = nodes_to_highlight,
-                                                faces = faces_to_highlight
-                                                )
+            app().main_window.selection.set_mesh_selection(nodes=nodes_to_highlight, faces=faces_to_highlight)
 
     def block_signals(self, widgets: QWidget, option: bool):
         for widget in widgets:
