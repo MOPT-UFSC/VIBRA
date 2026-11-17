@@ -29,6 +29,7 @@ class NewMeshRenderWidget(CommonRenderWidget):
         self._last_click_time = None
         self._last_click_position = (0, 0)
         self._is_double_click = False
+        self._must_update = False
 
         self.create_actors()
 
@@ -68,6 +69,12 @@ class NewMeshRenderWidget(CommonRenderWidget):
 
     @function_timer
     def update_plot(self, reset_camera: bool = False):
+        if self.isVisible():
+            self._must_update = False
+        else:
+            self._must_update = True
+            return
+
         self.mesh_actor.update()
 
         self.update_visualization()
@@ -190,3 +197,8 @@ class NewMeshRenderWidget(CommonRenderWidget):
         # render is a better name for this action
         # I will update it later inside Molde
         self.update()
+
+    def showEvent(self, event):
+        super().showEvent(event)
+        if self._must_update:
+            self.update_plot()
