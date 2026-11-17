@@ -618,10 +618,6 @@ class MainWindow(MainWindow_UI):
         self.mesh_widget.remove_all_actors()
         self.results_widget.remove_all_actors()
 
-        self.geometry_render_widget.remove_all_actors()
-        self.mesh_render_widget.remove_all_actors()
-        self.results_render_widget.remove_all_actors()
-
         app().project.reset_variables()
         app().project.clear_working_directory()
         self.action_unhide_all_callback()
