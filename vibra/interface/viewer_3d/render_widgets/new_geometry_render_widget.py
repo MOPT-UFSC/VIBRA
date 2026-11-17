@@ -130,9 +130,9 @@ class NewGeometryRenderWidget(CommonRenderWidget):
                 self.selection_handler.geometry_points,
             )
 
-        self.geometry_actor.show_surfaces()
         if self.entity_visibility_handler is not None:
-            self.geometry_actor.hide_surfaces(self.entity_visibility_handler.get_hidden_surfaces())
+            self.geometry_actor.hide_surfaces()
+            self.geometry_actor.show_surfaces(self.entity_visibility_handler.get_visible_surfaces())
 
         self.geometry_actor.update_caches()
         self.render()
