@@ -5,6 +5,7 @@ from pathlib import Path
 from shutil import rmtree
 
 import gmsh
+import numpy as np
 from molde import stylesheets
 from molde.render_widgets import CommonRenderWidget
 from PIL import ImageQt
@@ -46,7 +47,7 @@ from vibra.interface.viewer_3d.render_widgets import GeometryRenderWidget, MeshR
 from vibra.interface.viewer_3d.render_widgets.new_mesh_render_widget import NewMeshRenderWidget
 from vibra.interface.viewer_3d.render_widgets.new_results_render_widget import NewResultsRenderWidget
 from vibra.interface.welcome_widget import WelcomeWidget
-from vibra.utils.interface_utils import GeometryColorMode, VisualizationFilter, block_signals
+from vibra.utils.interface_utils import GeometryColorMode, SectionPlane, VisualizationFilter, block_signals
 
 
 class MainWindow(MainWindow_UI):
@@ -277,6 +278,7 @@ class MainWindow(MainWindow_UI):
 
     def _load_render_widgets(self):
         self.section_plane = SectionPlaneWidget(self)
+        self.section_plane.value_changed.connect(self.section_plane_modified_callback)
 
         self.geometry_widget = GeometryRenderWidget()
         self.mesh_widget = MeshRenderWidget()
@@ -354,6 +356,20 @@ class MainWindow(MainWindow_UI):
             self.section_plane.keep_section_plane = False
             self.section_plane.close()
             self.section_plane.value_changed.emit()
+
+    def section_plane_modified_callback(self):
+        mesh = app().project.model.mesh
+        if mesh is None:
+            return
+
+        x_min, y_min, z_min = np.min(mesh.nodal_coordinates[:, 1:], axis=0)
+        x_max, y_max, z_max = np.max(mesh.nodal_coordinates[:, 1:], axis=0)
+        bounding_box = (x_min, x_max, y_min, y_max, z_min, z_max)
+        section_plane = self.section_plane.get_section_plane(bounding_box)
+
+        self.geometry_render_widget.set_section_plane(section_plane)
+
+        self.geometry_render_widget.update_plot()
 
     def action_theme_callback(self):
         self.theme_sun_icon = Icon(":/icons/sun_icon.png")
