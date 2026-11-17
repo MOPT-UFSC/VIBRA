@@ -483,6 +483,7 @@ class MeshActor(vtkPropAssembly):
 
     def hide_volumes(self, volumes: Sequence[int] | None = None):
         if volumes is None:
+            vtk_to_numpy(self.surface_colors)[:, 3] = 0
             vtk_to_numpy(self.volume_colors)[:, 3] = 0
         else:
             self._set_volume_cells_visibility(volumes, visible=False)
@@ -495,6 +496,7 @@ class MeshActor(vtkPropAssembly):
 
     def show_volumes(self, volumes: Sequence[int] | None = None):
         if volumes is None:
+            vtk_to_numpy(self.surface_colors)[:, 3] = 255
             vtk_to_numpy(self.volume_colors)[:, 3] = 255
         else:
             self._set_volume_cells_visibility(volumes, visible=True)
