@@ -467,7 +467,7 @@ class GeometryActor(vtkPropAssembly):
         uv = vtk_to_numpy(self.surface_data.GetPointData().GetTCoords())
         uv[:, 0] = uv[:, 0] % GeometryTextures.span() + texture.bias()
 
-    def set_surface_texture(self, texture: GeometryTextures, surfaces: Iterable[int]):
+    def set_surfaces_texture(self, texture: GeometryTextures, surfaces: Iterable[int]):
         surfaces = list(surfaces)
         if not surfaces:
             return
@@ -478,6 +478,16 @@ class GeometryActor(vtkPropAssembly):
         mask = np.isin(self._nodal_surface_ids, surfaces)
         if mask.size:
             u[mask] = u[mask] % GeometryTextures.span() + texture.bias()
+
+    def set_volumes_texture(self, texture: GeometryTextures, volumes: Iterable[int]):
+        if self.mesh is None:
+            return
+
+        surfaces = set()
+        for volume in volumes:
+            surfaces.update(self.mesh.surfaces_from_volume.get(volume, []))
+
+        self.set_surfaces_texture(texture, surfaces)
 
     def set_point_color(self, color: Color):
         vtk_to_numpy(self.point_colors)[:, :3] = color.to_rgb()
