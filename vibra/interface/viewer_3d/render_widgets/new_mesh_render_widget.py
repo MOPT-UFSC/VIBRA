@@ -103,11 +103,11 @@ class NewMeshRenderWidget(CommonRenderWidget):
         self.mesh_actor.set_solids_visibility(visible=self.visualization_filter.faces)
 
         if self.selection_handler is not None:
-            self.mesh_actor.paint_volumes(
+            self.mesh_actor.paint_solid_elements(
                 self.user_preferences.selection_volumes_color,
                 self.selection_handler.mesh_solids,
             )
-            self.mesh_actor.paint_surfaces(
+            self.mesh_actor.paint_face_elements(
                 self.user_preferences.selection_faces_color,
                 self.selection_handler.mesh_faces,
             )
@@ -115,10 +115,18 @@ class NewMeshRenderWidget(CommonRenderWidget):
                 self.user_preferences.selection_nodes_points_color,
                 self.selection_handler.mesh_nodes,
             )
-
-        self.mesh_actor.show_surfaces()
-        if self.entity_visibility_handler is not None:
-            self.mesh_actor.hide_surfaces(self.entity_visibility_handler.get_hidden_surfaces())
+            self.mesh_actor.paint_volumes(
+                self.user_preferences.selection_volumes_color,
+                self.selection_handler.geometry_volumes,
+            )
+            self.mesh_actor.paint_surfaces(
+                self.user_preferences.selection_faces_color,
+                self.selection_handler.geometry_surfaces,
+            )
+            self.mesh_actor.paint_nodes(
+                self.user_preferences.selection_nodes_points_color,
+                self.selection_handler.geometry_points,
+            )
 
         self.mesh_actor.update_caches()
         self.render()
@@ -156,14 +164,7 @@ class NewMeshRenderWidget(CommonRenderWidget):
 
         modifiers = QApplication.keyboardModifiers()
         ctrl_pressed = modifiers & Qt.KeyboardModifier.ControlModifier
-        shift_pressed = modifiers & Qt.KeyboardModifier.ShiftModifier
         alt_pressed = modifiers & Qt.KeyboardModifier.AltModifier
-
-        select_volume = any([self._is_double_click, shift_pressed, self.selection_handler.volume_selection_mode])
-        if select_volume:
-            selection.mesh_faces.clear()
-        else:
-            selection.mesh_solids.clear()
 
         self.selection_handler.update_from(
             selection,
