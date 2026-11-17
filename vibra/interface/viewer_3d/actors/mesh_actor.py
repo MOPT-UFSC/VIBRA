@@ -71,7 +71,7 @@ class MeshActor(vtkPropAssembly):
             self.clear_data()
             return
 
-        if self.section_plane is None:
+        if (self.section_plane is None) or (self.section_plane.mode == SectionPlane.SectionPlaneMode.DISABLED):
             self.build_mesh_without_section_plane()
         else:
             self.build_mesh_with_section_plane()
@@ -323,7 +323,7 @@ class MeshActor(vtkPropAssembly):
         faces_coordinates = self.mesh.faces_connectivity[:, 4:]
         solid_coordinates = self.mesh.solids_connectivity[:, 4:]
 
-        if self.section_plane is None:
+        if (self.section_plane is None) or (self.section_plane.mode == SectionPlane.SectionPlaneMode.DISABLED):
             nodes_mask = np.ones(len(coordinates), dtype=bool)
         else:
             nodes_mask = self._masked_nodes.copy()
@@ -440,7 +440,7 @@ class MeshActor(vtkPropAssembly):
         surfaces = list(chain.from_iterable(surface_groups))
         self.paint_surfaces(color, surfaces)
 
-        if self.section_plane is None:
+        if (self.section_plane is None) or (self.section_plane.mode == SectionPlane.SectionPlaneMode.DISABLED):
             return
 
         section_ids = self._solid_ids
@@ -534,7 +534,7 @@ class MeshActor(vtkPropAssembly):
         surfaces = list(chain.from_iterable(surface_groups))
         self._set_surface_cells_visibility(surfaces, visible=visible)
 
-        if self.section_plane is None:
+        if (self.section_plane is None) or (self.section_plane.mode == SectionPlane.SectionPlaneMode.DISABLED):
             return
 
         section_ids = self._solid_ids
@@ -558,7 +558,7 @@ class MeshActor(vtkPropAssembly):
         if self.mesh.solids_connectivity is None:
             return np.array([], dtype=int)
 
-        if self.section_plane is None:
+        if (self.section_plane is None) or (self.section_plane.mode == SectionPlane.SectionPlaneMode.DISABLED):
             return np.array([], dtype=int)
 
         coordinates = self.mesh.nodal_coordinates[:, 1:]
