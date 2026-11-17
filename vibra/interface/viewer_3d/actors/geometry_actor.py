@@ -243,7 +243,7 @@ class GeometryActor(vtkPropAssembly):
         for mapper in mappers:
             mapper.RemoveAllClippingPlanes()
 
-        if self.section_plane is None:
+        if (self.section_plane is None) or (self.section_plane.mode == SectionPlane.SectionPlaneMode.DISABLED):
             self.section_data.SetLines(vtkCellArray())
             self.section_data.Modified()
             return
@@ -255,6 +255,12 @@ class GeometryActor(vtkPropAssembly):
         for mapper in mappers:
             mapper.AddClippingPlane(plane)
             mapper.Modified()
+
+        if self.section_plane.mode == SectionPlane.SectionPlaneMode.CUTTING:
+            self.section_actor.VisibilityOn()
+        else:
+            self.section_actor.VisibilityOff()
+            return
 
         merged = vtkAppendPolyData()
         triangular_faces = triangulate_2d_cells(self.mesh.faces_connectivity)
@@ -357,7 +363,7 @@ class GeometryActor(vtkPropAssembly):
         lines_only_connectivity = self.mesh.lines_connectivity[:, 4:]
         faces_only_connectivity = self.mesh.faces_connectivity[:, 4:]
 
-        if self.section_plane is None:
+        if (self.section_plane is None) or (self.section_plane.mode == SectionPlane.SectionPlaneMode.DISABLED):
             nodes_mask = np.ones(len(coordinates), dtype=bool)
         else:
             nodes_mask = inside_plane(
