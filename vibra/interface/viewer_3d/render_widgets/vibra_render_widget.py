@@ -11,16 +11,23 @@ from vibra.utils.interface_utils import SectionPlane, VisualizationFilter
 
 
 class VibraRenderWidget(CommonRenderWidget):
+    model: Model | None
+    section_plane: SectionPlane | None
+    user_preferences: UserPreferences
+    visualization_filter: VisualizationFilter
+    selection_handler: SelectionHandler | None
+    entity_visibility_handler: EntityVisibilityHandler | None
+
     def __init__(self):
         super().__init__()
         self.set_interactor_style(BoxSelectionInteractorStyle())
 
-        self.model: Model | None = None
-        self.section_plane: SectionPlane | None = None
+        self.model = None
+        self.section_plane = None
         self.user_preferences = UserPreferences()
         self.visualization_filter = VisualizationFilter(faces=True, symbols=True)
-        self.selection_handler: SelectionHandler | None = None
-        self.entity_visibility_handler: EntityVisibilityHandler | None = None
+        self.selection_handler = None
+        self.entity_visibility_handler = None
 
         self._last_click_time = None
         self._last_click_position = (0, 0)
