@@ -1085,6 +1085,13 @@ class Mesh:
         setup_sizes = [setup.element_size for setup in size_control_setups]
         max_size = max([global_size, *setup_sizes])
 
+        # The background field must be the only source of mesh sizes, otherwise
+        # gmsh extends the size of the controlled entities to the whole model
+        # (through shared curves, faces etc.), which ends up
+        # refining every region down to the smallest controlled size.
+        gmsh.option.setNumber("Mesh.MeshSizeFromPoints", 0)
+        gmsh.option.setNumber("Mesh.MeshSizeExtendFromBoundary", 0)
+
         fields_list = []
 
         for setup in size_control_setups:
@@ -1106,8 +1113,6 @@ class Mesh:
         if max_size > global_size:
             # Coarsening: the global size is applied as a refinement of every
             # region that is not explicitly coarsened.
-
-            gmsh.option.setNumber("Mesh.MeshSizeFromPoints", 0)  # Necessary call for the fields to override this setting
 
             all_volumes = {tag for dim, tag in gmsh.model.getEntities(3)}
             all_faces = {tag for dim, tag in gmsh.model.getEntities(2)}

@@ -116,6 +116,24 @@ def test_local_mesh_size_control_refines():
     assert mean_edges[2] < mean_edges[1] * 0.9
 
 
+def test_local_mesh_size_control_refines_connected():
+    geometry_path = str(PROJECT_DIR / "data/examples/geometry_files/tetrahedron_double_volume.step")
+
+    for element_setup in (GMSH_TET4, GMSH_TET10):
+        mesh_setup = MeshSetup(
+            maximum_element_size=20,
+            merge_connected_volumes=True,
+            local_mesh_size_control_parameters=[LocalMeshSizeControlSetup("volumes", 5, [2])],
+            custom_element_setup=element_setup,
+        )
+        mesh = Mesh().load_cad(geometry_path, mesh_setup, threads=1)
+
+        coarse_elements = int((mesh.solids_connectivity[:, 1] == 1).sum())
+        refined_elements = int((mesh.solids_connectivity[:, 1] == 2).sum())
+
+        assert coarse_elements * 5 < refined_elements
+
+
 def test_detect_small_areas():
     mesh = Mesh(length_unit="millimeter")
     mesh.area_from_surfaces = {10: 1e-6, 11: 2e-6, 12: 5e-6, 13: 0.0}

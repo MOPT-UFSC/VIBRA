@@ -226,6 +226,9 @@ class Ui_Form(object):
         self.comboBox_multiplification_factor.addItem("")
         self.comboBox_multiplification_factor.addItem("")
         self.comboBox_multiplification_factor.addItem("")
+        self.comboBox_multiplification_factor.addItem("")
+        self.comboBox_multiplification_factor.addItem("")
+        self.comboBox_multiplification_factor.addItem("")
         self.comboBox_multiplification_factor.setObjectName(u"comboBox_multiplification_factor")
         self.comboBox_multiplification_factor.setMinimumSize(QSize(160, 28))
         self.comboBox_multiplification_factor.setMaximumSize(QSize(16777215, 28))
@@ -274,6 +277,9 @@ class Ui_Form(object):
         self.comboBox_multiplification_factor.setItemText(11, QCoreApplication.translate("Form", u"2.00x", None))
         self.comboBox_multiplification_factor.setItemText(12, QCoreApplication.translate("Form", u"3.00x", None))
         self.comboBox_multiplification_factor.setItemText(13, QCoreApplication.translate("Form", u"4.00x", None))
+        self.comboBox_multiplification_factor.setItemText(14, QCoreApplication.translate("Form", u"5.00x", None))
+        self.comboBox_multiplification_factor.setItemText(15, QCoreApplication.translate("Form", u"7.50x", None))
+        self.comboBox_multiplification_factor.setItemText(16, QCoreApplication.translate("Form", u"10.0x", None))
 
     # retranslateUi
 
