@@ -504,6 +504,10 @@ class MesherSetupInputs(MesherSetupInputs_UI):
         return True
 
     def apply_callback(self, close_window: bool = False):
+
+        if isinstance(self.group_assistant, QDialog):
+            self.group_assistant.close()
+
         def generate_mesh() -> bool:
             self.hide()
 
