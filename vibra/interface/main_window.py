@@ -488,12 +488,17 @@ class MainWindow(MainWindow_UI):
 
     def update_plots(self, reset_camera=True):
         self.model_setup_widget.model_setup_items.update_items_appearance()
-        renders_number = self.render_widgets_stack.count()
-        for i in range(renders_number):
-            logging.info(f"Updating renders... [{i + 1}/{renders_number}]")
-            widget = self.render_widgets_stack.widget(i)
-            if isinstance(widget, CommonRenderWidget):
-                widget.update_plot(reset_camera)
+
+        self.geometry_render_widget.update_plot(reset_camera)
+        self.mesh_render_widget.update_plot(reset_camera)
+        # self.results_render_widget.update_plot(reset_camera)
+
+        # renders_number = self.render_widgets_stack.count()
+        # for i in range(renders_number):
+        #     logging.info(f"Updating renders... [{i + 1}/{renders_number}]")
+        #     widget = self.render_widgets_stack.widget(i)
+        #     if isinstance(widget, CommonRenderWidget):
+        #         widget.update_plot(reset_camera)
 
     def update_visualization_callback(self):
         self.geometry_render_widget.update_visualization()
