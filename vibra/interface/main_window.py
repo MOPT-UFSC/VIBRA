@@ -786,10 +786,12 @@ class MainWindow(MainWindow_UI):
         return True
 
     def save_project_as(self, path: str):
+
         def save_data(path):
+            logging.info("Saving project data... [10/100]")
+            path = Path(path)
             project = app().project
 
-            path = Path(path)
             app().config.add_recent_file(path)
             app().config.write_last_folder_path_in_file("project_folder", path)
             logging.info("Saving project data... [30/100]")
