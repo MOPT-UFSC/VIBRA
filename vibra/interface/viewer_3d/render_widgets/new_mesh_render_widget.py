@@ -93,9 +93,10 @@ class NewMeshRenderWidget(VibraRenderWidget):
                 self.selection_handler.geometry_points,
             )
 
+        self.mesh_actor.show_volumes()
+        self.mesh_actor.show_surfaces()
         if self.entity_visibility_handler is not None:
-            self.mesh_actor.hide_volumes()
-            self.mesh_actor.show_volumes(self.entity_visibility_handler.get_visible_volumes())
+            self.mesh_actor.hide_volumes(self.entity_visibility_handler.get_hidden_volumes())
             self.mesh_actor.hide_surfaces(self.entity_visibility_handler.get_hidden_surfaces())
 
         self.mesh_actor.update_caches()
