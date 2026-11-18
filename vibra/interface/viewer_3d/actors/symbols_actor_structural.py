@@ -276,7 +276,7 @@ class SymbolsActorStructural(SymbolsActor):
 
         if surface_id != -1:
             coords, normal = self._get_center_coords_and_normals(surface_id)
-            surface_properties = app().project.model.properties.surface_properties
+            surface_properties = self.model.properties.surface_properties
             property: dict = surface_properties[property_name, surface_id]
 
             values = property.get("values", [])
@@ -292,7 +292,7 @@ class SymbolsActorStructural(SymbolsActor):
 
         if line_id != -1:
             coords = self._get_center_coords_and_normals_line(line_id)
-            line_properties = app().project.model.properties.line_properties
+            line_properties = self.model.properties.line_properties
             property = line_properties[property_name, line_id]
 
             values = property.get("values", [])
@@ -312,7 +312,7 @@ class SymbolsActorStructural(SymbolsActor):
 
         if surface_id != -1:
             coords, normal = self._get_center_coords_and_normals(surface_id)
-            surface_properties = app().project.model.properties.surface_properties
+            surface_properties = self.model.properties.surface_properties
             property: dict = surface_properties[property_name, surface_id]
 
             values = property.get("values", [])
@@ -328,7 +328,7 @@ class SymbolsActorStructural(SymbolsActor):
 
         if line_id != -1:
             coords = self._get_center_coords_and_normals_line(line_id)
-            line_properties = app().project.model.properties.line_properties
+            line_properties = self.model.properties.line_properties
             property = line_properties[property_name, line_id]
 
             values = property.get("values", [])
