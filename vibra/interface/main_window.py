@@ -61,7 +61,10 @@ class MainWindow(MainWindow_UI):
         self.selection = SelectionHandler(app().project.model)
         self.entity_visibility = EntityVisibilityHandler(app().project.model)
 
-        self.selection.selection_changed.connect(self.selection_changed_callback)
+        self.selection.selection_changed.connect(
+            self.selection_changed_callback,
+            type=Qt.ConnectionType.QueuedConnection,
+        )
         self.entity_visibility.changed.connect(self.update_hidden_plots)
 
         self.hidden_mesh_faces = set()
