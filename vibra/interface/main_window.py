@@ -285,10 +285,6 @@ class MainWindow(MainWindow_UI):
         self.mesh_render_widget = NewMeshRenderWidget()
         self.results_render_widget = NewResultsRenderWidget()
 
-        self.geometry_render_widget.set_model(app().project.model)
-        self.geometry_render_widget.set_selection_handler(self.selection)
-        self.geometry_render_widget.set_entity_visibility_handler(self.entity_visibility)
-
         self.welcome_widget = WelcomeWidget()
 
     def _load_menu_widgets(self):
@@ -482,11 +478,19 @@ class MainWindow(MainWindow_UI):
         self.mesh_render_widget.set_model(model)
         # self.results_render_widget.set_model(model)
 
+        self.geometry_render_widget.set_selection_handler(self.selection)
+        self.mesh_render_widget.set_selection_handler(self.selection)
+        # self.results_render_widget.set_selection_handler(self.selection)
+
+        self.geometry_render_widget.set_entity_visibility_handler(self.entity_visibility)
+        self.mesh_render_widget.set_entity_visibility_handler(self.entity_visibility)
+        # self.results_render_widget.set_entity_visibility_handler(self.entity_visibility)
+
         self.geometry_render_widget.set_user_preferences(app().config.user_preferences)
         self.mesh_render_widget.set_user_preferences(app().config.user_preferences)
         # self.results_render_widget.set_user_preferences(app().config.user_preferences)
 
-    def update_plots(self, reset_camera=True):
+    def update_plots(self, reset_camera=False):
         self.model_setup_widget.model_setup_items.update_items_appearance()
 
         self.geometry_render_widget.update_plot(reset_camera)
@@ -501,8 +505,9 @@ class MainWindow(MainWindow_UI):
         #         widget.update_plot(reset_camera)
 
     def update_visualization_callback(self):
-        self.geometry_render_widget.update_visualization()
-        self.mesh_render_widget.update_visualization()
+        self.update_plots()
+        # self.geometry_render_widget.update_visualization()
+        # self.mesh_render_widget.update_visualization()
 
     def update_symbols(self):
         self.model_setup_widget.model_setup_items.update_items_appearance()
