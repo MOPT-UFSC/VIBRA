@@ -1,5 +1,5 @@
 from collections.abc import Iterable, Sequence
-from dataclasses import dataclass, field
+from dataclasses import dataclass
 from enum import IntEnum, auto
 from itertools import chain
 
@@ -278,9 +278,10 @@ class GeometryActor(vtkPropAssembly):
             cutter = vtkCutter()
             cutter.SetCutFunction(plane)
             cutter.SetInputData(welded)
+            cutter.Update()
 
             triangulator = vtkContourTriangulator()
-            triangulator.SetInputConnection(cutter.GetOutputPort())
+            triangulator.SetInputData(cutter.GetOutput())
             triangulator.Update()
 
             data: vtkPolyData = triangulator.GetOutput()
