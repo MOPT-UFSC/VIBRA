@@ -351,30 +351,17 @@ class MeshActor(vtkPropAssembly):
             picked_solids=set(self.mesh.solids_connectivity[solids_mask, 0]),
         )
 
-    def set_color(self, color: Color):
-        rgb = color.to_rgb()
-        for i in range(3):
-            self.node_colors.FillComponent(i, rgb[i])
-            self.surface_colors.FillComponent(i, rgb[i])
-            self.volume_colors.FillComponent(i, rgb[i])
-
     def set_node_color(self, color: Color):
-        rgb = color.to_rgb()
-        for i in range(3):
-            self.node_colors.FillComponent(i, rgb[i])
+        vtk_to_numpy(self.node_colors)[:, :3] = color.to_rgb()
 
     def set_edge_color(self, color: Color):
         self.edge_actor.GetProperty().SetColor(*color.to_rgb_f())
 
     def set_surface_color(self, color: Color):
-        rgb = color.to_rgb()
-        for i in range(3):
-            self.surface_colors.FillComponent(i, rgb[i])
+        vtk_to_numpy(self.surface_colors)[:, :3] = color.to_rgb()
 
     def set_volume_color(self, color: Color):
-        rgb = color.to_rgb()
-        for i in range(3):
-            self.volume_colors.FillComponent(i, rgb[i])
+        vtk_to_numpy(self.volume_colors)[:, :3] = color.to_rgb()
 
     def set_nodes_size(self, size: int):
         self.node_actor.GetProperty().SetPointSize(size)
