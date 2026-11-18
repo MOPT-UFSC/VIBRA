@@ -1,19 +1,11 @@
-from molde.interactor_styles import BoxSelectionInteractorStyle
-from molde.render_widgets import CommonRenderWidget
-
-from vibra.engine.model import Model
 from vibra.interface.viewer_3d.actors.results_actor import ResultsActor
-from vibra.utils.interface_utils import SectionPlane
+from vibra.interface.viewer_3d.render_widgets.vibra_render_widget import VibraRenderWidget
 
 
-class NewResultsRenderWidget(CommonRenderWidget):
+class NewResultsRenderWidget(VibraRenderWidget):
     def __init__(self):
         super().__init__()
         self.create_axes()
-        self.set_interactor_style(BoxSelectionInteractorStyle())
-
-        self.model: Model | None = None
-        self.section_plane: SectionPlane | None = None
 
         self.create_actors()
 
