@@ -77,6 +77,9 @@ class NewGeometryRenderWidget(VibraRenderWidget):
         self.geometry_actor.set_lines_visibility(visible=self.visualization_filter.lines)
         self.geometry_actor.set_surfaces_visibility(visible=self.visualization_filter.faces)
 
+        self.acoustic_symbols_actor.SetVisibility(self.visualization_filter.symbols)
+        self.structural_symbols_actor.SetVisibility(self.visualization_filter.symbols)
+
         if self.selection_handler is not None:
             self.geometry_actor.paint_volumes(
                 self.user_preferences.selection_volumes_color,
