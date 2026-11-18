@@ -29,7 +29,7 @@ def function_timer(func: T) -> T:
         start = perf_counter()
         result = func(*args, **kwargs)
         elapsed = perf_counter() - start
-        msg = f"{func.__name__} took {elapsed:.3f}s"
+        msg = f"{func.__qualname__} took {elapsed:.3f}s"
         logger.info(msg)
         print(msg)
         return result
@@ -104,7 +104,7 @@ def warn_delays(arg=None, /):
             elapsed = perf_counter() - start
 
             if elapsed >= maximum_time:
-                logger.info(f"{func.__name__} took {elapsed:.3f}s. It should be less than {maximum_time:.3f}s.")
+                logger.info(f"{func.__qualname__} took {elapsed:.3f}s. It should be less than {maximum_time:.3f}s.")
 
             return result
 
