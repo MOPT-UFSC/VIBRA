@@ -483,7 +483,6 @@ class MeshActor(vtkPropAssembly):
 
     def hide_volumes(self, volumes: Sequence[int] | None = None):
         if volumes is None:
-            vtk_to_numpy(self.surface_colors)[:, 3] = 0
             vtk_to_numpy(self.volume_colors)[:, 3] = 0
         else:
             self._set_volume_cells_visibility(volumes, visible=False)
@@ -496,7 +495,6 @@ class MeshActor(vtkPropAssembly):
 
     def show_volumes(self, volumes: Sequence[int] | None = None):
         if volumes is None:
-            vtk_to_numpy(self.surface_colors)[:, 3] = 255
             vtk_to_numpy(self.volume_colors)[:, 3] = 255
         else:
             self._set_volume_cells_visibility(volumes, visible=True)
@@ -516,6 +514,10 @@ class MeshActor(vtkPropAssembly):
         if self.mesh is None:
             return
 
+        surfaces = list(surfaces)
+        if not surfaces:
+            return
+
         assert self.mesh.faces_connectivity is not None
 
         surface_ids = self._face_ids
@@ -530,14 +532,14 @@ class MeshActor(vtkPropAssembly):
         if self.mesh is None:
             return
 
-        assert self.mesh.solids_connectivity is not None
-
-        surface_groups = [self.mesh.surfaces_from_volume[v] for v in volumes if (v in self.mesh.surfaces_from_volume)]
-        surfaces = list(chain.from_iterable(surface_groups))
-        self._set_surface_cells_visibility(surfaces, visible=visible)
-
         if (self.section_plane is None) or (self.section_plane.mode == SectionPlane.SectionPlaneMode.DISABLED):
             return
+
+        volumes = list(volumes)
+        if not volumes:
+            return
+
+        assert self.mesh.solids_connectivity is not None
 
         section_ids = self._solid_ids
         section_colors = vtk_to_numpy(self.volume_colors)
