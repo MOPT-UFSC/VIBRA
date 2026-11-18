@@ -644,6 +644,21 @@
           <string>4.00x</string>
          </property>
         </item>
+        <item>
+         <property name="text">
+          <string>5.00x</string>
+         </property>
+        </item>
+        <item>
+         <property name="text">
+          <string>7.50x</string>
+         </property>
+        </item>
+        <item>
+         <property name="text">
+          <string>10.0x</string>
+         </property>
+        </item>
        </widget>
       </item>
       <item row="0" column="0">
