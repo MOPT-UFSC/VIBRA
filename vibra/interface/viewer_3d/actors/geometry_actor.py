@@ -24,7 +24,7 @@ from vibra.utils.vtk_utils import create_cells, linearize_1d_cells, read_texture
 
 
 class GeometryTextures(IntEnum):
-    WHITE_TEXTURE = auto()
+    FLAT_TEXTURE = auto()
     CHESS_TEXTURE = auto()
     SPONGE_TEXTURE = auto()
     HOLES_TEXTURE = auto()
@@ -181,7 +181,6 @@ class GeometryActor(vtkPropAssembly):
         self.surface_actor.GetProperty().SetNormalTexture(self.normal_texture)
         self.surface_actor.GetProperty().SetSpecularPower(60)
         self.surface_actor.GetProperty().SetSpecular(1.2)
-        self.surface_actor.GetProperty().SetDiffuse(0.6)
         self.surface_actor.GetProperty().SetNormalScale(0.2)
         self.surface_actor.SetForceOpaque(True)
         self.AddPart(self.surface_actor)
@@ -469,7 +468,7 @@ class GeometryActor(vtkPropAssembly):
 
         self.surface_data.Modified()
 
-    def clear_textures(self, texture: GeometryTextures = GeometryTextures.WHITE_TEXTURE):
+    def clear_textures(self, texture: GeometryTextures = GeometryTextures.FLAT_TEXTURE):
         uv = vtk_to_numpy(self.surface_data.GetPointData().GetTCoords())
         uv[:, 0] = uv[:, 0] % GeometryTextures.span() + texture.bias()
 

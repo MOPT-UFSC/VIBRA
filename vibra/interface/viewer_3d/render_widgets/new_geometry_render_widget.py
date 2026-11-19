@@ -1,9 +1,13 @@
+from collections import defaultdict
+from collections.abc import Sequence
+
+from molde.colors import Color, color_names
 from PySide6.QtCore import Qt
 from PySide6.QtWidgets import QApplication
 
 from vibra.engine.model import Model
 from vibra.interface.general.selection_handler import SelectionHandler
-from vibra.interface.viewer_3d.actors.geometry_actor import GeometryActor
+from vibra.interface.viewer_3d.actors.geometry_actor import GeometryActor, GeometryTextures
 from vibra.interface.viewer_3d.actors.symbols_actor_acoustic import SymbolsActorAcoustic
 from vibra.interface.viewer_3d.actors.symbols_actor_structural import SymbolsActorStructural
 from vibra.interface.viewer_3d.render_widgets.vibra_render_widget import VibraRenderWidget
@@ -66,20 +70,97 @@ class NewGeometryRenderWidget(VibraRenderWidget):
         self.renderer.SetBackground(self.user_preferences.renderer_background_color_1.to_rgb_f())
         self.renderer.SetBackground2(self.user_preferences.renderer_background_color_2.to_rgb_f())
 
-        self.geometry_actor.set_point_color(self.user_preferences.nodes_points_color)
-        self.geometry_actor.set_line_color(self.user_preferences.lines_color)
-        self.geometry_actor.set_surface_color(self.user_preferences.faces_color)
-
-        self.geometry_actor.set_point_size(self.user_preferences.points_size)
-        self.geometry_actor.set_line_thickness(self.user_preferences.lines_thickness)
-
-        self.geometry_actor.set_points_visibility(visible=self.visualization_filter.points)
-        self.geometry_actor.set_lines_visibility(visible=self.visualization_filter.lines)
-        self.geometry_actor.set_surfaces_visibility(visible=self.visualization_filter.faces)
-
         self.acoustic_symbols_actor.SetVisibility(self.visualization_filter.symbols)
         self.structural_symbols_actor.SetVisibility(self.visualization_filter.symbols)
 
+        self._update_points_appearance()
+        self._update_lines_appearance()
+        self._update_surfaces_appearance()
+
+        self.geometry_actor.update_caches()
+        self.render()
+
+    def _update_points_appearance(self):
+        self.geometry_actor.set_points_visibility(visible=self.visualization_filter.points)
+        if not self.visualization_filter.points:
+            return
+
+        self.geometry_actor.set_point_size(self.user_preferences.points_size)
+        self.geometry_actor.set_point_color(self.user_preferences.nodes_points_color)
+        if self.selection_handler is not None:
+            self.geometry_actor.paint_points(
+                self.user_preferences.selection_nodes_points_color,
+                self.selection_handler.geometry_points,
+            )
+
+    def _update_lines_appearance(self):
+        self.geometry_actor.set_lines_visibility(visible=self.visualization_filter.lines)
+        if not self.visualization_filter.lines:
+            return
+
+        self.geometry_actor.set_line_thickness(self.user_preferences.lines_thickness)
+        self.geometry_actor.set_line_color(self.user_preferences.lines_color)
+        if self.selection_handler is not None:
+            self.geometry_actor.paint_lines(
+                self.user_preferences.selection_lines_color,
+                self.selection_handler.geometry_lines,
+            )
+
+    def _update_surfaces_appearance(self):
+        self.geometry_actor.set_surfaces_visibility(visible=self.visualization_filter.faces)
+        if not self.visualization_filter.faces:
+            return
+
+        if self.model is None:
+            return
+
+        mesh = self.model.mesh
+        if mesh is None:
+            return
+
+        properties = self.model.properties
+        surfaces_with_perforated_plates = self._surfaces_with_perforated_plate()
+        color_to_surfaces = defaultdict(list)
+        texture_to_surfaces = defaultdict(list)
+
+        for surface in mesh.all_surface_ids():
+            volumes = mesh.volumes_from_surface.get(surface, ())
+            volume = self._first_visible_volume(volumes)
+
+            fluid = properties._get_property("fluid", surface=surface, volume=volume)
+            material = properties._get_property("material", surface=surface, volume=volume)
+            porous = properties._get_property("porous_material_model", surface=surface, volume=volume)
+
+            if surface in surfaces_with_perforated_plates:
+                color = color_names.WHITE
+                texture = GeometryTextures.HOLES_TEXTURE
+
+            elif porous is not None:
+                color = color_names.YELLOW_6
+                texture = GeometryTextures.SPONGE_TEXTURE
+
+            elif material is not None:
+                color = Color(*material.color)
+                texture = GeometryTextures.METAL_TEXTURE
+
+            elif fluid is not None:
+                color = Color(*fluid.color)
+                texture = GeometryTextures.FLAT_TEXTURE
+
+            else:
+                color = color_names.WHITE
+                texture = GeometryTextures.CHESS_TEXTURE
+
+            color_to_surfaces[color].append(surface)
+            texture_to_surfaces[texture].append(surface)
+
+        for color, surfaces in color_to_surfaces.items():
+            self.geometry_actor.paint_surfaces(color, surfaces)
+
+        for texture, surfaces in texture_to_surfaces.items():
+            self.geometry_actor.set_surfaces_texture(texture, surfaces)
+
+        # self.geometry_actor.set_surface_color(self.user_preferences.faces_color)
         if self.selection_handler is not None:
             self.geometry_actor.paint_volumes(
                 self.user_preferences.selection_volumes_color,
@@ -89,21 +170,10 @@ class NewGeometryRenderWidget(VibraRenderWidget):
                 self.user_preferences.selection_faces_color,
                 self.selection_handler.geometry_surfaces,
             )
-            self.geometry_actor.paint_lines(
-                self.user_preferences.selection_lines_color,
-                self.selection_handler.geometry_lines,
-            )
-            self.geometry_actor.paint_points(
-                self.user_preferences.selection_nodes_points_color,
-                self.selection_handler.geometry_points,
-            )
 
         if self.entity_visibility_handler is not None:
             self.geometry_actor.hide_surfaces()
             self.geometry_actor.show_surfaces(self.entity_visibility_handler.get_visible_surfaces())
-
-        self.geometry_actor.update_caches()
-        self.render()
 
     def click_end_callback(self, x1: int, y1: int):
         # TODO: move this method to the tools
@@ -136,3 +206,27 @@ class NewGeometryRenderWidget(VibraRenderWidget):
 
     def area_pick(self, x0: int, y0: int, x1: int, y1: int) -> SelectionHandler:
         return self.geometry_actor.area_pick(x0, y0, x1, y1, self.renderer)
+
+    def _first_visible_volume(self, volumes: Sequence[int]) -> int | None:
+        for volume in volumes:
+            if volume not in self.entity_visibility_handler._volumes_to_hide:
+                return volume
+
+    def _surfaces_with_perforated_plate(self):
+        # Find both surfaces of a perforated plate
+        assert self.model is not None
+        assert self.model.mesh is not None
+
+        mesh = self.model.mesh
+        properties = self.model.properties
+
+        surfaces_with_perforated_plates = set()
+        for surface, _ in mesh.volumes_from_surface.items():
+            perforated = properties._get_property("perforated_plate_model", surface=surface)
+            decoupling = properties._get_property("degrees_of_freedom_decoupling", surface=surface)
+            if (perforated is not None) and (decoupling is not None):
+                complementary_surface = decoupling.get("new_surface_id")
+                surfaces_with_perforated_plates.add(surface)
+                surfaces_with_perforated_plates.add(complementary_surface)
+
+        return surfaces_with_perforated_plates
