@@ -70,7 +70,6 @@ class HarmonicSolver:
         logging.info("Solving harmonic analysis (direct method)... [10/100]")
 
         nodal_solution_buffer = self._get_nodal_solution_buffer(is_resume)
-
         self.compute_frequency_sweep(nodal_solution_buffer, print_log, is_resume)
 
         logging.info("Solving harmonic analysis (direct method)... [99/100]")

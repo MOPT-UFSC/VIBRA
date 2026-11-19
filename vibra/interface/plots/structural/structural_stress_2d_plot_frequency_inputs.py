@@ -145,7 +145,6 @@ class StructuralStress2dPlotFrequencyInputs(StructuralStress2dPlotFrequencyInput
 
         self.frequencies = self.model.frequencies
 
-    @RamMonitor()
     def process_stress_field(self):
         # recover the averaged structural stresses
         if not self.is_stress_data_cached and not process_structural_stresses():

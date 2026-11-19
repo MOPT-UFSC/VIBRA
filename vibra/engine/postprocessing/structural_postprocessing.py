@@ -67,7 +67,6 @@ class StructuralPostprocessing:
 
 
     @cache
-    @function_timer
     def recover_nodal_averaged_structural_stresses(
         self,
         time_domain: bool = False,
@@ -82,6 +81,55 @@ class StructuralPostprocessing:
 
         Parameters
         ----------
+        time_domain: bool, optional (default is False)
+            Set this argument to True if the structural nodal 
+            solution is in time domain and False otherwise.
+
+        node_ids: int, list[int], None. (default None)
+            The selected node IDs.
+
+        surface_ids: int, list[int], None. (default None)
+            The selected surface IDs.
+
+        volume_ids: int, list[int], None. (default None)
+            The selected volume IDs.
+
+        Return
+        ------
+        avg_nodal_stresses: np.ndarray
+            A 3D array (n_nodes, 6, n_steps) in which each plane stores the averaged nodal stresses of a node,
+            so that each row contains a stress (Sx, Sy, Sz, Txy, Txz, Tyz) and the columns represent
+            the frequencies (complex) or the time steps (float) if time_domain is True.
+
+        """
+
+        return self.recover_nodal_averaged_structural_stresses_calculations(
+            time_domain=time_domain,
+            node_ids=node_ids,
+            surface_ids=surface_ids,
+            volume_ids=volume_ids,
+        )
+
+    @function_timer
+    def recover_nodal_averaged_structural_stresses_calculations(
+        self,
+        out: np.ndarray | None = None,
+        time_domain: bool = False,
+        node_ids : int | list[int] | None = None,
+        surface_ids: int | list[int] | None = None,
+        volume_ids: list[int] | None = None,
+        ) -> np.ndarray:
+
+        """
+        This method computes the nodal averaged structural stresses. When the GIL is disabled,
+        the elements are split in ranges processed by multiple threads over a single shared output array.
+
+        Parameters
+        ----------
+        out : np.ndarray, optional
+            Output array for the averaged nodal stresses, with shape (n_nodes, 6, n_steps).
+            If provided, it is filled in place and returned. If None, a new array is allocated.
+
         time_domain: bool, optional (default is False)
             Set this argument to True if the structural nodal 
             solution is in time domain and False otherwise.
@@ -161,7 +209,12 @@ class StructuralPostprocessing:
         _connectivities = _connect_flat.reshape(-1, element_3d.nodes_per_element)
 
         n_elements = len(_connectivities)
-        avg_nodal_stresses = np.zeros(shape, dtype=data_type)
+        if out is None:
+            avg_nodal_stresses = np.zeros(shape, dtype=data_type)
+        else:
+            assert out.shape == shape and out.dtype == np.dtype(data_type)
+            out.fill(0)
+            avg_nodal_stresses = out
 
         if is_gil_enabled():
             print("Not using multithreading")

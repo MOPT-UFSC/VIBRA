@@ -17,7 +17,7 @@ def process_structural_stresses(time_domain: bool = False):
 
             if stresses is None:
                 return False
-            
+
             post.nodal_averaged_stresses_frequency = stresses
 
         if time_domain:

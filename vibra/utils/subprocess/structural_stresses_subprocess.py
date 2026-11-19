@@ -23,16 +23,13 @@ def main(working_dir: Path, shm_name: str):
     project.read_from_working_dir()
 
     structural_postprocessing = project.get_structural_postprocessing()
-    stresses = structural_postprocessing.recover_nodal_averaged_structural_stresses()
+    shape = structural_postprocessing.get_nodal_stresses_frequency_shape()
+    dtype = np.dtype(complex)
 
     shared_mem = SharedMemory(name=shm_name, track=False)
     try:
-        if shared_mem.size < stresses.nbytes:
-            raise ValueError(f"Shared memory too small: {shared_mem.size} < {stresses.nbytes} bytes")
-
-        target = np.ndarray(stresses.shape, stresses.dtype, shared_mem.buf)
-        target[:] = stresses
-        del target
+        target = np.ndarray(shape, dtype, shared_mem.buf)
+        structural_postprocessing.recover_nodal_averaged_structural_stresses_calculations(out=target)
     finally:
         shared_mem.close()
 
