@@ -890,9 +890,7 @@ class MainWindow(MainWindow_UI):
 
         # Interface update
         self.update_dependency_injection()
-        self.geometry_render_widget.update_plot()
-        self.mesh_render_widget.update_plot()
-        self.results_render_widget.update_plot()
+        self.update_plots(reset_camera=True)
 
         self.update_geometry_information()
         self.update_toolbar_and_menu_items_after_load_project()
@@ -909,9 +907,7 @@ class MainWindow(MainWindow_UI):
 
         # Interface update
         self.update_dependency_injection()
-        self.geometry_render_widget.update_plot()
-        self.mesh_widget.update_plot()
-        self.results_render_widget.update_plot()
+        self.update_plots(reset_camera=True)
 
         self.update_geometry_information()
         self.update_toolbar_and_menu_items_after_load_project()
@@ -968,7 +964,7 @@ class MainWindow(MainWindow_UI):
             self.analysis_toolbar.update_reset_solution_button_accessibility()
 
             self.update_dependency_injection()
-            self.update_plots()
+            self.update_plots(reset_camera=True)
 
             self.action_model_workspace_callback()
 
