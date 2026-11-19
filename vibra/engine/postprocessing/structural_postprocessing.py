@@ -28,16 +28,13 @@ class StructuralPostprocessing:
         # initialize the minimum/maximum values processor
         self.min_max_processor = MinimumAndMaximumValuesProcessor(self)
 
-
     @property
     def mesh(self):
         return self.model.mesh
 
-
     @property
     def solution(self):
         return self.model.solution
-
 
     @property
     def structural_element_2d(self):
@@ -45,36 +42,32 @@ class StructuralPostprocessing:
             self.model.set_structural_elements()
         return self.model.structural_element_2d
 
-
     @property
     def structural_element_3d(self):
         if self.model.structural_element_3d is None:
             self.model.set_structural_elements()
         return self.model.structural_element_3d
 
-
     def reset_attributes(self):
         self.nodal_solution_time = None
         self.nodal_averaged_stresses_frequency = None
         self.nodal_averaged_stresses_time = None
 
-
     @cache
     def recover_nodal_averaged_structural_stresses(
         self,
         time_domain: bool = False,
-        node_ids : int | list[int] | None = None,
+        node_ids: int | list[int] | None = None,
         surface_ids: int | list[int] | None = None,
         volume_ids: list[int] | None = None,
-        ) -> np.ndarray:
-
+    ) -> np.ndarray:
         """
         This method computes the nodal averaged.
 
         Parameters
         ----------
         time_domain: bool, optional (default is False)
-            Set this argument to True if the structural nodal 
+            Set this argument to True if the structural nodal
             solution is in time domain and False otherwise.
 
         node_ids: int, list[int], None. (default None)
@@ -118,7 +111,6 @@ class StructuralPostprocessing:
             node_ids = [node_ids]
 
         elif not isinstance(node_ids, np.ndarray | list):
-
             node_ids = []
             if isinstance(surface_ids, int):
                 surface_ids = [surface_ids]
@@ -164,7 +156,6 @@ class StructuralPostprocessing:
         _connectivities = _connect_flat.reshape(-1, element_3d.nodes_per_element)
 
         for i, _connect in enumerate(_connectivities):
-
             progress = int((100 * (i / n_el) // 5) * 5)
             if progress != last_progress:
                 logging.info(f"Calculating the nodal stresses for each element... [{progress}/100]")
@@ -174,7 +165,7 @@ class StructuralPostprocessing:
                 element_ids[i],
                 solution=solution,
                 extrapolate=True,
-                )
+            )
 
             # sum the nodal stresses at the corner nodes
             avg_nodal_stresses[_connect[corner_indices], :, :] += enodal_stresses
@@ -188,23 +179,21 @@ class StructuralPostprocessing:
 
         return avg_nodal_stresses
 
-
     @cache
     def recover_element_structural_stresses(
         self,
         time_domain: bool = False,
-        node_ids : int | list[int] | None = None,
+        node_ids: int | list[int] | None = None,
         surface_ids: int | list[int] | None = None,
         volume_ids: list[int] | None = None,
-        ) -> np.ndarray | None:
-
+    ) -> np.ndarray | None:
         """
         This method computes the nodal stresses for each element.
 
         Parameters
         ----------
         time_domain: bool, optional (default is False)
-            Set this argument to True if the structural nodal 
+            Set this argument to True if the structural nodal
             solution is in time domain and False otherwise.
 
         node_ids: int, list[int], None. (default None)
@@ -248,7 +237,6 @@ class StructuralPostprocessing:
             node_ids = [node_ids]
 
         elif not isinstance(node_ids, np.ndarray | list):
-
             node_ids = []
             if isinstance(surface_ids, int):
                 surface_ids = [surface_ids]
@@ -287,7 +275,6 @@ class StructuralPostprocessing:
         element_stress_data = np.zeros((n_el, n_nodes, 6, n_steps), dtype=data_type)
 
         for i, element_id in enumerate(element_ids):
-
             progress = int((100 * (i / n_el) // 5) * 5)
             if progress != last_progress:
                 logging.info(f"Recovering the structural stresses... [{progress}/100]")
@@ -297,7 +284,7 @@ class StructuralPostprocessing:
                 element_id,
                 solution=solution,
                 extrapolate=True,
-                )
+            )
 
             # map the node indexes
             if is_quadratic:
@@ -308,14 +295,13 @@ class StructuralPostprocessing:
 
         return element_stress_data
 
-
     def process_multiple_iffts(
-            self,
-            f_max: float,
-            nodal_solution: np.ndarray[complex],
-            n_div: int | None = None,
-            spectral_lines: int | None = None,
-            ):
+        self,
+        f_max: float,
+        nodal_solution: np.ndarray[complex],
+        n_div: int | None = None,
+        spectral_lines: int | None = None,
+    ):
 
         if n_div is None:
             time_vector, nodal_solution_time = process_multiple_iffts_from_one_sided_spectrum_signals(f_max, nodal_solution)
@@ -343,7 +329,6 @@ class StructuralPostprocessing:
 
         return time_vector, nodal_solution_time
 
-
     @cache
     def compute_multiple_ifft_for_structural_nodal_solution(
         self,
@@ -361,7 +346,7 @@ class StructuralPostprocessing:
         # differentiate the nodal solution
         if n_diff:
             freqs = self.model.frequencies
-            nodal_solution *= (1j * 2 * np.pi * freqs)**n_diff
+            nodal_solution *= (1j * 2 * np.pi * freqs) ** n_diff
 
         logging.info("Computing the iffts for structural nodal solution... [25/100]")
         t0 = perf_counter()
@@ -371,7 +356,7 @@ class StructuralPostprocessing:
             nodal_solution,
             n_div=n_div,
             spectral_lines=spectral_lines,
-            )
+        )
 
         logging.info("Computing the iffts for structural nodal solution... [100/100]")
 
@@ -380,7 +365,6 @@ class StructuralPostprocessing:
             print(f"Time to process the iffts for structural nodal solution: {dt: .6f} s")
 
         return time_vector, nodal_solution_time
-
 
     @cache
     def compute_multiple_ifft_for_structural_stresses(
@@ -402,7 +386,7 @@ class StructuralPostprocessing:
             self.nodal_averaged_stresses_frequency.reshape(-1, n_freq),
             n_div=n_div,
             spectral_lines=spectral_lines,
-            )
+        )
 
         logging.info("Computing the iffts for nodal stresses... [100/100]")
 
@@ -411,7 +395,6 @@ class StructuralPostprocessing:
             print(f"Time to process the iffts for stresses: {dt: .6f} s")
 
         return time_vector, nodal_stresses_time.reshape(n_nodes, n_stress, nodal_stresses_time.shape[1])
-
 
     def compute_structural_stresses_frequency(self):
         t0 = perf_counter()
@@ -423,13 +406,12 @@ class StructuralPostprocessing:
         if dt > 0.5:
             print(f"Time to process nodal stresses (frequency): {dt} s")
 
-
     def compute_structural_stresses_time(
-            self,
-            n_div: int | None = None,
-            spectral_lines: int | None = None,
-            stress_iffts: bool = True,
-            ):
+        self,
+        n_div: int | None = None,
+        spectral_lines: int | None = None,
+        stress_iffts: bool = True,
+    ):
 
         t0 = perf_counter()
         if stress_iffts:
@@ -439,7 +421,7 @@ class StructuralPostprocessing:
             _, self.nodal_averaged_stresses_time = self.compute_multiple_ifft_for_structural_stresses(
                 n_div=n_div,
                 spectral_lines=spectral_lines,
-                )
+            )
 
         else:
             if self.nodal_solution_time is None:
@@ -454,19 +436,18 @@ class StructuralPostprocessing:
         if dt > 0.5:
             print(f"Time to process nodal stresses (time): {dt} s")
 
-
     def compute_advanced_structural_stresses(self, stresses: np.ndarray, stress_type: StressType):
         """
-        Use this method to compute the following advanced nodal stresses: 
+        Use this method to compute the following advanced nodal stresses:
         Von Mises, Tresca, Maximum Principal 1, 2 and 3.
 
         Parameters
         ----------
         stresses: np.ndarray
-            A N_steps x 6 2D array with the stress tensor components. 
+            A N_steps x 6 2D array with the stress tensor components.
 
         stress_type: StressType
-            Attribute used to select the stress type. 
+            Attribute used to select the stress type.
 
         Return
         ------
@@ -475,15 +456,17 @@ class StructuralPostprocessing:
 
         """
         if stress_type == StressType.VON_MISES_STRESS:
-            stress_vector = np.sqrt((1/2) * (
-                (stresses[:, 0] - stresses[:, 1])**2 + 
-                (stresses[:, 1] - stresses[:, 2])**2 + 
-                (stresses[:, 2] - stresses[:, 0])**2 +
-                6 * (stresses[:, 3]**2 + stresses[:, 4]**2 + stresses[:, 5]**2)
-                ))
+            stress_vector = np.sqrt(
+                (1 / 2)
+                * (
+                    (stresses[:, 0] - stresses[:, 1]) ** 2
+                    + (stresses[:, 1] - stresses[:, 2]) ** 2
+                    + (stresses[:, 2] - stresses[:, 0]) ** 2
+                    + 6 * (stresses[:, 3] ** 2 + stresses[:, 4] ** 2 + stresses[:, 5] ** 2)
+                )
+            )
 
         else:
-
             """
             stress_tensor = |sigma_x, tau_xy, tau_xz| 
                             |tau_xy, sigma_y, tau_yz|
@@ -503,16 +486,15 @@ class StructuralPostprocessing:
                 stress_vector = sigmas[:, 2] - sigmas[:, 0]  # sigma_1 - sigma_3
 
             elif stress_type == StressType.MAXIMUM_PRINCIPAL_STRESS_1:
-                stress_vector = sigmas[:, 2] # sigma_1
+                stress_vector = sigmas[:, 2]  # sigma_1
 
             elif stress_type == StressType.MAXIMUM_PRINCIPAL_STRESS_2:
-                stress_vector = sigmas[:, 1] # sigma_2
-            
+                stress_vector = sigmas[:, 1]  # sigma_2
+
             else:
-                stress_vector = sigmas[:, 0] # sigma_3
+                stress_vector = sigmas[:, 0]  # sigma_3
 
         return stress_vector
-
 
     def compute_displacements_for_3d_plot_frequency(
         self,
@@ -542,9 +524,9 @@ class StructuralPostprocessing:
 
         if self.model.analysis_id.is_harmonic():
             freq = self.model.frequencies[column]
-            data_complex *= (1j * 2 * np.pi * freq)**n_diff
+            data_complex *= (1j * 2 * np.pi * freq) ** n_diff
 
-        phase_shifted_data  = compute_phase_shifted_values(data_complex, phase_rad)
+        phase_shifted_data = compute_phase_shifted_values(data_complex, phase_rad)
         current_solution = phase_shifted_data.reshape(-1, 3).copy()
 
         if stress_plot:
@@ -567,10 +549,11 @@ class StructuralPostprocessing:
             color_scalars = current_solution[:, 2]
             phase_shifted_data = current_solution * np.array([0.0, 0.0, 1.0])
 
-        min_value, max_value = self.min_max_processor.get_values_for_displacement_frequency(column, n_diff, round(unit_factor, 10), data_type, is_modal)
+        min_value, max_value = self.min_max_processor.get_values_for_displacement_frequency(
+            column, n_diff, round(unit_factor, 10), data_type, is_modal
+        )
 
         return phase_shifted_data, color_scalars, min_value, max_value, np.imag(data_complex).any()
-
 
     def compute_displacements_for_3d_plot_time(
         self,
@@ -589,14 +572,14 @@ class StructuralPostprocessing:
             n_diff=n_diff,
             n_div=n_div,
             spectral_lines=spectral_lines,
-            )
+        )
 
         if reduced_loop_time is None:
             n = time_vector.size
         else:
             n = np.sum(time_vector <= reduced_loop_time)
 
-        # cache the minimum and maximum nodal displacements values 
+        # cache the minimum and maximum nodal displacements values
         min_max_values = self.min_max_processor.get_values_for_displacement_time(int(n), round(unit_factor, 10), plot_type)
 
         if stress_plot:
@@ -606,7 +589,7 @@ class StructuralPostprocessing:
 
         displacements = unit_factor * self.nodal_solution_time[self.solution.displacement_dof, time_index].reshape(-1, 3).copy()
 
-        if plot_type in ["u_sum", "v_sum", "a_sum"] :
+        if plot_type in ["u_sum", "v_sum", "a_sum"]:
             min_value = 0
             max_value = np.max(np.abs(min_max_values))
             scalars = np.linalg.norm(displacements, axis=1)
@@ -624,7 +607,6 @@ class StructuralPostprocessing:
                 displacements = displacements * np.array([0, 0, 1], dtype=float)
 
         return time_vector[:n], displacements, scalars, min_value, max_value
-
 
     def compute_structural_stresses_for_3d_plot_frequency(
         self,
@@ -661,7 +643,6 @@ class StructuralPostprocessing:
 
         return stress_values, min_value, max_value, symmetric_animation
 
-
     def compute_structural_stresses_for_3d_plot_time(
         self,
         time_index: int,
@@ -693,13 +674,12 @@ class StructuralPostprocessing:
             round(unit_factor, 10),
             stress_type,
             data_type,
-            )
+        )
 
         # force the processing of all animation frames
         symmetric_animation = False
 
         return stress_values, min_value, max_value, symmetric_animation
-
 
     def compute_advanced_structural_stresses_for_3d_plot_frequency(
         self,
@@ -717,17 +697,19 @@ class StructuralPostprocessing:
 
         # evaluate the stresses at a specific phase (phase_rad = omega * t)
         stresses = unit_factor * compute_phase_shifted_values(self.nodal_averaged_stresses_frequency[:, :, column], phase_rad)
- 
+
         if stress_type == StressType.VON_MISES_STRESS:
-            stress_vector = np.sqrt((1/2) * (
-                (stresses[:, 0] - stresses[:, 1])**2 + 
-                (stresses[:, 1] - stresses[:, 2])**2 + 
-                (stresses[:, 2] - stresses[:, 0])**2 +
-                6 * (stresses[:, 3]**2 + stresses[:, 4]**2 + stresses[:, 5]**2)
-                ))
+            stress_vector = np.sqrt(
+                (1 / 2)
+                * (
+                    (stresses[:, 0] - stresses[:, 1]) ** 2
+                    + (stresses[:, 1] - stresses[:, 2]) ** 2
+                    + (stresses[:, 2] - stresses[:, 0]) ** 2
+                    + 6 * (stresses[:, 3] ** 2 + stresses[:, 4] ** 2 + stresses[:, 5] ** 2)
+                )
+            )
 
         else:
-
             """
             stress_tensor = |sigma_x, tau_xy, tau_xz| 
                             |tau_xy, sigma_y, tau_yz|
@@ -747,13 +729,13 @@ class StructuralPostprocessing:
                 stress_vector = sigmas[:, 2] - sigmas[:, 0]  # sigma_1 - sigma_3
 
             elif stress_type == StressType.MAXIMUM_PRINCIPAL_STRESS_1:
-                stress_vector = sigmas[:, 2] # sigma_1
+                stress_vector = sigmas[:, 2]  # sigma_1
 
             elif stress_type == StressType.MAXIMUM_PRINCIPAL_STRESS_2:
-                stress_vector = sigmas[:, 1] # sigma_2
-            
+                stress_vector = sigmas[:, 1]  # sigma_2
+
             else:
-                stress_vector = sigmas[:, 0] # sigma_3
+                stress_vector = sigmas[:, 0]  # sigma_3
 
         match data_type:
             case StressDataType.ABSOLUTE_VALUES:
@@ -771,13 +753,12 @@ class StructuralPostprocessing:
         min_value, max_value = self.min_max_processor.get_values_for_advanced_stress_frequency(
             tuple(stress_vector),
             data_type,
-            )
+        )
 
         # force the processing of all animation frames
         symmetric_animation = False
 
         return stress_values, min_value, max_value, symmetric_animation
-
 
     def compute_advanced_structural_stresses_for_3d_plot_time(
         self,
@@ -796,7 +777,7 @@ class StructuralPostprocessing:
         stresses = unit_factor * self.nodal_averaged_stresses_time[:, :, time_index]
 
         stress_vector = self.compute_advanced_structural_stresses(stresses, stress_type)
- 
+
         match data_type:
             case StressDataType.ABSOLUTE_ANIMATION:
                 stress_values = np.abs(stress_vector.copy())
@@ -806,13 +787,12 @@ class StructuralPostprocessing:
         min_value, max_value = self.min_max_processor.get_values_for_advanced_stress_frequency(
             tuple(stress_vector),
             data_type,
-            )
+        )
 
         # force the processing of all animation frames
         symmetric_animation = False
 
         return stress_values, min_value, max_value, symmetric_animation
-
 
     def map_material_to_elements(self, element_ids: list[int]) -> dict[int, list[int]]:
         """
@@ -822,7 +802,7 @@ class StructuralPostprocessing:
         ---------
         element_ids: list
             The list of elements to map the materials.
-        
+
         Return
         ------
         material_to_elements: dict
@@ -838,7 +818,6 @@ class StructuralPostprocessing:
         material_to_elements = defaultdict(list)
 
         for mat_id, volume_ids in material_to_volumes.items():
-
             mask = np.isin(self.mesh.solids_connectivity[:, 1], volume_ids)
             elements_from_volumes = self.mesh.solids_connectivity[mask, 0]
 
@@ -856,7 +835,7 @@ def compute_shifted_values(data: np.ndarray, phase_rad: float):
 
 
 def compute_phase_shifted_values(values: np.ndarray, phase_rad: float, absolute: bool = False) -> np.ndarray:
-    shifted_values = values.real * np.cos(phase_rad) -  values.imag * np.sin(phase_rad)
+    shifted_values = values.real * np.cos(phase_rad) - values.imag * np.sin(phase_rad)
     if absolute:
         return np.absolute(shifted_values)
 

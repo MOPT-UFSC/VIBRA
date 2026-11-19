@@ -42,7 +42,7 @@ class SetFluidCompositionInputs(SetFluidCompositionInput_UI):
         self._create_connections()
         self._config_widgets()
 
-        if self.state_properties: 
+        if self.state_properties:
             self.check_state_properties(self.state_properties)
 
         self.update_remainig_composition()
@@ -131,8 +131,8 @@ class SetFluidCompositionInputs(SetFluidCompositionInput_UI):
         elif self.comboBox_temperature_units.currentIndex() == TemperatureUnits.FARENHEIT:
             t_min = -459.67
 
-        # adjust pressure bounds (p_min -> perfect vacuum)      
-        p_min = 0 
+        # adjust pressure bounds (p_min -> perfect vacuum)
+        p_min = 0
         p_max = 1e8
 
         punit_index = self.comboBox_pressure_units.currentIndex()
@@ -147,13 +147,13 @@ class SetFluidCompositionInputs(SetFluidCompositionInput_UI):
             p_max = 2e3
 
         elif punit_index == PressureUnits.kgf_cm2_g:
-            p_min = -(9.80665*1e4)
+            p_min = -(9.80665 * 1e4)
 
         elif punit_index == PressureUnits.psi_g:
-            p_min = -(0.45359237*9.80665) / (0.0254**2)
+            p_min = -(0.45359237 * 9.80665) / (0.0254**2)
 
         elif punit_index == PressureUnits.ksi_g:
-            p_min = -(0.45359237*9.80665) / (1e3 * (0.0254**2))
+            p_min = -(0.45359237 * 9.80665) / (1e3 * (0.0254**2))
             p_max = 1e3
 
         # configure validator for pressure and temeperature inputs
@@ -168,7 +168,7 @@ class SetFluidCompositionInputs(SetFluidCompositionInput_UI):
 
         if self.refprop_interface.initialize_REFPROP():
             return True
-        
+
         logging.info("Loading REFPROP interface [80%]")
 
         self.refprop = self.refprop_interface.refprop
@@ -251,7 +251,7 @@ class SetFluidCompositionInputs(SetFluidCompositionInput_UI):
 
             self.frame_multiple_fluids.setVisible(True)
             self.pushButton_fluid_configuration_mode.setText("Single fluid mode")
-            
+
             main_title = "Mulit-fluid configuration mode"
             tool_tip = "Switch to simple fluid configuration mode"
 
@@ -296,15 +296,15 @@ class SetFluidCompositionInputs(SetFluidCompositionInput_UI):
             temperature = state_properties.get("temperature")
 
             if isinstance(temperature, (int | float)):
-                self.lineEdit_temperature_left.setText(f"{temperature : .6f}")
+                self.lineEdit_temperature_left.setText(f"{temperature: .6f}")
 
             if isinstance(pressure, (int | float)):
-                self.lineEdit_pressure_left.setText(f"{pressure : .8e}")
+                self.lineEdit_pressure_left.setText(f"{pressure: .8e}")
 
         else:
-            self.connection_type = state_properties['connection_type']
-            T_suction = state_properties['suction_temperature']
-            P_suction = state_properties['suction_pressure']
+            self.connection_type = state_properties["connection_type"]
+            T_suction = state_properties["suction_temperature"]
+            P_suction = state_properties["suction_pressure"]
 
             connected_at_discharge = self.connection_type == "discharge"
 
@@ -315,25 +315,24 @@ class SetFluidCompositionInputs(SetFluidCompositionInput_UI):
             self.lineEdit_pressure_right.setVisible(connected_at_discharge)
             self.lineEdit_temperature_right.setVisible(connected_at_discharge)
 
-            if 'suction_pressure' in state_properties:
-                self.lineEdit_temperature_left.setText(f"{T_suction : .6f}")
-                self.lineEdit_pressure_left.setText(f"{P_suction : .8e}")
+            if "suction_pressure" in state_properties:
+                self.lineEdit_temperature_left.setText(f"{T_suction: .6f}")
+                self.lineEdit_pressure_left.setText(f"{P_suction: .8e}")
 
-            if 'pressure_ratio' in state_properties:
-                self.p_ratio =  state_properties['pressure_ratio']
+            if "pressure_ratio" in state_properties:
+                self.p_ratio = state_properties["pressure_ratio"]
                 P_discharge = self.p_ratio * P_suction
 
-            elif 'discharge_pressure' in state_properties:
-                P_discharge = state_properties['discharge_pressure']
+            elif "discharge_pressure" in state_properties:
+                P_discharge = state_properties["discharge_pressure"]
 
-            self.lineEdit_pressure_right.setText(f"{P_discharge : .8e}")
+            self.lineEdit_pressure_right.setText(f"{P_discharge: .8e}")
 
-            if 'discharge_temperature' in state_properties:
-                T_discharge = state_properties['discharge_temperature']
-                self.lineEdit_temperature_right.setText(f"{T_discharge : .6f}")
+            if "discharge_temperature" in state_properties:
+                T_discharge = state_properties["discharge_temperature"]
+                self.lineEdit_temperature_right.setText(f"{T_discharge: .6f}")
 
             else:
-
                 tool_tip = "The temperature at discharge will be estimated after "
                 tool_tip += "the fluid mixture definition being complete."
 
@@ -404,7 +403,7 @@ class SetFluidCompositionInputs(SetFluidCompositionInput_UI):
         self.remaining_composition_highlight(_remain)
         if not self.state_properties:
             return
-        
+
         if self.state_properties.get("connection_type", "") == "suction":
             return
 
@@ -413,14 +412,14 @@ class SetFluidCompositionInputs(SetFluidCompositionInput_UI):
 
     def remaining_composition_highlight(self, value: float):
         if value >= 0:
-            style_sheet =   """  
+            style_sheet = """  
                 QLabel{border-radius: 4px; border-color: rgb(100, 100, 100); 
                     border-style: solid; border-width: 1px; color: rgb(100, 100, 100); 
                     background-color: rgb(255, 255, 255)}
                 """
 
         else:
-            style_sheet =   """  
+            style_sheet = """  
                 QLabel{border-radius: 4px; border-color: rgb(250, 10, 10); 
                     border-style: solid; border-width: 2px; color: rgb(250, 10, 10); 
                     background-color: rgb(255, 255, 255)}
@@ -432,7 +431,7 @@ class SetFluidCompositionInputs(SetFluidCompositionInput_UI):
     def update_discharge_temperature_line_edit(self, T_discharge_K: float):
         temp_unit = self.comboBox_temperature_units.currentText()
         T_disch = convert_temperature_unit(T_discharge_K, "K", temp_unit)
-        self.lineEdit_temperature_right.setText(f"{T_disch : .6f}")
+        self.lineEdit_temperature_right.setText(f"{T_disch: .6f}")
 
     def compute_reciprocating_compressor_state_properties(self):
 
@@ -448,19 +447,19 @@ class SetFluidCompositionInputs(SetFluidCompositionInput_UI):
 
         [T_suction_K, P_suction_Pa] = values
 
-        k_suction, errors, *_ = self.refprop_interface.get_specific_fluid_property( 
-            key_mixture = key_mixture,
-            molar_fractions = molar_fractions,
-            property_key = self.refprop_interface.isentropic_label,
-            temperature_K = T_suction_K,
-            pressure_Pa = P_suction_Pa,
-            )
+        k_suction, errors, *_ = self.refprop_interface.get_specific_fluid_property(
+            key_mixture=key_mixture,
+            molar_fractions=molar_fractions,
+            property_key=self.refprop_interface.isentropic_label,
+            temperature_K=T_suction_K,
+            pressure_Pa=P_suction_Pa,
+        )
 
         if errors:
             return
 
         # evaluate the temperature at the discharge
-        T_discharge_K = T_suction_K * (self.p_ratio**((k_suction - 1) / k_suction))
+        T_discharge_K = T_suction_K * (self.p_ratio ** ((k_suction - 1) / k_suction))
 
         # update the discharge temperature QLineEdit
         self.update_discharge_temperature_line_edit(T_discharge_K)
@@ -468,7 +467,6 @@ class SetFluidCompositionInputs(SetFluidCompositionInput_UI):
     def remove_selected_gas(self):
 
         if isinstance(self.selected_row, int):
-
             item = self.tableWidget_new_fluid.item(self.selected_row, 0)
 
             if item is None:
@@ -483,11 +481,10 @@ class SetFluidCompositionInputs(SetFluidCompositionInput_UI):
 
     def reset_fluid(self):
 
-
         title = "Fluid composition reset"
         message = "Would you like to reset the current fluid composition?"
 
-        buttons_config = {"left_button_label" : "Cancel", "right_button_label" : "Continue"}
+        buttons_config = {"left_button_label": "Cancel", "right_button_label": "Continue"}
         read = GetUserConfirmationInput(title, message, buttons_config=buttons_config)
 
         if read._cancel:
@@ -516,8 +513,8 @@ class SetFluidCompositionInputs(SetFluidCompositionInput_UI):
 
     def config_table_data(self):
 
-        header = ['Fluid name', 'Molar fraction [%]']
-        
+        header = ["Fluid name", "Molar fraction [%]"]
+
         self.tableWidget_new_fluid.setColumnCount(len(header))
         self.tableWidget_new_fluid.setHorizontalHeaderLabels(header)
         self.tableWidget_new_fluid.setSelectionBehavior(QAbstractItemView.SelectionBehavior(1))
@@ -543,7 +540,6 @@ class SetFluidCompositionInputs(SetFluidCompositionInput_UI):
         factor = self.get_percentual_factor()
 
         for row, (fluid, composition_data) in enumerate(self.fluid_to_composition.items()):
-
             self.tableWidget_new_fluid.setItem(row, 0, QTableWidgetItem(fluid))
             self.tableWidget_new_fluid.item(row, 0).setTextAlignment(Qt.AlignCenter)
 
@@ -552,7 +548,7 @@ class SetFluidCompositionInputs(SetFluidCompositionInput_UI):
                     continue
 
                 molar_fraction = round(factor * composition_data[0], 7)
-                self.add_molar_fraction_to_cell(row, molar_fraction = str(molar_fraction))
+                self.add_molar_fraction_to_cell(row, molar_fraction=str(molar_fraction))
 
         self.label_selected_fluid.setText("")
         self.tableWidget_new_fluid.blockSignals(False)
@@ -607,7 +603,6 @@ class SetFluidCompositionInputs(SetFluidCompositionInput_UI):
             return True
 
         try:
-
             molar_fraction = molar_fraction.replace(",", ".")
             self.tableWidget_new_fluid.setItem(row, 1, QTableWidgetItem(molar_fraction))
             self.tableWidget_new_fluid.item(row, 1).setTextAlignment(Qt.AlignCenter)
@@ -626,9 +621,9 @@ class SetFluidCompositionInputs(SetFluidCompositionInput_UI):
             message += f"Remaining molar fraction: {remaining_molar_fraction} %"
             PrintMessageInput([error_title, title, message])
             return True
-        
+
         return False
-        
+
     def check_fluid_name(self):
 
         if self.lineEdit_fluid_name.text() == "":
@@ -637,7 +632,7 @@ class SetFluidCompositionInputs(SetFluidCompositionInput_UI):
             self.lineEdit_fluid_name.setFocus()
             PrintMessageInput([error_title, title, message])
             return True
-        
+
         return False
 
     def get_fluid_composition_data(self):
@@ -715,16 +710,16 @@ class SetFluidCompositionInputs(SetFluidCompositionInput_UI):
                 continue
 
             fluid_property, errors, warnings = self.refprop_interface.get_specific_fluid_property(
-                key_mixture = key_mixture,
-                molar_fractions = molar_fractions,
-                property_key = key_prop,
-                temperature_K = T_suction_K,
-                pressure_Pa = P_suction_Pa,
-                )
+                key_mixture=key_mixture,
+                molar_fractions=molar_fractions,
+                property_key=key_prop,
+                temperature_K=T_suction_K,
+                pressure_Pa=P_suction_Pa,
+            )
 
             if errors:
                 self.errors[prop_label] = errors
-            
+
             if warnings:
                 self.warnings[prop_label] = warnings
 
@@ -733,7 +728,7 @@ class SetFluidCompositionInputs(SetFluidCompositionInput_UI):
                 self.k = fluid_property
 
         # evaluate the temperature at the discharge
-        T_discharge_K = T_suction_K * (self.p_ratio**((self.k - 1) / self.k))
+        T_discharge_K = T_suction_K * (self.p_ratio ** ((self.k - 1) / self.k))
 
         # update the discharge temperature QLineEdit
         self.update_discharge_temperature_line_edit(T_discharge_K)
@@ -743,12 +738,12 @@ class SetFluidCompositionInputs(SetFluidCompositionInput_UI):
             self.fluid_properties["pressure"] = P_suction_Pa
             return
 
-        # It is well known that the isentropic exponent depends on the temperature, 
-        # k = k(T), meaning there is a non-linear relationship to be resolved. 
-        # Therefore, the temperature T_disch of the first iteration is computed using 
-        # the isentropic exponent evaluated for the suction thermodynamic state. 
+        # It is well known that the isentropic exponent depends on the temperature,
+        # k = k(T), meaning there is a non-linear relationship to be resolved.
+        # Therefore, the temperature T_disch of the first iteration is computed using
+        # the isentropic exponent evaluated for the suction thermodynamic state.
         # The newly computed temperature T_disch is used to update the isentropic
-        # exponent, and a new temperature is computed within a while loop until 
+        # exponent, and a new temperature is computed within a while loop until
         # the predefined criterion is satisfied.
 
         P_disch_Pa = self.p_ratio * P_suction_Pa
@@ -759,18 +754,17 @@ class SetFluidCompositionInputs(SetFluidCompositionInput_UI):
         criteria = 1e4
 
         while criteria > 0.001 and count <= max_iter:
-
             for key_prop, prop_label in self.refprop_interface.map_properties.items():
                 if key_prop in ["PRANDTL", "TD", "KV"]:
-                    continue    
+                    continue
 
                 fluid_property, errors, warnings = self.refprop_interface.get_specific_fluid_property(
-                    key_mixture = key_mixture,
-                    molar_fractions = molar_fractions,
-                    property_key = key_prop,
-                    temperature_K = T_discharge_K,
-                    pressure_Pa = P_disch_Pa,
-                    )
+                    key_mixture=key_mixture,
+                    molar_fractions=molar_fractions,
+                    property_key=key_prop,
+                    temperature_K=T_discharge_K,
+                    pressure_Pa=P_disch_Pa,
+                )
 
                 if errors:
                     self.errors[prop_label] = errors
@@ -778,7 +772,7 @@ class SetFluidCompositionInputs(SetFluidCompositionInput_UI):
                 if warnings:
                     self.warnings[prop_label] = warnings
 
-                self.fluid_properties[prop_label] = fluid_property  
+                self.fluid_properties[prop_label] = fluid_property
                 if key_prop == self.refprop_interface.isentropic_label:
                     k_iter = fluid_property
 
@@ -789,7 +783,7 @@ class SetFluidCompositionInputs(SetFluidCompositionInput_UI):
                         self.compressibility_factor = Z
 
             count += 1
-            T_discharge_K = T_suction_K * (self.p_ratio**((k_iter-1)/k_iter))
+            T_discharge_K = T_suction_K * (self.p_ratio ** ((k_iter - 1) / k_iter))
 
             # cache computed temperature discharge value
             temp_cache.append(T_discharge_K)
@@ -813,7 +807,7 @@ class SetFluidCompositionInputs(SetFluidCompositionInput_UI):
 
         if self.check_fluid_name():
             return
-        
+
         fluid_name = self.lineEdit_fluid_name.text()
         if self.check_remaining_molar_fraction():
             return
@@ -825,7 +819,6 @@ class SetFluidCompositionInputs(SetFluidCompositionInput_UI):
             key_mixture, molar_fractions = composition_data
 
         if self.spinBox_number_of_fluids.value() == 1:
-
             self.fluid_properties.clear()
             self.fluid_properties["name"] = fluid_name
 
@@ -839,19 +832,19 @@ class SetFluidCompositionInputs(SetFluidCompositionInput_UI):
 
             if self.state_properties.get("source") == "reciprocating_compressor":
                 self.process_fluid_data_for_reciprocating_compressors(
-                    key_mixture = key_mixture,
-                    molar_fractions = molar_fractions,
-                    temperature_K = temperature_K,
-                    pressure_Pa = pressure_Pa,
-                    )
+                    key_mixture=key_mixture,
+                    molar_fractions=molar_fractions,
+                    temperature_K=temperature_K,
+                    pressure_Pa=pressure_Pa,
+                )
 
             else:
                 self.process_fluid_data_for_general_purposes(
-                    key_mixture = key_mixture,
-                    molar_fractions = molar_fractions,
-                    temperature_K = temperature_K,
-                    pressure_Pa = pressure_Pa,
-                    )
+                    key_mixture=key_mixture,
+                    molar_fractions=molar_fractions,
+                    temperature_K=temperature_K,
+                    pressure_Pa=pressure_Pa,
+                )
 
             self.fluid_properties["key_mixture"] = key_mixture
             self.fluid_properties["molar_fractions"] = molar_fractions
@@ -864,7 +857,6 @@ class SetFluidCompositionInputs(SetFluidCompositionInput_UI):
             self.refprop_fluids_data["properties"] = self.fluid_properties
 
         else:
-
             distribution_type = self.comboBox_distribution_type.currentText().lower().replace(" ", "_")
             decay_factor = self.doubleSpinBox_decay_factor.value()
             number_of_fluids = self.spinBox_number_of_fluids.value()
@@ -875,7 +867,7 @@ class SetFluidCompositionInputs(SetFluidCompositionInput_UI):
                 return
 
             [T_start, P_start] = values
-            
+
             values = self.get_temperature_and_pressure_SI_units(thermostate_side="right")
             if values is None:
                 return
@@ -892,20 +884,20 @@ class SetFluidCompositionInputs(SetFluidCompositionInput_UI):
                 return
 
             state_properties = self.refprop_interface.get_state_properties(
-                temperatures_K = [T_start, T_end],
-                pressures_Pa = [P_start, P_end],
-                number_of_fluids = number_of_fluids,
-                distribution_type = distribution_type,
-                decay_factor = decay_factor,
-                color_scale = color_scale,
-                )
+                temperatures_K=[T_start, T_end],
+                pressures_Pa=[P_start, P_end],
+                number_of_fluids=number_of_fluids,
+                distribution_type=distribution_type,
+                decay_factor=decay_factor,
+                color_scale=color_scale,
+            )
 
             multistage_fluid_properties = self.refprop_interface.compute_fluid_properties_for_multiple_state_properties(
-                fluid_name = fluid_name,
-                key_mixture = key_mixture,
-                molar_fractions = molar_fractions,
-                state_properties = state_properties,
-                )
+                fluid_name=fluid_name,
+                key_mixture=key_mixture,
+                molar_fractions=molar_fractions,
+                state_properties=state_properties,
+            )
 
             if multistage_fluid_properties is None:
                 return
@@ -940,15 +932,15 @@ class SetFluidCompositionInputs(SetFluidCompositionInput_UI):
 
         message += "\n\nPress Proceed to ignore this warning and get fluid properties or No to cancel."
 
-        buttons_config = {"left_button_label" : "Cancel", "right_button_label" : "Proceed"}
+        buttons_config = {"left_button_label": "Cancel", "right_button_label": "Proceed"}
         read = GetUserConfirmationInput(title, message, buttons_config=buttons_config)
 
         if read._cancel:
-            self.complete = False              
+            self.complete = False
             app().main_window.set_input_widget(self)
             return True
 
-    def get_temperature_and_pressure_SI_units(self, thermostate_side: str="left"):
+    def get_temperature_and_pressure_SI_units(self, thermostate_side: str = "left"):
 
         source = self.state_properties.get("source")
         connection_type = self.state_properties.get("connection_type")
@@ -970,15 +962,15 @@ class SetFluidCompositionInputs(SetFluidCompositionInput_UI):
 
         if not is_numeric(str_pressure):
             return None
-        
+
         input_temperature = float(str_temperature)
         input_pressure = float(str_pressure)
 
         temp_unit = self.comboBox_temperature_units.currentText()
-        temperature_K = convert_temperature_unit(input_temperature, temp_unit,  "K")
+        temperature_K = convert_temperature_unit(input_temperature, temp_unit, "K")
 
         press_unit = self.comboBox_pressure_units.currentText()
-        pressure_Pa = convert_pressure_unit(input_pressure, press_unit,  "Pa")
+        pressure_Pa = convert_pressure_unit(input_pressure, press_unit, "Pa")
 
         if temperature_K < 0:
             title = "Invalid entry to the temperature"
@@ -1009,7 +1001,7 @@ class SetFluidCompositionInputs(SetFluidCompositionInput_UI):
                 _key = str(key)
                 _error = str(error)
                 further_details += f"{_key}: {_error}\n\n"
-            
+
             title = "Error generated while processing fluid properties"
             message = "The following errors were found in while processing the fluid properties.\n\n"
             message += further_details
@@ -1044,7 +1036,7 @@ class SetFluidCompositionInputs(SetFluidCompositionInput_UI):
             message += f"\n\nTemperature (suction) = {self.state_properties['temperature (suction)']} [K]"
             message += f"\nPressure (suction) = {self.state_properties['pressure (suction)']} [Pa]"
             message += f"\nPressure (discharge) = {round(self.state_properties['pressure (discharge)'], 4)} [Pa]"
-            message += f"\nMolar mass = {round(self.fluid_data['molar_mass'],6)} [kg/mol]"   
+            message += f"\nMolar mass = {round(self.fluid_data['molar_mass'], 6)} [kg/mol]"
             PrintMessageInput([warning_title, title, message])
 
     def check_input_value(self, str_value: str, label: str):
@@ -1066,7 +1058,7 @@ class SetFluidCompositionInputs(SetFluidCompositionInput_UI):
             title = "Empty field detected"
             message = f"The {label} input field is empty. Please, inform a valid float number to proceed."
             PrintMessageInput([error_title, title, message])
-            return None       
+            return None
 
         return value
 
@@ -1090,18 +1082,16 @@ class SetFluidCompositionInputs(SetFluidCompositionInput_UI):
                 fluid_to_row = self.fluid_to_row.copy()
                 for key, value in fluid_to_row.items():
                     if row == value and key != selected_fluid:
-
                         self.fluid_to_row.pop(key)
                         if key in self.fluid_to_composition:
                             self.fluid_to_composition.pop(key)
-                        
+
                         self.tableWidget_new_fluid.removeRow(row)
                         self.update_remainig_composition()
                         self.tableWidget_new_fluid.blockSignals(False)
                         return
 
             else:
-
                 if self.selected_fluid in self.refprop_fluids and self.selected_fluid in self.fluid_to_composition:
                     self.fluid_to_composition.pop(self.selected_fluid)
                     self.update_remainig_composition()
@@ -1122,11 +1112,10 @@ class SetFluidCompositionInputs(SetFluidCompositionInput_UI):
             self.add_selected_fluid(selected_fluid, molar_fraction)
 
         else:
-
             if self.item_is_invalid_number(item):
                 self.tableWidget_new_fluid.blockSignals(False)
                 return
- 
+
             self.go_to_next_cell(item)
             selected_fluid = self.tableWidget_new_fluid.item(item.row(), 0).text()
             molar_fraction = self.tableWidget_new_fluid.item(item.row(), 1).text()
@@ -1139,7 +1128,7 @@ class SetFluidCompositionInputs(SetFluidCompositionInput_UI):
         self.tableWidget_new_fluid.blockSignals(False)
 
     def go_to_next_cell(self, item):
-        
+
         row = item.row()
         column = item.column()
         if column == 0:
@@ -1149,7 +1138,7 @@ class SetFluidCompositionInputs(SetFluidCompositionInput_UI):
             next_item = self.tableWidget_new_fluid.item(row + 1, column)
             if next_item is None:
                 return
-            
+
             if next_item.text() == "":
                 self.tableWidget_new_fluid.setCurrentItem(next_item)
                 self.tableWidget_new_fluid.editItem(next_item)
@@ -1158,13 +1147,13 @@ class SetFluidCompositionInputs(SetFluidCompositionInput_UI):
 
         if item is None:
             return True
-        
+
         if item.text() == "":
             return False
 
         if item.column() == 0:
             return True
-        
+
         str_value = item.text().replace(",", ".")
         item.setText(str_value)
 
@@ -1179,7 +1168,7 @@ class SetFluidCompositionInputs(SetFluidCompositionInput_UI):
             PrintMessageInput([window_title, title, message])
             item.setText("")
             return True
-        
+
         message = ""
 
         if value > 100 or value < 0:
@@ -1192,7 +1181,7 @@ class SetFluidCompositionInputs(SetFluidCompositionInput_UI):
             PrintMessageInput([window_title, title, message])
             item.setText("")
             return True
-        
+
         return False
 
     def load_fluid_composition_callback(self):
@@ -1202,15 +1191,14 @@ class SetFluidCompositionInputs(SetFluidCompositionInput_UI):
         self.fluid_to_composition.clear()
         self.label_selected_fluid.clear()
 
-        read = LoadFluidCompositionInputs(file_path = self.composition_file_path)
+        read = LoadFluidCompositionInputs(file_path=self.composition_file_path)
 
         if not read.complete:
             app().main_window.set_input_widget(self)
 
         self.composition_file_path = read.file_path
 
-        for (i, label, fluid_name, value) in read.fluid_composition_data:
-
+        for i, label, fluid_name, value in read.fluid_composition_data:
             if label is None:
                 continue
 
@@ -1228,8 +1216,7 @@ class SetFluidCompositionInputs(SetFluidCompositionInput_UI):
             (fluid_file, _, _) = self.refprop_fluids[fluid_name]
             self.fluid_to_composition[fluid_name] = [molar_fraction, fluid_file]
 
-        for (i, state_property, value, property_units) in read.state_properties_data:
-
+        for i, state_property, value, property_units in read.state_properties_data:
             if state_property.lower() == "pressure":
                 self.lineEdit_pressure_left.setText(str(value))
                 self.comboBox_pressure_units.setCurrentText(property_units)
@@ -1248,9 +1235,11 @@ class SetFluidCompositionInputs(SetFluidCompositionInput_UI):
     def export_fluid_composition_callback(self):
         self.hide()
 
-        file_path = FileDialogService.save_file(file_extensions=SUPPORTED_SPREADSHEET_EXTENSIONS,
-                                    caption="Export the fluid composition data in spreadsheet file",
-                                    last_folder="fluid_composition_folder")
+        file_path = FileDialogService.save_file(
+            file_extensions=SUPPORTED_SPREADSHEET_EXTENSIONS,
+            caption="Export the fluid composition data in spreadsheet file",
+            last_folder="fluid_composition_folder",
+        )
 
         if file_path is None:
             return True
@@ -1293,9 +1282,9 @@ class SetFluidCompositionInputs(SetFluidCompositionInput_UI):
         header_sp = ["Index", "State property", "Value", "Property units"]
 
         data_to_export = {
-            "fluid_composition" : (header_fc, fluid_composition),
-            "state_properties" : (header_sp, state_properties),
-            }
+            "fluid_composition": (header_fc, fluid_composition),
+            "state_properties": (header_sp, state_properties),
+        }
 
         return data_to_export
 
@@ -1305,7 +1294,6 @@ class SetFluidCompositionInputs(SetFluidCompositionInput_UI):
         from polars import DataFrame
 
         with ExcelWriter(export_path) as writer:
-
             for sheet_name, (header, sheet_data) in data_to_export.items():
                 if not isinstance(sheet_data, np.ndarray | list):
                     continue

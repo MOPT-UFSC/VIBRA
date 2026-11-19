@@ -1,3 +1,5 @@
+from collections.abc import Iterable
+
 import numpy as np
 
 
@@ -15,21 +17,21 @@ def bounds_distance(bounds):
 
 
 def inside_plane(
-    test_points: np.ndarray[float],
-    origin: np.ndarray[float],
-    normal: np.ndarray[float],
-):
-    return np.dot(
-        np.array(test_points) - np.array(origin),
-        np.array(normal),
-    ) >= 0
+    test_points: Iterable[float],
+    origin: Iterable[float],
+    normal: Iterable[float],
+) -> np.typing.NDArray[np.bool_]:
+    points = np.asarray(test_points)
+    origin = np.asarray(origin)
+    normal = np.asarray(normal)
+    return points @ normal >= origin @ normal
 
 
 def points_in_between(
-    test_points: np.ndarray[float],
-    origin_a: np.ndarray[float],
-    origin_b: np.ndarray[float],
-) -> bool | np.ndarray[bool]:
+    test_points: np.ndarray,
+    origin_a: np.ndarray,
+    origin_b: np.ndarray,
+) -> bool | np.ndarray:
     """
     Tests if test_points are in between the parallel planes
     defined by the two planes orthogonal to the (A - B) line.

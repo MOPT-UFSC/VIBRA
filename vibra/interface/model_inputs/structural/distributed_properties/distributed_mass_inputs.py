@@ -1,4 +1,3 @@
-
 from collections import defaultdict
 from enum import IntEnum
 
@@ -119,7 +118,6 @@ class DistributedMassInputs(DistributedMassInputs_UI):
         self.comboBox_assignment_type.setEnabled(True)
 
         if surfaces:
-
             text = ", ".join([str(i) for i in surfaces])
             self.lineEdit_selection_id.setText(text)
             self.comboBox_assignment_type.setCurrentIndex(0)
@@ -132,7 +130,6 @@ class DistributedMassInputs(DistributedMassInputs_UI):
                     self.update_formulation_callback(surface_id=surface_id)
 
         elif lines:
-
             text = ", ".join([str(i) for i in lines])
             self.lineEdit_selection_id.setText(text)
             self.comboBox_assignment_type.setCurrentIndex(1)
@@ -184,7 +181,7 @@ class DistributedMassInputs(DistributedMassInputs_UI):
 
         if str_value == "":
             return None
-    
+
         try:
             str_value = str_value.replace(",", ".")
             return float(str_value)
@@ -215,7 +212,7 @@ class DistributedMassInputs(DistributedMassInputs_UI):
 
         app().main_window.selection.selection_changed.disconnect(self.geometry_selection_callback)
         update_entities_selection(self.lineEdit_selection_id, selection, selected_ids)
-        app().main_window.selection.selection_changed.connect(self.geometry_selection_callback)       
+        app().main_window.selection.selection_changed.connect(self.geometry_selection_callback)
 
         self.remove_duplicated_attributions(selected_ids, selection)
         self.remove_conflicting_excitations(selected_ids, selection)
@@ -236,7 +233,6 @@ class DistributedMassInputs(DistributedMassInputs_UI):
         imag_values = [value if value is None else np.imag(value) for value in distributed_mass]
 
         for selected_id in selected_ids:
-
             data = {
                 "element_type": element_type,
                 "real_values": real_values,
@@ -257,7 +253,6 @@ class DistributedMassInputs(DistributedMassInputs_UI):
     def remove_duplicated_attributions(self, selected_ids: list, selection: str):
 
         for selected_id in selected_ids:
-
             if selection == "surfaces":
                 for line_id in self.mesh.lines_from_surface[selected_id]:
                     data = self.properties._get_property("distributed_mass", line=line_id)
@@ -270,7 +265,7 @@ class DistributedMassInputs(DistributedMassInputs_UI):
                     if isinstance(data, dict):
                         self.properties._remove_surface_property("distributed_mass", surface_id)
 
-    def apply_callback(self, close_window: bool=False):
+    def apply_callback(self, close_window: bool = False):
 
         if self.tabWidget_main.currentIndex() == TabType.LIST:
             return
@@ -283,18 +278,17 @@ class DistributedMassInputs(DistributedMassInputs_UI):
     def load_model_info(self):
 
         properties = {
-            "line" : self.properties.line_properties,
-            "surface" : self.properties.surface_properties,
+            "line": self.properties.line_properties,
+            "surface": self.properties.surface_properties,
         }
 
         self.treeWidget_distributed_mass.clear()
 
         for key, property in properties.items():
             for (prop_label, *args), data in property.items():
-
                 if prop_label != "distributed_mass":
                     continue
-            
+
                 value = np.real(data["values"])[0]
                 str_value = f"{value}"
 
@@ -315,7 +309,7 @@ class DistributedMassInputs(DistributedMassInputs_UI):
         ]
 
         for current_property in properties_to_check:
-            for (property, _) in current_property:
+            for property, _ in current_property:
                 if property != "distributed_mass":
                     continue
 
@@ -340,7 +334,7 @@ class DistributedMassInputs(DistributedMassInputs_UI):
             app().main_window.selection.set_geometry_selection()
             self.lineEdit_selection_id.setText("")
         else:
-            view = self.comboBox_assignment_type.view() 
+            view = self.comboBox_assignment_type.view()
             view.setRowHidden(2, True)
             self.comboBox_assignment_type.setCurrentIndex(AssignmentType.SURFACES)
             self.treeWidget_distributed_mass.clearSelection()
@@ -367,9 +361,9 @@ class DistributedMassInputs(DistributedMassInputs_UI):
             return
 
         app().main_window.selection.set_geometry_selection(
-            surfaces = entities_mapping.get("surface"),
-            lines = entities_mapping.get("line"),
-            )
+            surfaces=entities_mapping.get("surface"),
+            lines=entities_mapping.get("line"),
+        )
 
     def item_double_clicked_callback(self, item):
         self.item_clicked_callback(item)
@@ -414,7 +408,7 @@ class DistributedMassInputs(DistributedMassInputs_UI):
         title = "Distributed masses reset"
         message = "Would you like to remove the all distributed masses from model?"
 
-        buttons_config = {"left_button_label" : "Cancel", "right_button_label" : "Continue"}
+        buttons_config = {"left_button_label": "Cancel", "right_button_label": "Continue"}
         obj = GetUserConfirmationInput(title, message, buttons_config=buttons_config)
 
         if obj._cancel:

@@ -74,7 +74,7 @@ class PerforatedPlateModelInputs(PerforatedPlateModelInputs_UI):
 
         while self.keep_window_open:
             self.exec()
-    
+
     @property
     def model(self):
         return app().project.model
@@ -141,7 +141,7 @@ class PerforatedPlateModelInputs(PerforatedPlateModelInputs_UI):
         if current_tab == PPMMainTabType.LIST:
             self.verify_if_selected_surfaces_are_in_tree_widget_perforated_plate_model()
             return
-    
+
         if current_tab != PPMMainTabType.SETUP:
             return
 
@@ -216,7 +216,7 @@ class PerforatedPlateModelInputs(PerforatedPlateModelInputs_UI):
             self.lineEdit_user_defined_transfer_impedance_path.setEnabled(True)
             self.lineEdit_user_defined_transfer_impedance_path.setText(table_path[0])
             self.lineEdit_user_defined_transfer_impedance_path.setToolTip(table_path[0])
-        
+
     def verify_if_selected_surfaces_are_in_tree_widget_perforated_plate_model(self):
         if self.tree_item_clicked:
             return
@@ -225,7 +225,7 @@ class PerforatedPlateModelInputs(PerforatedPlateModelInputs_UI):
 
         if not selected_surfaces:
             return
-                
+
         self.clear_line_edit_selection_id()
         self.treeWidget_perforated_plate_model.clearSelection()
         self.pushButton_remove.setDisabled(True)
@@ -237,9 +237,9 @@ class PerforatedPlateModelInputs(PerforatedPlateModelInputs_UI):
 
         if not selected_surfaces_in_tree_widget:
             return
-        
+
         self.pushButton_remove.setEnabled(True)
-        
+
         model_selector = self.treeWidget_perforated_plate_model.selectionModel()
 
         for surface_id in selected_surfaces_in_tree_widget:
@@ -270,7 +270,7 @@ class PerforatedPlateModelInputs(PerforatedPlateModelInputs_UI):
                 self.decoupling_map[surface_id] = new_surface_id
 
             index = self.treeWidget_perforated_plate_model.indexBelow(index)
-        
+
         return map_id_to_model_index
 
     def clear_all_inputs(self):
@@ -315,7 +315,7 @@ class PerforatedPlateModelInputs(PerforatedPlateModelInputs_UI):
             self.treeWidget_perforated_plate_model.headerItem().setTextAlignment(i, Qt.AlignCenter)
 
         self.treeWidget_perforated_plate_model.header().setSectionResizeMode(QHeaderView.ResizeMode.Stretch)
-        
+
     def tab_event_callback(self):
         current_tab = self.tabWidget_main.currentIndex()
         tab_list = current_tab == PPMMainTabType.LIST
@@ -355,25 +355,29 @@ class PerforatedPlateModelInputs(PerforatedPlateModelInputs_UI):
 
         self.pushButton_remove.setEnabled(True)
         self.set_selection_text(surface_ids)
-    
+
         self.tree_item_clicked = False
 
     def on_tree_widget_doubleclick_item(self, item):
         self.on_tree_widget_click_item(item)
-    
+
     def get_selected_surfaces_from_tree_widget_perforated_plate_model(self) -> list:
         selected_items = self.treeWidget_perforated_plate_model.selectedItems()
 
         if not selected_items:
             return []
-        
+
         return [int(item.text(0)) for item in selected_items]
 
     def set_selection_text(self, selected_surfaces: list | set):
         selected_surfaces_decoupled = []
 
         for selected_surface in selected_surfaces:
-            decouple_surface = self.decoupling_map[selected_surface] if selected_surface in self.decoupling_map.keys() else self.decoupling_map.inverse[selected_surface][0]
+            decouple_surface = (
+                self.decoupling_map[selected_surface]
+                if selected_surface in self.decoupling_map.keys()
+                else self.decoupling_map.inverse[selected_surface][0]
+            )
 
             decouple_pair = [selected_surface, decouple_surface]
             decouple_pair.sort()
@@ -385,7 +389,7 @@ class PerforatedPlateModelInputs(PerforatedPlateModelInputs_UI):
 
         self.lineEdit_selection_id.setText(selection_text)
         self.lineEdit_selection_id.setToolTip(selection_text)
-    
+
     def clear_line_edit_selection_id(self):
         self.lineEdit_selection_id.clear()
         self.lineEdit_selection_id.setToolTip("")
@@ -408,10 +412,10 @@ class PerforatedPlateModelInputs(PerforatedPlateModelInputs_UI):
         self.update_pp_model_tree_widget()
         self.update_edit_table_widget()
         self.update_tabs_visibility()
-    
+
     def map_existing_perforated_plate_models(self):
-        self.map_model_id_to_model : Dict[int, PerforatedPlateData] = dict()
-        self.map_model_id_to_surfaces : Dict[int, List[int]] = defaultdict(list)
+        self.map_model_id_to_model: Dict[int, PerforatedPlateData] = dict()
+        self.map_model_id_to_surfaces: Dict[int, List[int]] = defaultdict(list)
 
         models = []
         for key, data in deepcopy(self.properties.surface_properties).items():
@@ -422,9 +426,9 @@ class PerforatedPlateModelInputs(PerforatedPlateModelInputs_UI):
             model = PerforatedPlateData.set_data(data)
             model_aux = deepcopy(model)
 
-            # NOTE: we must convert the values from np.ndarray into 
-            # a list of values and remove the table_names to get 
-            # the expected model mapping 
+            # NOTE: we must convert the values from np.ndarray into
+            # a list of values and remove the table_names to get
+            # the expected model mapping
             if isinstance(model_aux.values, list) and len(model_aux.values) == 1:
                 model_aux.values = [complex(value) for value in model.values[0]]
                 model_aux.table_names = None
@@ -447,17 +451,17 @@ class PerforatedPlateModelInputs(PerforatedPlateModelInputs_UI):
                     new.setTextAlignment(i, Qt.AlignCenter)
 
                 self.treeWidget_perforated_plate_model.addTopLevelItem(new)
-    
+
     def configure_edit_table_widget(self):
         self.edit_tableWidget.clearContents()
         self.edit_tableWidget.blockSignals(True)
         self.edit_tableWidget.setRowCount(13)
         self.edit_tableWidget.setColumnCount(len(self.map_model_id_to_model))
-    
+
     def update_edit_table_widget(self):
         for column, model_info in enumerate(self.map_model_id_to_model.items()):
             model_id, model = model_info
-        
+
             model_id_item = QTableWidgetItem(str(model_id))
             model_id_item.setTextAlignment(Qt.AlignCenter)
             model_id_item.setFlags(Qt.ItemIsSelectable)
@@ -478,7 +482,7 @@ class PerforatedPlateModelInputs(PerforatedPlateModelInputs_UI):
                     fluid_item.setToolTip(tool_tip)
 
                 self.edit_tableWidget.setItem(row + 1, column, fluid_item)
-            
+
             for row, pp_data in enumerate(model.get_data_to_fill_edit_table_widget()):
                 item_text = str(pp_data) if not isinstance(pp_data, Path) else pp_data.name
 
@@ -494,9 +498,9 @@ class PerforatedPlateModelInputs(PerforatedPlateModelInputs_UI):
                     pp_item.setToolTip(tool_tip)
 
                 self.edit_tableWidget.setItem(row + 5, column, pp_item)
-        
+
         self.edit_tableWidget.blockSignals(False)
-    
+
     def edit_fluid_or_transfer_impedance(self, row, column):
         if row not in [1, 12]:
             return
@@ -526,7 +530,6 @@ class PerforatedPlateModelInputs(PerforatedPlateModelInputs_UI):
                 self.properties._set_property("perforated_plate_model", pp_model_data, surface=surface_id)
 
         else:
-
             for surface_id in surface_ids:
                 self.include_user_defined_transfer_impedance(model, surface_id)
                 pp_model_data = deepcopy(model.get_data())
@@ -555,7 +558,7 @@ class PerforatedPlateModelInputs(PerforatedPlateModelInputs_UI):
         try:
             input_value = item.text().replace(",", ".")
             new_item_value = float(input_value)
-            if new_item_value <= 0.:
+            if new_item_value <= 0.0:
                 new_item_value = None
                 unnaceptable_value_error = True
 
@@ -579,7 +582,7 @@ class PerforatedPlateModelInputs(PerforatedPlateModelInputs_UI):
 
         app().project.update_model_properties_file()
         self.load_model_info()
-    
+
     def update_tabs_visibility(self):
 
         if len(self.map_model_id_to_model) > 0:
@@ -592,7 +595,7 @@ class PerforatedPlateModelInputs(PerforatedPlateModelInputs_UI):
         self.tabWidget_main.setTabVisible(PPMMainTabType.EDIT, False)
         self.tabWidget_main.setTabVisible(PPMMainTabType.LIST, False)
 
-    def load_table(self, lineEdit : QLineEdit = None, direct_load: bool=False) -> np.ndarray:
+    def load_table(self, lineEdit: QLineEdit = None, direct_load: bool = False) -> np.ndarray:
         title = "Error reached while loading 'user-defined transfer impedance' table"
 
         try:
@@ -601,10 +604,12 @@ class PerforatedPlateModelInputs(PerforatedPlateModelInputs_UI):
 
             else:
                 extensions = SUPPORTED_SPREADSHEET_EXTENSIONS + SUPPORTED_TEXT_EXTENSIONS
-                imported_path = FileDialogService.open_file(file_extensions=extensions,
-                                                            caption="Choose a table to import the user-defined transfer impedance",
-                                                            last_folder="imported_table_folder")
-                
+                imported_path = FileDialogService.open_file(
+                    file_extensions=extensions,
+                    caption="Choose a table to import the user-defined transfer impedance",
+                    last_folder="imported_table_folder",
+                )
+
             imported_data = FileHandler.read(imported_path)
 
             if imported_data is None:
@@ -668,7 +673,7 @@ class PerforatedPlateModelInputs(PerforatedPlateModelInputs_UI):
 
         if self.tabWidget_perforated_plate_models.currentIndex() != PPlateModelsTabType.CIRCULAR_HOLES:
             return
-        
+
         if self.selected_fluid is None:
             self.get_fluid_callback()
 
@@ -698,23 +703,22 @@ class PerforatedPlateModelInputs(PerforatedPlateModelInputs_UI):
         if linear_discharge_coefficient is None:
             lineEdit.setFocus()
             return
-        
+
         model = PerforatedPlateData()
 
         pp_data_general = dict(
-                                fluid = self.selected_fluid,
-                                formulation = "circular_hole",
-                                plate_thickness = plate_thickness,
-                                hole_diameter = hole_diameter,
-                                porosity = porosity,
-                                include_effects = self.comboBox_include_effects.currentText(),
-                                linear_discharge_coefficient = linear_discharge_coefficient,
-                                )
+            fluid=self.selected_fluid,
+            formulation="circular_hole",
+            plate_thickness=plate_thickness,
+            hole_diameter=hole_diameter,
+            porosity=porosity,
+            include_effects=self.comboBox_include_effects.currentText(),
+            linear_discharge_coefficient=linear_discharge_coefficient,
+        )
 
         model.set_general_data(pp_data_general)
 
         if "Non-linear" in self.comboBox_include_effects.currentText():
-
             lineEdit = self.lineEdit_non_linear_discharge_coefficient
             non_linear_discharge_coefficient = self.check_inputs(lineEdit, "Non-linear discharge coefficient")
             if non_linear_discharge_coefficient is None:
@@ -728,7 +732,7 @@ class PerforatedPlateModelInputs(PerforatedPlateModelInputs_UI):
                 return
 
             model.set_non_linear_data(non_linear_discharge_coefficient, non_linear_correction_factor)
-        
+
         return model
 
     def check_selected_surfaces(self):
@@ -740,7 +744,7 @@ class PerforatedPlateModelInputs(PerforatedPlateModelInputs_UI):
             input_ids,
             "surfaces",
             domain="acoustic",
-            )
+        )
 
         if error_data is not None:
             self.lineEdit_selection_id.setFocus()
@@ -763,7 +767,6 @@ class PerforatedPlateModelInputs(PerforatedPlateModelInputs_UI):
         surfaces_from_volume = defaultdict(list)
 
         for surface_id in surface_ids:
-
             message = ""
             volumes_from_surface = self.model.mesh.volumes_from_surface.get(surface_id)
 
@@ -773,7 +776,7 @@ class PerforatedPlateModelInputs(PerforatedPlateModelInputs_UI):
                 message += "with two volumes to proceed with dofs decoupling."
 
             elif len(volumes_from_surface) == 1:
-                message = "The selected surface is connected to one volume, this means that an external " 
+                message = "The selected surface is connected to one volume, this means that an external "
                 message += "surface has been selected. You must select an internal surface connected "
                 message += "with two volumes to proceed with dofs decoupling."
 
@@ -791,7 +794,7 @@ class PerforatedPlateModelInputs(PerforatedPlateModelInputs_UI):
         # check if there is a common volume touching the selected surfaces
         for vol_id, surf_ids in surfaces_from_volume.items():
             if len(surf_ids) == len(surface_ids):
-                return {surf_id : vol_id for surf_id in surface_ids}
+                return {surf_id: vol_id for surf_id in surface_ids}
 
         surface_to_volume_map = {}
 
@@ -834,7 +837,7 @@ class PerforatedPlateModelInputs(PerforatedPlateModelInputs_UI):
             if volume_id is None:
                 continue
 
-            data = {"volume_to_decouple" : volume_id}
+            data = {"volume_to_decouple": volume_id}
 
             if "User-defined" in self.comboBox_include_effects.currentText():
                 self.include_user_defined_transfer_impedance(model, surface_id)
@@ -886,9 +889,9 @@ class PerforatedPlateModelInputs(PerforatedPlateModelInputs_UI):
             surface_ids = [surface_ids]
 
         labels = [
-            "perforated_plate_model", 
+            "perforated_plate_model",
             "interior_impedance",
-            ]
+        ]
 
         for surface_id in surface_ids:
             for label in labels:
@@ -904,7 +907,7 @@ class PerforatedPlateModelInputs(PerforatedPlateModelInputs_UI):
             input_ids,
             "surfaces",
             domain="acoustic",
-            )
+        )
 
         if error_data is not None:
             self.lineEdit_selection_id.setFocus()
@@ -917,14 +920,14 @@ class PerforatedPlateModelInputs(PerforatedPlateModelInputs_UI):
             data = self.properties._get_property("degrees_of_freedom_decoupling", surface=surface_id)
             if not isinstance(data, dict):
                 continue
-        
+
             new_surface_id = data.get("new_surface_id")
             if not isinstance(new_surface_id, int):
                 continue
 
             remove_all_properties_assigned_to_new_surfaces([new_surface_id])
             self.properties._remove_surface_property("degrees_of_freedom_decoupling", surface_id)
-        
+
         self.clear_line_edit_selection_id()
         self.pushButton_remove.setDisabled(True)
 
@@ -963,7 +966,7 @@ class PerforatedPlateModelInputs(PerforatedPlateModelInputs_UI):
                 new_surface_id = data.get("new_surface_id")
                 if isinstance(new_surface_id, int):
                     new_surface_ids.append(new_surface_id)
-    
+
                 self.properties._remove_surface_property("degrees_of_freedom_decoupling", surf_id)
 
         remove_all_properties_assigned_to_new_surfaces(new_surface_ids)
@@ -1011,7 +1014,6 @@ class PerforatedPlateModelInputs(PerforatedPlateModelInputs_UI):
         input_str = lineEdit.text()
 
         if input_str != "":
-
             input_str = input_str.replace(",", ".")
 
             try:
@@ -1057,14 +1059,14 @@ class PerforatedPlateModelInputs(PerforatedPlateModelInputs_UI):
 
     def get_perforated_plate_impendance(self, fluid: Fluid):
 
-        warnings.filterwarnings('ignore')
+        warnings.filterwarnings("ignore")
 
         frequencies = app().project.model.frequencies
         if frequencies is None:
             df = 5
             f_min = 5
             f_max = 1400
-            frequencies = np.arange(f_min, f_max+df, df)
+            frequencies = np.arange(f_min, f_max + df, df)
 
         if frequencies[0] == 0:
             freq = frequencies[1:]
@@ -1080,20 +1082,20 @@ class PerforatedPlateModelInputs(PerforatedPlateModelInputs_UI):
 
         if pp_data is None:
             return None, None
-        
+
         U_rms = 0
         normalized_impedances = model.get_transfer_impedance_for_circular_holes(omega, pp_data.get_data())
         if normalized_impedances is None:
             return None, None
 
         z_orifice, z_end, z_nl_urms, z_ud, Z_0 = normalized_impedances
-        Z_tr = Z_0 * (z_orifice + z_end + z_ud + z_nl_urms*U_rms)
+        Z_tr = Z_0 * (z_orifice + z_end + z_ud + z_nl_urms * U_rms)
 
         return freq, Z_tr
-    
+
     def get_perforated_plate_model(self):
         tab_index = self.tabWidget_main.currentIndex()
-        
+
         if tab_index == PPMMainTabType.SETUP:
             return "circular hole"
 
@@ -1131,29 +1133,29 @@ class PerforatedPlateModelInputs(PerforatedPlateModelInputs_UI):
 
         key = ("property", (None))
 
-        self.data_to_plot[key] = { 
-                                    "x_data" : x_data,
-                                    "y_data" : y_data,
-                                    "x_label" : "Frequency [Hz]",
-                                    "y_label" : y_label,
-                                    "title" : title,
-                                    "data_type" : f"effective fluid properties for {section_label}",
-                                    "legend" : legend_label,
-                                    "units" : unit_label,
-                                    "color" : [0,0,1],
-                                    "linestyle" : "-"
-                                   }
+        self.data_to_plot[key] = {
+            "x_data": x_data,
+            "y_data": y_data,
+            "x_label": "Frequency [Hz]",
+            "y_label": y_label,
+            "title": title,
+            "data_type": f"effective fluid properties for {section_label}",
+            "legend": legend_label,
+            "units": unit_label,
+            "color": [0, 0, 1],
+            "linestyle": "-",
+        }
 
     def plot_data(self, x_data, y_data, label, pm_label):
         self.join_model_data(x_data, y_data, label, pm_label)
         self.plotter = FrequencyResponsePlotter()
         self.plotter._set_model_results_data_to_plot(self.data_to_plot)
-    
+
     def process_degress_of_freedom_decoupling(self):
 
         if not self.assignment_complete:
             return False
-        
+
         if not self.properties.is_the_surface_property_present_in_the_model("degrees_of_freedom_decoupling"):
             return False
 
@@ -1197,7 +1199,7 @@ class PerforatedPlateModelInputs(PerforatedPlateModelInputs_UI):
         self.hide()
 
         try:
-            warnings.filterwarnings('default')
+            warnings.filterwarnings("default")
         except TypeError:
             pass
 

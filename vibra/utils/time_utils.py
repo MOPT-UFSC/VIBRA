@@ -3,11 +3,14 @@ import typing
 from contextlib import contextmanager
 from functools import wraps
 from time import perf_counter
+from typing import Callable, TypeVar
 
 logger = logging.getLogger(__name__)
 
+T = TypeVar("T")
 
-def function_timer(func):
+
+def function_timer(func: T) -> T:
     """
     Decorator to log the time of a given function.
 
@@ -60,7 +63,11 @@ def context_timer(name: str, /):
 
 
 @typing.overload
-def warn_delays(time=0.1, /): ...
+def warn_delays(time=0.1, /) -> Callable[[T], T]: ...
+
+
+@typing.overload
+def warn_delays(func: T) -> T: ...
 
 
 def warn_delays(arg=None, /):

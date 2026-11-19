@@ -1,4 +1,3 @@
-
 from collections import defaultdict
 from enum import IntEnum
 from os.path import basename
@@ -70,8 +69,8 @@ class DistributedDampingsInputs(DistributedDampingsInputs_UI):
         self.keep_window_open = True
         self.element_types = ["2d_element", "3d_element"]
         self.assignment_types = {
-            0 : "surfaces",
-            1 : "lines",
+            0: "surfaces",
+            1: "lines",
         }
         self.reset_table_variables()
 
@@ -217,13 +216,12 @@ class DistributedDampingsInputs(DistributedDampingsInputs_UI):
             table_path_line_edits = list(self.table_line_edits.values())
             for index, table_path in enumerate(table_paths):
                 line_edit = table_path_line_edits[index]
-                if table_path is not None:                   
+                if table_path is not None:
                     line_edit.setText(table_path)
 
             self.tabWidget_main.setCurrentIndex(StandardTabType.TABULAR_DATA)
 
         else:
-
             if "real_values" in data:
                 left_values = data.get("real_values")
                 right_values = data.get("imag_values")
@@ -258,7 +256,7 @@ class DistributedDampingsInputs(DistributedDampingsInputs_UI):
             if isinstance(data, dict):
                 self.comboBox_element_type.setCurrentIndex(0)
                 return
-            
+
         if isinstance(line_id, int):
             for node_id in self.mesh.get_nodes_from_line(line_id):
                 for surface_id in self.mesh.get_surfaces_from_node(node_id):
@@ -351,13 +349,12 @@ class DistributedDampingsInputs(DistributedDampingsInputs_UI):
         right_values = [value_b for (_, value_b) in distributed_dampings]
 
         for selected_id in selected_ids:
-
             data = {
                 "element_type": element_type,
                 "real_values" if real_imag_input else "amplitude_values": left_values,
                 "imag_values" if real_imag_input else "phase_values": right_values,
-                "normal" : not by_components,
-                "units" : "N.s/m",
+                "normal": not by_components,
+                "units": "N.s/m",
             }
 
             match selection:
@@ -367,7 +364,7 @@ class DistributedDampingsInputs(DistributedDampingsInputs_UI):
                 case "lines":
                     self.properties._set_property("distributed_damping", data, line=selected_id)
 
-    def load_table(self, lineEdit : QLineEdit, load_label: str, direct_load = False):
+    def load_table(self, lineEdit: QLineEdit, load_label: str, direct_load=False):
         title = "Error while loading table"
 
         try:
@@ -414,14 +411,14 @@ class DistributedDampingsInputs(DistributedDampingsInputs_UI):
 
     def load_Cx_table(self):
         self.Cx_table_values, self.Cx_table_path = self.load_table(self.lineEdit_path_table_Cx, "Cx")
-        if  self.Cx_table_path is None:
+        if self.Cx_table_path is None:
             self.lineEdit_reset(self.lineEdit_path_table_Cx)
 
     def load_Cy_table(self):
         self.Cy_table_values, self.Cy_table_path = self.load_table(self.lineEdit_path_table_Cy, "Cy")
         if self.Cy_table_path is None:
             self.lineEdit_reset(self.lineEdit_path_table_Cy)
-            
+
     def load_Cz_table(self):
         self.Cz_table_values, self.Cz_table_path = self.load_table(self.lineEdit_path_table_Cz, "Cz")
         if self.Cz_table_path is None:
@@ -438,7 +435,6 @@ class DistributedDampingsInputs(DistributedDampingsInputs_UI):
             frequencies[0] = 0
 
         if self.model.change_analysis_frequency_setup(list(frequencies)):
-
             lineEdit = self.table_line_edits[load_label]
             imported_filename = basename(lineEdit.text())
             self.lineEdit_reset(lineEdit)
@@ -480,17 +476,16 @@ class DistributedDampingsInputs(DistributedDampingsInputs_UI):
         by_components = self.comboBox_direction_control.currentIndex() == DirectionControl.BY_COMPONENTS
 
         if self.Cx_table_path is None:
-            self.Cx_table_values, self.Cx_table_path = self.load_table(self.lineEdit_path_table_Cx, "Cx", direct_load = True)
+            self.Cx_table_values, self.Cx_table_path = self.load_table(self.lineEdit_path_table_Cx, "Cx", direct_load=True)
 
         if by_components:
             if self.Cy_table_path is None:
-                self.Cy_table_values, self.Cy_table_path = self.load_table(self.lineEdit_path_table_Cy, "Cy", direct_load = True)
+                self.Cy_table_values, self.Cy_table_path = self.load_table(self.lineEdit_path_table_Cy, "Cy", direct_load=True)
 
             if self.Cz_table_path is None:
-                self.Cz_table_values, self.Cz_table_path = self.load_table(self.lineEdit_path_table_Cz, "Cz", direct_load = True)
+                self.Cz_table_values, self.Cz_table_path = self.load_table(self.lineEdit_path_table_Cz, "Cz", direct_load=True)
 
         for selected_id in selected_ids:
-            
             if self.Cx_table_values is not None:
                 self.Cx_table_name, self.Cx_array = self.save_table_files("Cx", selected_id, selection, self.Cx_table_values)
                 if self.Cx_array is None:
@@ -506,7 +501,6 @@ class DistributedDampingsInputs(DistributedDampingsInputs_UI):
                     self.Cz_table_name, self.Cz_array = self.save_table_files("Cz", selected_id, selection, self.Cz_table_values)
                     if self.Cz_array is None:
                         return True
-
 
                 table_names = [self.Cx_table_name, self.Cy_table_name, self.Cz_table_name]
                 table_paths = [self.Cx_table_path, self.Cy_table_path, self.Cz_table_path]
@@ -524,15 +518,15 @@ class DistributedDampingsInputs(DistributedDampingsInputs_UI):
             if condition_1 or condition_2:
                 title = "Additional inputs required"
                 message = "You must to enter at leat one distributed load table path before confirming the assignment."
-                PrintMessageInput([error_title, title, message]) 
+                PrintMessageInput([error_title, title, message])
                 return True
 
             data = {
-                "element_type" : element_type,
-                "table_names" : table_names,
-                "table_paths" : table_paths,
-                "normal" : not by_components,
-                "units" : "N.s/m",
+                "element_type": element_type,
+                "table_names": table_names,
+                "table_paths": table_paths,
+                "normal": not by_components,
+                "units": "N.s/m",
             }
 
             match selection:
@@ -544,7 +538,7 @@ class DistributedDampingsInputs(DistributedDampingsInputs_UI):
 
         self.reset_table_variables()
 
-    def apply_callback(self, close_window: bool=False):
+    def apply_callback(self, close_window: bool = False):
 
         tab_index = self.tabWidget_main.currentIndex()
         if tab_index == StandardTabType.LIST:
@@ -582,9 +576,9 @@ class DistributedDampingsInputs(DistributedDampingsInputs_UI):
     def text_label(self, mask: np.ndarray[bool]):
 
         if len(mask) == 3:
-            load_labels = np.array(['Cx','Cy','Cz'])
+            load_labels = np.array(["Cx", "Cy", "Cz"])
         else:
-            load_labels = np.array(['Cn'])
+            load_labels = np.array(["Cn"])
 
         labels = load_labels[mask]
 
@@ -600,15 +594,14 @@ class DistributedDampingsInputs(DistributedDampingsInputs_UI):
     def load_model_info(self):
 
         properties = {
-            "line" : self.properties.line_properties,
-            "surface" : self.properties.surface_properties,
+            "line": self.properties.line_properties,
+            "surface": self.properties.surface_properties,
         }
 
         self.treeWidget_distributed_dampings.clear()
 
         for key, property in properties.items():
             for (prop_label, *args), data in property.items():
-
                 if prop_label != "distributed_damping":
                     continue
 
@@ -638,7 +631,7 @@ class DistributedDampingsInputs(DistributedDampingsInputs_UI):
         ]
 
         for current_property in properties_to_check:
-            for (property, _) in current_property:
+            for property, _ in current_property:
                 if property != "distributed_damping":
                     continue
 
@@ -689,9 +682,9 @@ class DistributedDampingsInputs(DistributedDampingsInputs_UI):
             return
 
         app().main_window.selection.set_geometry_selection(
-            surfaces = entities_mapping.get("surface"),
-            lines = entities_mapping.get("line"),
-            )
+            surfaces=entities_mapping.get("surface"),
+            lines=entities_mapping.get("line"),
+        )
 
     def item_double_clicked_callback(self, item):
         self.item_clicked_callback(item)
@@ -722,7 +715,7 @@ class DistributedDampingsInputs(DistributedDampingsInputs_UI):
         title = "Distributed dampings reset"
         message = "Would you like to remove the all distributed dampings from model?"
 
-        buttons_config = {"left_button_label" : "Cancel", "right_button_label" : "Continue"}
+        buttons_config = {"left_button_label": "Cancel", "right_button_label": "Continue"}
         obj = GetUserConfirmationInput(title, message, buttons_config=buttons_config)
 
         if obj._cancel:

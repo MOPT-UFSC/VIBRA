@@ -76,10 +76,10 @@ class MeshRenderWidget(CommonRenderWidget):
     def get_logo_for_current_theme(self) -> str:
         if app().config.user_preferences.interface_theme == "light":
             return "vibra_colored_light_background.png"
-        
-        
+
+
         return "vibra_colored_dark_background.png"
-    
+
     def set_theme(self, *args, **kwargs):
         self.update_theme()
 

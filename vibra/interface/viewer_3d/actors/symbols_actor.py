@@ -295,8 +295,8 @@ class SymbolsActor(vtkActor):
         If the object should never be hidden, the parameters should be set to
         factor = 1 and offset = -66000.
         """
-        self.mapper.SetResolveCoincidentTopologyToPolygonOffset()
-        self.mapper.SetRelativeCoincidentTopologyLineOffsetParameters(factor, units)
-        self.mapper.SetRelativeCoincidentTopologyPolygonOffsetParameters(factor, units)
-        self.mapper.SetRelativeCoincidentTopologyPointOffsetParameter(units)
-        self.mapper.Update()
+        self.symbol_mapper.SetResolveCoincidentTopologyToPolygonOffset()
+        self.symbol_mapper.SetRelativeCoincidentTopologyLineOffsetParameters(factor, units)
+        self.symbol_mapper.SetRelativeCoincidentTopologyPolygonOffsetParameters(factor, units)
+        self.symbol_mapper.SetRelativeCoincidentTopologyPointOffsetParameter(units)
+        self.symbol_mapper.Update()

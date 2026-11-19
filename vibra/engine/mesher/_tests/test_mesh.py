@@ -11,7 +11,7 @@ from vibra.engine.mesher.mesh_setup import ElementTopology, LocalMeshSizeControl
 
 
 def test_tetrahedron_4_mesh():
-    geometry_path = str(PROJECT_DIR / "data/examples/geometry_files/cylinder.step")
+    geometry_path = str(PROJECT_DIR / "examples/geometry_files/cylinder.step")
     mesh_test_path = str(PROJECT_DIR / "validation_files/data/mesh_info/cilinder_tet4/")
 
     mesh_setup = MeshSetup(
@@ -29,7 +29,7 @@ def test_tetrahedron_4_mesh():
 
 
 def test_tetrahedron_10_mesh():
-    geometry_path = str(PROJECT_DIR / "data/examples/geometry_files/tetrahedron.step")
+    geometry_path = str(PROJECT_DIR / "examples/geometry_files/tetrahedron.step")
     mesh_test_path = str(PROJECT_DIR / "validation_files/data/mesh_info/tetrahedron_tet10/")
 
     mesh_setup = MeshSetup(
@@ -47,7 +47,7 @@ def test_tetrahedron_10_mesh():
 
 
 def test_hexahedron_8_mesh():
-    geometry_path = str(PROJECT_DIR / "data/examples/geometry_files/cylinder.step")
+    geometry_path = str(PROJECT_DIR / "examples/geometry_files/cylinder.step")
 
     mesh_setup = MeshSetup(
         minimum_element_size=30,
@@ -59,7 +59,7 @@ def test_hexahedron_8_mesh():
 
 
 def test_hexahedron_20_mesh():
-    geometry_path = str(PROJECT_DIR / "data/examples/geometry_files/parallelepiped.step")
+    geometry_path = str(PROJECT_DIR / "examples/geometry_files/parallelepiped.step")
 
     mesh_setup = MeshSetup(
         minimum_element_size=300,
@@ -71,7 +71,7 @@ def test_hexahedron_20_mesh():
 
 
 def test_local_mesh_size_control_coarsening():
-    geometry_path = str(PROJECT_DIR / "data/examples/geometry_files/tetrahedron_double_volume.step")
+    geometry_path = str(PROJECT_DIR / "examples/geometry_files/tetrahedron_double_volume.step")
 
     mesh_setup = MeshSetup(
         maximum_element_size=20,
@@ -87,7 +87,7 @@ def test_local_mesh_size_control_coarsening():
 
 
 def test_local_mesh_size_control_coarsening_connected():
-    geometry_path = str(PROJECT_DIR / "data/examples/geometry_files/tetrahedron_double_volume.step")
+    geometry_path = str(PROJECT_DIR / "examples/geometry_files/tetrahedron_double_volume.step")
 
     mesh_setup = MeshSetup(
         maximum_element_size=20,
@@ -102,7 +102,7 @@ def test_local_mesh_size_control_coarsening_connected():
 
 
 def test_local_mesh_size_control_refines():
-    geometry_path = str(PROJECT_DIR / "data/examples/geometry_files/tetrahedron_double_volume.step")
+    geometry_path = str(PROJECT_DIR / "examples/geometry_files/tetrahedron_double_volume.step")
 
     mesh_setup = MeshSetup(
         maximum_element_size=20,

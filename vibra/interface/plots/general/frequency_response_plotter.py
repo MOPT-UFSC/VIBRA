@@ -1,7 +1,7 @@
 from enum import IntEnum
 
 import numpy as np
-from PySide6.QtCore import Qt, QSignalBlocker
+from PySide6.QtCore import QSignalBlocker, Qt
 from PySide6.QtGui import QCloseEvent
 from PySide6.QtWidgets import QDialog, QLineEdit, QVBoxLayout
 
@@ -81,15 +81,15 @@ class FrequencyResponsePlotter(FrequencyResponsePlotter_UI):
         self.title = ""
         self.font_weight = "normal"
 
-        self.colors = [ 
-            [0,0,1],
-            [0,0,0],
-            [1,0,0],
-            [0,1,1],
-            [0.75,0.75,0.75],
+        self.colors = [
+            [0, 0, 1],
+            [0, 0, 0],
+            [1, 0, 0],
+            [0, 1, 1],
+            [0.75, 0.75, 0.75],
             [0.5, 0.5, 0.5],
             [0.25, 0.25, 0.25],
-            ]
+        ]
 
     def _create_connections(self):
 
@@ -104,19 +104,19 @@ class FrequencyResponsePlotter(FrequencyResponsePlotter_UI):
         self.comboBox_harmonic_lines_control.currentIndexChanged.connect(self.plot_harmonic_lines_callback)
         self.comboBox_data_format.currentIndexChanged.connect(self.data_format_changed_callback)
         self.comboBox_cursor_control.currentIndexChanged.connect(self.cursor_controls_changed_callback)
-        
+
         # QLineEdit connections
         self.lineEdit_harmonic_lines_1st_freq.textChanged.connect(self.plot_harmonic_lines_callback)
         self.lineEdit_harmonic_lines_1st_freq.returnPressed.connect(self.plot_harmonic_lines_callback)
-        
+
         # QPushButton connections
         self.pushButton_import_data.clicked.connect(self.import_file)
         self.pushButton_export_data.clicked.connect(self.export_data_callback)
         self.pushButton_display_hfrequencies.clicked.connect(self.update_harmonic_lines_legend_icon)
-    
+
         # QSpinBox connection
         self.spinBox_harmonic_lines_number.valueChanged.connect(self.plot_harmonic_lines_callback)
-        
+
         self._initial_config()
         self.plot_harmonic_lines_callback()
 
@@ -184,10 +184,11 @@ class FrequencyResponsePlotter(FrequencyResponsePlotter_UI):
 
     def _initialize_canvas(self):
         from vibra.interface.plots.general.mpl_canvas import MplCanvas
+
         self.mpl_canvas_frequency_plot = MplCanvas(self, width=8, height=6, dpi=110)
         self.ax = self.mpl_canvas_frequency_plot.axes
         self.fig = self.mpl_canvas_frequency_plot.fig
-    
+
     def export_data_callback(self):
         self.hide()
         self.exporter = ExportModelResults()
@@ -202,11 +203,11 @@ class FrequencyResponsePlotter(FrequencyResponsePlotter_UI):
     ):
         if self.x_data is None:
             return
-        
+
         plotted_lines = [line for line in self.ax.lines if getattr(line, "is_harmonic_line", False)]
         for line in plotted_lines:
             line.remove()
-        
+
         plotted_texts = [text for text in self.ax.texts if getattr(text, "is_harmonic_label", False)]
         for text in plotted_texts:
             text.remove()
@@ -218,7 +219,7 @@ class FrequencyResponsePlotter(FrequencyResponsePlotter_UI):
                 frequency = float((i + 1) * fundamental_freq)
 
                 if x_min <= frequency <= x_max:
-                    line = self.ax.axvline(x=frequency, color=(214/255, 126/255, 44/255), linestyle="--", alpha=0.8, label="_nolegend_")
+                    line = self.ax.axvline(x=frequency, color=(214 / 255, 126 / 255, 44 / 255), linestyle="--", alpha=0.8, label="_nolegend_")
                     line.is_harmonic_line = True
 
                     legend = f" {i + 1}x"
@@ -242,9 +243,9 @@ class FrequencyResponsePlotter(FrequencyResponsePlotter_UI):
         self.mpl_canvas_frequency_plot.draw()
 
     def check_inputs(
-        self, 
-        line_edit: QLineEdit, 
-        ):
+        self,
+        line_edit: QLineEdit,
+    ):
 
         message = ""
         title = "Invalid value typed"
@@ -296,7 +297,7 @@ class FrequencyResponsePlotter(FrequencyResponsePlotter_UI):
             False,
         )
 
-    def imported_real_data(self, decibel_data: bool=False):
+    def imported_real_data(self, decibel_data: bool = False):
         self.decibel_data = decibel_data
 
         self.comboBox_plot_type.setDisabled(True)
@@ -331,14 +332,14 @@ class FrequencyResponsePlotter(FrequencyResponsePlotter_UI):
         shift = 0
         if self.comboBox_differentiate_data.currentIndex() != Differentiate.NONE:
             shift = 1
-            
+
         self.x_data = self.x_data[shift:]
-        data2 = np.real(data[shift:]*np.conjugate(data[shift:]))
+        data2 = np.real(data[shift:] * np.conjugate(data[shift:]))
 
         if self.unit == "Pa":
-            return 10*np.log10(data2/((2e-5)**2))
+            return 10 * np.log10(data2 / ((2e-5) ** 2))
 
-        return 10*np.log10(data2)
+        return 10 * np.log10(data2)
 
     def get_y_axis_data(self, data: np.ndarray | None):
         if data is None:
@@ -363,7 +364,7 @@ class FrequencyResponsePlotter(FrequencyResponsePlotter_UI):
             return self.get_scaled_data(dif_data)
 
     def get_y_axis_label(self, label: str):
-        
+
         data_format_index = self.comboBox_data_format.currentIndex()
         if data_format_index == DataFormat.REAL:
             type_label = "real"
@@ -409,8 +410,9 @@ class FrequencyResponsePlotter(FrequencyResponsePlotter_UI):
 
         if self._layout is None:
             from vibra.interface.plots.general.custom_navigation_toolbar import CustomNavigationToolbar
+
             toolbar = CustomNavigationToolbar(self.mpl_canvas_frequency_plot, self)
-                
+
             self._layout = QVBoxLayout()
             self._layout.addWidget(toolbar)
             self._layout.addWidget(self.mpl_canvas_frequency_plot)
@@ -419,7 +421,6 @@ class FrequencyResponsePlotter(FrequencyResponsePlotter_UI):
 
         for current_data in [self.model_results_data, self.imported_results_data]:
             for data in current_data.values():
-
                 self.load_data_to_plot(data)
 
                 if self.y_data is None:
@@ -441,9 +442,9 @@ class FrequencyResponsePlotter(FrequencyResponsePlotter_UI):
                     _plot = self.call_lin_lin_plot()
 
                 if len(self.x_data) == 1:
-                    _plot.set_marker('o')
+                    _plot.set_marker("o")
                     _plot.set_markersize(8)
-            
+
                 self.legends.append(self.legend)
                 self.plots.append(_plot)
 
@@ -451,11 +452,11 @@ class FrequencyResponsePlotter(FrequencyResponsePlotter_UI):
             return
 
         self.call_cursor()
-        self.ax.set_xlabel(self.x_label, fontsize = 10, fontweight = self.font_weight)
-        self.ax.set_ylabel(self.y_label, fontsize = 10, fontweight = self.font_weight)
+        self.ax.set_xlabel(self.x_label, fontsize=10, fontweight=self.font_weight)
+        self.ax.set_ylabel(self.y_label, fontsize=10, fontweight=self.font_weight)
 
         if self.title != "":
-            self.ax.set_title(self.title, fontsize = 11, fontweight = self.font_weight)
+            self.ax.set_title(self.title, fontsize=11, fontweight=self.font_weight)
 
         if self.checkBox_grid.isChecked():
             self.ax.grid()
@@ -464,7 +465,7 @@ class FrequencyResponsePlotter(FrequencyResponsePlotter_UI):
             f_cut = round(self.f_cut, 4)
             _plot = self.ax.axvline(x=f_cut, color=(0.9, 0.4, 0), visible=True, linestyle="--", linewidth=1)
             self.plots.append(_plot)
-            self.legends.append(f'Pipe cut-off frequency $f_c$ = {f_cut} [Hz]')
+            self.legends.append(f"Pipe cut-off frequency $f_c$ = {f_cut} [Hz]")
 
         if self.checkBox_legends.isChecked():
             self.ax.legend(handles=self.plots, labels=self.legends, fontsize=9)
@@ -476,27 +477,27 @@ class FrequencyResponsePlotter(FrequencyResponsePlotter_UI):
 
     def call_semilog_y_plot(self, first_index=0):
 
-        _plot, = self.ax.semilogy(
-            self.x_data[first_index:], 
-            self.y_data[first_index:], 
-            linewidth = 1,
-            color = self.color,
-            linestyle = self.linestyle,
+        (_plot,) = self.ax.semilogy(
+            self.x_data[first_index:],
+            self.y_data[first_index:],
+            linewidth=1,
+            color=self.color,
+            linestyle=self.linestyle,
             nonpositive="clip",
-            )
+        )
 
         return _plot
 
     def call_semilog_x_plot(self, first_index=0):
 
-        _plot, = self.ax.semilogx( 
+        (_plot,) = self.ax.semilogx(
             self.x_data[first_index:],
             self.y_data[first_index:],
-            linewidth = 1,
-            color = self.color,
-            linestyle = self.linestyle,
+            linewidth=1,
+            color=self.color,
+            linestyle=self.linestyle,
             nonpositive="clip",
-            )
+        )
 
         return _plot
 
@@ -508,26 +509,26 @@ class FrequencyResponsePlotter(FrequencyResponsePlotter_UI):
 
             self.ax.set_yscale("linear")
 
-        _plot, = self.ax.plot(  
+        (_plot,) = self.ax.plot(
             self.x_data,
             self.y_data,
-            linewidth = 1,
-            color = self.color,
-            linestyle = self.linestyle,
-            )
+            linewidth=1,
+            color=self.color,
+            linestyle=self.linestyle,
+        )
 
         return _plot
 
     def call_log_log_plot(self, first_index=0):
-   
-        _plot, = self.ax.loglog(
+
+        (_plot,) = self.ax.loglog(
             self.x_data[first_index:],
             self.y_data[first_index:],
-            linewidth = 1,
-            color = self.color,
-            linestyle = self.linestyle,
+            linewidth=1,
+            color=self.color,
+            linestyle=self.linestyle,
             nonpositive="clip",
-            )
+        )
 
         return _plot
 
@@ -535,21 +536,21 @@ class FrequencyResponsePlotter(FrequencyResponsePlotter_UI):
 
         show_cursor = self.comboBox_cursor_control.currentIndex() != CursorIndex.DISABLED
         show_legend = self.checkBox_cursor_legends.isChecked()
-        
+
         number_vlines = 1
         if self.comboBox_cursor_control.currentIndex() == CursorIndex.HARMONIC:
             number_vlines = self.spinBox_vertical_lines.value()
 
-        self.cursor = AdvancedCursor(   
-            self.ax, 
-            self.x_data, 
-            self.y_data, 
+        self.cursor = AdvancedCursor(
+            self.ax,
+            self.x_data,
+            self.y_data,
             show_cursor,
             show_legend,
-            number_vlines = number_vlines,
-            )
+            number_vlines=number_vlines,
+        )
 
-        self.mouse_connection = self.fig.canvas.mpl_connect(s='motion_notify_event', func=self.cursor.mouse_move)
+        self.mouse_connection = self.fig.canvas.mpl_connect(s="motion_notify_event", func=self.cursor.mouse_move)
 
     def _set_model_results_data_to_plot(self, data):
         if isinstance(data, dict):
@@ -562,7 +563,7 @@ class FrequencyResponsePlotter(FrequencyResponsePlotter_UI):
         if isinstance(data, dict):
             self.imported_results_data = data
             self.plot_data_in_freq_domain()
-        
+
     def reset_imported_results_data_to_plot(self):
         self.imported_results_data = {}
         self.plot_data_in_freq_domain()

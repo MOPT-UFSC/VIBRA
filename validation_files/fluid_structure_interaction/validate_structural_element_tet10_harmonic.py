@@ -19,19 +19,19 @@ from vibra.external_mesh.external_mesh_data import ExternalMeshData
 from vibra.interface.user_input.data_handler.file_handlers.file_handler import FileHandler
 
 udof_labels = [
-    "ux", 
-    "uy", 
+    "ux",
+    "uy",
     "uz",
-    ]
+]
 
 stresses_labels = [
-    "sigma_x", 
-    "sigma_y", 
-    "sigma_z", 
-    "tau_xy", 
+    "sigma_x",
+    "sigma_y",
+    "sigma_z",
+    "tau_xy",
     "tau_xz",
-    "tau_yz", 
-    ]
+    "tau_yz",
+]
 
 
 def load_external_mesh_and_solve():
@@ -52,10 +52,10 @@ def load_external_mesh_and_solve():
     }
 
     # define surfaces from each volume
-    surfaces_from_volume = { 
-        1 : [1, 2, 6],
-        2 : [3, 4, 5, 6],
-        }
+    surfaces_from_volume = {
+        1: [1, 2, 6],
+        2: [3, 4, 5, 6],
+    }
 
     t0 = time()
     external_mesh = ExternalMeshData()
@@ -92,15 +92,15 @@ def load_external_mesh_and_solve():
     poisson_ratio = 0.30
     thermal_expansion_coefficient = 1.1e-5
 
-    material = Material(   
-        name = "Carbon steel",
-        identifier = 1,
-        color = (200, 200, 200),
-        material_density = density,
-        elasticity_modulus = elasticity_modulus,
-        poisson_ratio = poisson_ratio,
-        thermal_expansion_coefficient = thermal_expansion_coefficient
-        )
+    material = Material(
+        name="Carbon steel",
+        identifier=1,
+        color=(200, 200, 200),
+        material_density=density,
+        elasticity_modulus=elasticity_modulus,
+        poisson_ratio=poisson_ratio,
+        thermal_expansion_coefficient=thermal_expansion_coefficient,
+    )
 
     # define the fluid properties
     temperature = 293.15
@@ -144,7 +144,7 @@ def load_external_mesh_and_solve():
         "element_type": "3d_element",
         "real_values": [0.0, 0.0, 0.0],
         "imag_values": [0.0, 0.0, 0.0],
-        }
+    }
 
     model.properties._set_property("prescribed_dof", dof_prescription_data, surface=named_selection_map.get("input_face_struct"))
 
@@ -169,12 +169,12 @@ def load_external_mesh_and_solve():
 
     ## Define the analysis frequency setup
     analysis_setup = model.get_harmonic_analysis_setup(
-        frequency_spacing = FrequencySpacing.EQUALLY_DISTRIBUTED,
-        analysis_id = AnalysisID.COUPLED_HARMONIC,
-        f_min = 20,
-        f_max = 2000,
-        f_step = 20,
-        global_damping = (0.0, 0.0, 0.005),
+        frequency_spacing=FrequencySpacing.EQUALLY_DISTRIBUTED,
+        analysis_id=AnalysisID.COUPLED_HARMONIC,
+        f_min=20,
+        f_max=2000,
+        f_step=20,
+        global_damping=(0.0, 0.0, 0.005),
     )
 
     frequencies = analysis_setup.get_frequencies()
@@ -213,7 +213,7 @@ def load_external_mesh_and_solve():
     dt = time() - t0
     print(f"Time to compute nodal stresses: {dt} s")
 
-   # Nodal results comparisons
+    # Nodal results comparisons
     results_path = "validation_files/data/WB/fsi_model/tet10/results/fsi_model_reference.xlsx"
     imported_results = FileHandler.read(results_path).to_dict()
 
@@ -222,7 +222,6 @@ def load_external_mesh_and_solve():
 
     # proces the acoustic pressure plots
     for act_label in ["input_face_act", "output_face_act"]:
-
         surface_id = named_selection_map.get(act_label)
         prefix = act_label.split("_")[0]
 
@@ -243,13 +242,19 @@ def load_external_mesh_and_solve():
             title=f"Harmonic response at surface {surface_id}",
             x_label="Frequency [Hz]",
             y_label=f"Nodal pressure [Pa] - {plot_type.capitalize()}",
-            )
+        )
 
     # process the structural displacement plots
     dof_labels = ["ux", "uy", "uz"]
 
-    for struct_label in ["ux_curve", "uy_curve", "uz_curve", "ux_free", "uy_free", "uz_free", ]:
-
+    for struct_label in [
+        "ux_curve",
+        "uy_curve",
+        "uz_curve",
+        "ux_free",
+        "uy_free",
+        "uz_free",
+    ]:
         if "curve" in struct_label:
             surface_id = named_selection_map.get("curved_face_struct")
         elif "free" in struct_label:
@@ -276,8 +281,8 @@ def load_external_mesh_and_solve():
             plot_type=plot_type,
             title=f"Harmonic response at surface {surface_id}",
             x_label="Frequency [Hz]",
-            y_label=f"Nodal displacement {prefix} [m] - {plot_type.capitalize()}"
-            )
+            y_label=f"Nodal displacement {prefix} [m] - {plot_type.capitalize()}",
+        )
 
     stresses_labels = [
         "normal_stress_x",
@@ -286,12 +291,11 @@ def load_external_mesh_and_solve():
         "shear_stress_xy",
         "shear_stress_xz",
         "shear_stress_yz",
-        ]
+    ]
 
     surface_id = named_selection_map.get("curved_face_struct")
-    
-    for stress_index, stress_label in enumerate(stresses_labels):
 
+    for stress_index, stress_label in enumerate(stresses_labels):
         reference_data = imported_results.get(stress_label)
         if reference_data is None:
             continue
@@ -308,20 +312,21 @@ def load_external_mesh_and_solve():
             avg_surface_stress,
             reference_data,
             plot_type=plot_type,
-            )
+        )
 
     plt.show()
 
+
 def compare_averaged_nodal_results(
-        surface_id: int, 
-        frequencies: np.ndarray, 
-        solution: np.ndarray,
-        solution_reference: np.ndarray,
-        plot_type: str = "absolute",
-        title: str = "",
-        x_label: str = "",
-        y_label: str = "",
-        ):
+    surface_id: int,
+    frequencies: np.ndarray,
+    solution: np.ndarray,
+    solution_reference: np.ndarray,
+    plot_type: str = "absolute",
+    title: str = "",
+    x_label: str = "",
+    y_label: str = "",
+):
 
     freq_ref = solution_reference[:, 0]
     response_ref = solution_reference[:, 1] + 1j * solution_reference[:, 2]
@@ -339,8 +344,8 @@ def compare_averaged_nodal_results(
         plot_data = np.abs
         plot = ax.semilogy
 
-    plot(frequencies, plot_data(solution), 'r', label='Vibra')
-    plot(freq_ref, plot_data(response_ref), 'k--', label='APDL')
+    plot(frequencies, plot_data(solution), "r", label="Vibra")
+    plot(freq_ref, plot_data(response_ref), "k--", label="APDL")
 
     ax.set(xlabel=x_label, ylabel=y_label, title=title)
     ax.grid()
@@ -358,19 +363,19 @@ def compare_averaged_nodal_results(
 
 def compare_averaged_nodal_stresses_results(
     surface_id: int,
-    stress_label: str, 
-    frequencies: np.ndarray, 
+    stress_label: str,
+    frequencies: np.ndarray,
     avg_surface_stress: np.ndarray,
     solution_reference,
     plot_type: str = "absolute",
-    ):
+):
 
     freq_ref = solution_reference[:, 0]
     response_ref = solution_reference[:, 1] + 1j * solution_reference[:, 2]
 
     title = f"Harmonic response at surface {surface_id}"
     x_label = "Frequency [Hz]"
-    y_label = f'Structural stress {stress_label} [Pa] - {plot_type.capitalize()}'
+    y_label = f"Structural stress {stress_label} [Pa] - {plot_type.capitalize()}"
 
     fig, ax = plt.subplots()
     if plot_type == "real":
@@ -385,10 +390,10 @@ def compare_averaged_nodal_stresses_results(
         plot_data = np.abs
         plot = ax.semilogy
 
-    plot(frequencies, plot_data(avg_surface_stress), 'r', label='Vibra')
+    plot(frequencies, plot_data(avg_surface_stress), "r", label="Vibra")
 
     if isinstance(response_ref, np.ndarray):
-        plot(freq_ref, plot_data(response_ref), 'k--', label='APDL')
+        plot(freq_ref, plot_data(response_ref), "k--", label="APDL")
 
     ax.set(xlabel=x_label, ylabel=y_label, title=title)
     ax.grid()
@@ -405,5 +410,4 @@ def compare_averaged_nodal_stresses_results(
 
 
 if __name__ == "__main__":
-
     load_external_mesh_and_solve()

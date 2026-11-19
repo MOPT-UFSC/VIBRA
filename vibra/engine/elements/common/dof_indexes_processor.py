@@ -16,21 +16,19 @@ class DOFIndexesProcessor:
         self.dof_per_element = dof_per_node * nodes_per_element
         self.local_dof = np.arange(dof_per_node, dtype=int)
 
-
     @property
     def dofs_shift(self):
         return self.model.domains_processor.get_dofs_offset(self.domain)
 
-
     def get_rows_and_cols_indices_1D(
-            self,
-            index: int,
-            connectivities: np.ndarray,
-            ):
+        self,
+        index: int,
+        connectivities: np.ndarray,
+    ):
         """
-        This method returns, for a selected element, the row 
+        This method returns, for a selected element, the row
         and column indices for 1D element integration.
-        
+
         index: int
             The element index.
         """
@@ -43,15 +41,14 @@ class DOFIndexesProcessor:
 
         return dof_indices.ravel()
 
-
     def get_rows_and_cols_indices_2D(
-            self,
-            connectivities: np.ndarray,
-            ):
+        self,
+        connectivities: np.ndarray,
+    ):
         """
-        This method returns the row and column indices for 2D element 
+        This method returns the row and column indices for 2D element
         integration for all elements related to the connectivities.
-        
+
         connectivities: np.ndarray
             A 2D array containing all element connectivities.
         """
@@ -66,7 +63,7 @@ class DOFIndexesProcessor:
             start = j * dof
             end = (j + 1) * dof
             _elem_nodes = self.model.get_mapped_nodes(connectivities[:, j], self.domain)
-            ind_dof[:, start : end] = dof * _elem_nodes.reshape(-1, 1) + self.local_dof
+            ind_dof[:, start:end] = dof * _elem_nodes.reshape(-1, 1) + self.local_dof
 
         ind_dof += self.dofs_shift
 
@@ -76,13 +73,12 @@ class DOFIndexesProcessor:
 
         return ind_rows, ind_cols
 
-
     def get_rows_and_cols_indices_3D(
-            self,
-            connectivities: np.ndarray,
-            ):
-        """ 
-        This method processess the dof indices (rows and columns) 
+        self,
+        connectivities: np.ndarray,
+    ):
+        """
+        This method processess the dof indices (rows and columns)
         for assembly
         """
 
@@ -101,7 +97,7 @@ class DOFIndexesProcessor:
             end = (j + 1) * dof
             _elem_nodes = self.model.get_mapped_nodes(reduced_connect[:, j], self.domain)
 
-            ind_dof[:, start : end] = dof * _elem_nodes.reshape(-1, 1) + self.local_dof
+            ind_dof[:, start:end] = dof * _elem_nodes.reshape(-1, 1) + self.local_dof
 
         ind_dof += self.dofs_shift
 

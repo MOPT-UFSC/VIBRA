@@ -149,7 +149,7 @@ class AnalysisChecker:
 
     def invalid_model_setup_for_fluids(self, surfaces: list[int] | None = None, volumes: list[int] | None = None):
         if isinstance(surfaces, Iterable):
-            message = f"You should assign one fluid for surfaces {surfaces} "           
+            message = f"You should assign one fluid for surfaces {surfaces} "
         elif isinstance(volumes, Iterable):
             message = f"You should assign one fluid for volumes {volumes} "
         else:
@@ -161,7 +161,7 @@ class AnalysisChecker:
 
     def invalid_model_setup_for_materials(self, surfaces: list[int] | None = None, volumes: list[int] | None = None):
         if isinstance(surfaces, Iterable):
-            message = f"You should assign one material for surfaces {surfaces} "           
+            message = f"You should assign one material for surfaces {surfaces} "
         elif isinstance(volumes, Iterable):
             message = f"You should assign one material for volumes {volumes} "
         else:
@@ -188,7 +188,7 @@ class AnalysisChecker:
             for vol_id in volumes_without_fluid:
                 if vol_id in structural_domain_volumes:
                     continue
-    
+
                 self.invalid_model_setup_for_fluids(volumes=volumes_without_fluid)
 
     def check_fluids_surfaces(self):

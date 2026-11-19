@@ -11,16 +11,13 @@ from vibra.interface.user_input.data_handler.imported_data import ImportedData
 
 
 class FileHandler:
+    @overload
+    @staticmethod
+    def read(file_path: str | Path | None) -> ImportedData | None: ...
 
     @overload
     @staticmethod
-    def read(file_path: str | Path | None) -> ImportedData | None:
-        ...
-
-    @overload
-    @staticmethod
-    def read(file_path: list[str] | list[Path]) -> list[ImportedData] | None:
-        ...
+    def read(file_path: list[str] | list[Path]) -> list[ImportedData] | None: ...
 
     @staticmethod
     def read(file_path: str | Path | list[str] | list[Path]) -> ImportedData | list[ImportedData] | None:
@@ -33,21 +30,21 @@ class FileHandler:
         if not isinstance(file_path, list):
             return None
 
-        imported_paths = [] 
+        imported_paths = []
         for path in file_path:
             imported_path = FileHandler._read(path)
 
             if imported_path is None:
                 continue
-            
-            imported_paths.append(imported_path) 
-            
+
+            imported_paths.append(imported_path)
+
         return imported_paths if len(imported_paths) > 0 else None
-        
+
     @staticmethod
     def _read(file_path: str | Path) -> ImportedData | None:
         file_path = Path(file_path)
-        
+
         if file_path.suffix in TextFileHandler.EXTENSIONS:
             return TextFileHandler.read(file_path)
         elif file_path.suffix in HDF5FileHandler.EXTENSIONS:
@@ -57,7 +54,7 @@ class FileHandler:
         else:
             all_extensions = TextFileHandler.EXTENSIONS + HDF5FileHandler.EXTENSIONS + SpreadsheetFileHandler.EXTENSIONS
             raise FileHandler.raise_extensions_error(file_path, all_extensions)
-            
+
     @staticmethod
     def save_text_file(file_path: str, data: np.array, delimiter=",", header=""):
         file_path = Path(file_path)

@@ -88,7 +88,7 @@ class AcousticPressureInputs(AcousticPressureInputs_UI):
         app().main_window.selection.selection_changed.connect(self.geometry_selection_callback)
 
         self.geometry_selection_callback()
-    
+
     def geometry_selection_callback(self):
         # if self.tabWidget_main.currentIndex() == StandardTabType.LIST:
         #     self.verify_if_selected_surfaces_are_in_tree_widget_acoustic_pressure()
@@ -118,7 +118,6 @@ class AcousticPressureInputs(AcousticPressureInputs_UI):
             self.tabWidget_main.setCurrentIndex(StandardTabType.TABULAR_DATA)
 
         else:
-
             if "real_values" in data:
                 left_value = data.get("real_values")[0]
                 right_value = data.get("imag_values")[0]
@@ -132,7 +131,7 @@ class AcousticPressureInputs(AcousticPressureInputs_UI):
             self.lineEdit_left_value.setText(str(left_value))
             self.lineEdit_right_value.setText(str(right_value))
             self.tabWidget_main.setCurrentIndex(StandardTabType.CONSTANT_DATA)
-   
+
     def clear_line_edit_selection_id(self):
         self.lineEdit_selection_id.clear()
         self.lineEdit_selection_id.setToolTip("")
@@ -152,7 +151,7 @@ class AcousticPressureInputs(AcousticPressureInputs_UI):
         if self.last_tab == StandardTabType.LIST or list_tab:
             app().main_window.selection.clear_selection()
             self.clear_line_edit_selection_id()
-        
+
         self.comboBox_data_type.setDisabled(list_tab)
         self.lineEdit_selection_id.setDisabled(list_tab)
         self.pushButton_apply.setDisabled(list_tab)
@@ -201,7 +200,7 @@ class AcousticPressureInputs(AcousticPressureInputs_UI):
             self.lineEdit_left_value.text(),
             self.lineEdit_right_value.text(),
             "acoustic pressure",
-            )
+        )
 
         if acoustic_pressure is None:
             return True
@@ -225,7 +224,7 @@ class AcousticPressureInputs(AcousticPressureInputs_UI):
         for surface_id in surface_ids:
             self.properties._set_property("acoustic_pressure", data, surface=surface_id)
 
-    def load_table(self, lineEdit : QLineEdit, direct_load=False):
+    def load_table(self, lineEdit: QLineEdit, direct_load=False):
         title = "Error reached while loading 'acoustic pressure' table"
 
         try:
@@ -234,9 +233,9 @@ class AcousticPressureInputs(AcousticPressureInputs_UI):
 
             else:
                 extensions = SUPPORTED_SPREADSHEET_EXTENSIONS + SUPPORTED_TEXT_EXTENSIONS
-                imported_path = FileDialogService.open_file(file_extensions=extensions,
-                                                            caption="Choose a table to import the acoustic pressure",
-                                                            last_folder="imported_table_folder")
+                imported_path = FileDialogService.open_file(
+                    file_extensions=extensions, caption="Choose a table to import the acoustic pressure", last_folder="imported_table_folder"
+                )
 
             imported_data = FileHandler.read(imported_path)
 
@@ -245,7 +244,7 @@ class AcousticPressureInputs(AcousticPressureInputs_UI):
 
             if not direct_load:
                 lineEdit.setText(str(imported_data.path))
-                
+
             imported_values = imported_data.data
 
             if imported_values.shape[1] < 3:
@@ -310,15 +309,13 @@ class AcousticPressureInputs(AcousticPressureInputs_UI):
             PrintMessageInput([error_title, title, message])
             self.lineEdit_table_path.setFocus()
             return True
-    
+
         if self.imported_values is None:
-            self.imported_values = self.load_table(self.lineEdit_table_path, direct_load = True)
+            self.imported_values = self.load_table(self.lineEdit_table_path, direct_load=True)
 
         for surface_id in surface_ids:
-
             if isinstance(self.imported_values, np.ndarray):
                 if self.imported_values.shape[1] >= 3:
-
                     table_name = f"precribed_pressure_at_surface_{surface_id}"
                     if self.save_table_values(table_name, self.imported_values):
                         self.lineEdit_table_path.setFocus()
@@ -335,9 +332,9 @@ class AcousticPressureInputs(AcousticPressureInputs_UI):
             table_path = self.lineEdit_table_path.text()
 
             data = {
-                "table_names" : [table_name],
-                "table_paths" : [table_path],
-                }
+                "table_names": [table_name],
+                "table_paths": [table_path],
+            }
 
             self.properties._set_property("acoustic_pressure", data, surface=surface_id)
 
@@ -354,7 +351,7 @@ class AcousticPressureInputs(AcousticPressureInputs_UI):
             "compressor_excitation_waveform",
             "reciprocating_compressor_excitation",
             "mass_source",
-            ]
+        ]
 
         for surface_id in surface_ids:
             for label in labels:
@@ -384,7 +381,7 @@ class AcousticPressureInputs(AcousticPressureInputs_UI):
         title = "Acoustic pressure reset"
         message = "Would you like to remove the all applied acoustic pressures from model?"
 
-        buttons_config = {"left_button_label" : "Cancel", "right_button_label" : "Continue"}
+        buttons_config = {"left_button_label": "Cancel", "right_button_label": "Continue"}
         read = GetUserConfirmationInput(title, message, buttons_config=buttons_config)
 
         if read._cancel:
@@ -418,7 +415,7 @@ class AcousticPressureInputs(AcousticPressureInputs_UI):
             self.tabWidget_main.setTabVisible(StandardTabType.LIST, True)
             return
 
-        self.tabWidget_main.setCurrentIndex(StandardTabType.CONSTANT_DATA)    
+        self.tabWidget_main.setCurrentIndex(StandardTabType.CONSTANT_DATA)
         self.tabWidget_main.setTabVisible(StandardTabType.LIST, False)
         self.lineEdit_left_value.setFocus()
 
@@ -441,8 +438,8 @@ class AcousticPressureInputs(AcousticPressureInputs_UI):
             return
 
         app().main_window.selection.set_geometry_selection(
-            surfaces = entities_mapping.get("surface"),
-            )
+            surfaces=entities_mapping.get("surface"),
+        )
 
     def item_double_clicked_callback(self, item):
         self.item_clicked_callback(item)
@@ -464,7 +461,7 @@ class AcousticPressureInputs(AcousticPressureInputs_UI):
                 str_value = "Table"
             else:
                 values = data["values"][0]
-                str_value = f"{values : .6e}"
+                str_value = f"{values: .6e}"
 
             new = QTreeWidgetItem([str(surface_id), "surface", str_value])
             for i in range(3):
@@ -491,9 +488,7 @@ class AcousticPressureInputs(AcousticPressureInputs_UI):
         app().main_window.selection.selection_changed.disconnect(self.geometry_selection_callback)
         return super().closeEvent(a0)
 
-
     ## TODO: remove if deprecated
-
 
     def set_selection_text(self, selected_surfaces: list | set):
         selected_surfaces = list(selected_surfaces)
@@ -503,8 +498,7 @@ class AcousticPressureInputs(AcousticPressureInputs_UI):
         selection_text = ", ".join(selected_surfaces)
 
         self.lineEdit_selection_id.setText(selection_text)
-        self.lineEdit_selection_id.setToolTip(selection_text) 
-
+        self.lineEdit_selection_id.setToolTip(selection_text)
 
     def verify_if_selected_surfaces_are_in_tree_widget_acoustic_pressure(self):
         if self.tree_item_clicked:
@@ -525,9 +519,9 @@ class AcousticPressureInputs(AcousticPressureInputs_UI):
 
         if not selected_surfaces_in_tree_widget:
             return
-        
+
         self.pushButton_remove.setEnabled(True)
-        
+
         model_selector = self.treeWidget_acoustic_pressure.selectionModel()
 
         for surface_id in selected_surfaces_in_tree_widget:
@@ -537,7 +531,6 @@ class AcousticPressureInputs(AcousticPressureInputs_UI):
 
         self.treeWidget_acoustic_pressure.setSelectionMode(QAbstractItemView.SingleSelection)
         self.set_selection_text(selected_surfaces_in_tree_widget)
-
 
     def get_tree_widget_acoustic_pressure_items_map(self) -> dict:
         map_id_to_model_index = dict()
@@ -550,5 +543,5 @@ class AcousticPressureInputs(AcousticPressureInputs_UI):
             map_id_to_model_index[int(surface_id)] = index
 
             index = self.treeWidget_acoustic_pressure.indexBelow(index)
-        
-        return map_id_to_model_index  
+
+        return map_id_to_model_index

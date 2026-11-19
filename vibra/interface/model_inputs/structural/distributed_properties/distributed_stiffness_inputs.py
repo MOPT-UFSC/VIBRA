@@ -1,4 +1,3 @@
-
 from collections import defaultdict
 from enum import IntEnum
 from os.path import basename
@@ -75,8 +74,8 @@ class DistributedStiffnessInputs(DistributedStiffnessInputs_UI):
         self.keep_window_open = True
         self.element_types = ["2d_element", "3d_element"]
         self.assignment_types = {
-            0 : "surfaces",
-            1 : "lines",
+            0: "surfaces",
+            1: "lines",
         }
         self.reset_table_variables()
 
@@ -228,13 +227,12 @@ class DistributedStiffnessInputs(DistributedStiffnessInputs_UI):
             table_path_line_edits = list(self.table_line_edits.values())
             for index, table_path in enumerate(table_paths):
                 line_edit = table_path_line_edits[index]
-                if table_path is not None:                   
+                if table_path is not None:
                     line_edit.setText(table_path)
 
             self.tabWidget_main.setCurrentIndex(StandardTabType.TABULAR_DATA)
 
         else:
-
             if "real_values" in data:
                 left_values = data.get("real_values")
                 right_values = data.get("imag_values")
@@ -269,7 +267,7 @@ class DistributedStiffnessInputs(DistributedStiffnessInputs_UI):
             if isinstance(data, dict):
                 self.comboBox_element_type.setCurrentIndex(0)
                 return
-            
+
         if isinstance(line_id, int):
             for node_id in self.mesh.get_nodes_from_line(line_id):
                 for surface_id in self.mesh.get_surfaces_from_node(node_id):
@@ -398,7 +396,7 @@ class DistributedStiffnessInputs(DistributedStiffnessInputs_UI):
                 case "lines":
                     self.properties._set_property("distributed_stiffness", data, line=selected_id)
 
-    def load_table(self, lineEdit : QLineEdit, load_label: str, direct_load = False):
+    def load_table(self, lineEdit: QLineEdit, load_label: str, direct_load=False):
         title = "Error while loading table"
 
         try:
@@ -411,7 +409,7 @@ class DistributedStiffnessInputs(DistributedStiffnessInputs_UI):
                     file_extensions=extensions,
                     caption=f"Choose a table to import the {load_label} data",
                     last_folder="imported_table_folder",
-                    )
+                )
 
             imported_data = FileHandler.read(imported_path)
 
@@ -445,14 +443,14 @@ class DistributedStiffnessInputs(DistributedStiffnessInputs_UI):
 
     def load_Kx_table(self):
         self.Kx_table_values, self.Kx_table_path = self.load_table(self.lineEdit_path_table_Kx, "Kx")
-        if  self.Kx_table_path is None:
+        if self.Kx_table_path is None:
             self.lineEdit_reset(self.lineEdit_path_table_Kx)
 
     def load_Ky_table(self):
         self.Ky_table_values, self.Ky_table_path = self.load_table(self.lineEdit_path_table_Ky, "Ky")
         if self.Ky_table_path is None:
             self.lineEdit_reset(self.lineEdit_path_table_Ky)
-            
+
     def load_Kz_table(self):
         self.Kz_table_values, self.Kz_table_path = self.load_table(self.lineEdit_path_table_Kz, "Kz")
         if self.Kz_table_path is None:
@@ -469,7 +467,6 @@ class DistributedStiffnessInputs(DistributedStiffnessInputs_UI):
             frequencies[0] = 0
 
         if self.model.change_analysis_frequency_setup(list(frequencies)):
-
             lineEdit = self.table_line_edits[load_label]
             imported_filename = basename(lineEdit.text())
             self.lineEdit_reset(lineEdit)
@@ -513,17 +510,16 @@ class DistributedStiffnessInputs(DistributedStiffnessInputs_UI):
         direct_input = self.comboBox_stiffness_input.currentIndex() == StiffnessInput.DIRECT
 
         if self.Kx_table_path is None:
-            self.Kx_table_values, self.Kx_table_path = self.load_table(self.lineEdit_path_table_Kx, "Kx", direct_load = True)
+            self.Kx_table_values, self.Kx_table_path = self.load_table(self.lineEdit_path_table_Kx, "Kx", direct_load=True)
 
         if by_components:
             if self.Ky_table_path is None:
-                self.Ky_table_values, self.Ky_table_path = self.load_table(self.lineEdit_path_table_Ky, "Ky", direct_load = True)
+                self.Ky_table_values, self.Ky_table_path = self.load_table(self.lineEdit_path_table_Ky, "Ky", direct_load=True)
 
             if self.Kz_table_path is None:
-                self.Kz_table_values, self.Kz_table_path = self.load_table(self.lineEdit_path_table_Kz, "Kz", direct_load = True)
+                self.Kz_table_values, self.Kz_table_path = self.load_table(self.lineEdit_path_table_Kz, "Kz", direct_load=True)
 
         for selected_id in selected_ids:
-            
             if self.Kx_table_values is not None:
                 self.Kx_table_name, self.Kx_array = self.save_table_files("Kx", selected_id, selection, self.Kx_table_values)
                 if self.Kx_array is None:
@@ -556,7 +552,7 @@ class DistributedStiffnessInputs(DistributedStiffnessInputs_UI):
             if condition_1 or condition_2:
                 title = "Additional inputs required"
                 message = "You must to enter at leat one distributed load table path before confirming the assignment."
-                PrintMessageInput([error_title, title, message]) 
+                PrintMessageInput([error_title, title, message])
                 return True
 
             data = {
@@ -577,7 +573,7 @@ class DistributedStiffnessInputs(DistributedStiffnessInputs_UI):
 
         self.reset_table_variables()
 
-    def apply_callback(self, close_window: bool=False):
+    def apply_callback(self, close_window: bool = False):
 
         tab_index = self.tabWidget_main.currentIndex()
         if tab_index == StandardTabType.LIST:
@@ -615,9 +611,9 @@ class DistributedStiffnessInputs(DistributedStiffnessInputs_UI):
     def text_label(self, mask: np.ndarray[bool]):
 
         if len(mask) == 3:
-            load_labels = np.array(['Kx','Ky','Kz'])
+            load_labels = np.array(["Kx", "Ky", "Kz"])
         else:
-            load_labels = np.array(['Kn'])
+            load_labels = np.array(["Kn"])
 
         labels = load_labels[mask]
 
@@ -633,15 +629,14 @@ class DistributedStiffnessInputs(DistributedStiffnessInputs_UI):
     def load_model_info(self):
 
         properties = {
-            "line" : self.properties.line_properties,
-            "surface" : self.properties.surface_properties,
+            "line": self.properties.line_properties,
+            "surface": self.properties.surface_properties,
         }
 
         self.treeWidget_distributed_stiffness.clear()
 
         for key, property in properties.items():
             for (prop_label, *args), data in property.items():
-
                 if prop_label != "distributed_stiffness":
                     continue
 
@@ -671,7 +666,7 @@ class DistributedStiffnessInputs(DistributedStiffnessInputs_UI):
         ]
 
         for current_property in properties_to_check:
-            for (property, _) in current_property:
+            for property, _ in current_property:
                 if property != "distributed_stiffness":
                     continue
 
@@ -722,9 +717,9 @@ class DistributedStiffnessInputs(DistributedStiffnessInputs_UI):
             return
 
         app().main_window.selection.set_geometry_selection(
-            surfaces = entities_mapping.get("surface"),
-            lines = entities_mapping.get("line"),
-            )
+            surfaces=entities_mapping.get("surface"),
+            lines=entities_mapping.get("line"),
+        )
 
     def item_double_clicked_callback(self, item):
         self.item_clicked_callback(item)
@@ -755,7 +750,7 @@ class DistributedStiffnessInputs(DistributedStiffnessInputs_UI):
         title = "Distributed stiffness reset"
         message = "Would you like to remove the all distributed stiffness from model?"
 
-        buttons_config = {"left_button_label" : "Cancel", "right_button_label" : "Continue"}
+        buttons_config = {"left_button_label": "Cancel", "right_button_label": "Continue"}
         obj = GetUserConfirmationInput(title, message, buttons_config=buttons_config)
 
         if obj._cancel:

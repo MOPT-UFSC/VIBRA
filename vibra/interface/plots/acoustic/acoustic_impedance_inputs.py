@@ -67,24 +67,24 @@ class AcousticImpedanceInputs(AcousticImpedanceInputs_UI):
         self.plotter = None
 
     def _create_connections(self):
-        
+
         # QComboBox connections
         self.comboBox_selector_filter.currentIndexChanged.connect(self.update_render_according_to_selector)
         self.comboBox_volumes.currentIndexChanged.connect(self.volume_selector_callback)
         self.comboBox_nodal_normals.currentIndexChanged.connect(self.toggle_nodal_normals_symbols_visibility)
-        
+
         # QPushButton connections
         self.pushButton_export_data.clicked.connect(self.export_data_callback)
         self.pushButton_plot_data.clicked.connect(self.plot_data_callback)
-        
+
         app().main_window.selection.selection_changed.connect(self.geometry_selection_callback)
-        
+
         self.geometry_selection_callback()
 
     def update_render_according_to_selector(self):
         self.geometry_selection_callback()
         if self.comboBox_selector_filter.currentIndex() == 0:
-            app().main_window.show_geometry_render_widget()           
+            app().main_window.show_geometry_render_widget()
         else:
             app().main_window.show_mesh_render_widget()
 
@@ -94,7 +94,7 @@ class AcousticImpedanceInputs(AcousticImpedanceInputs_UI):
             app().main_window.selection.set_geometry_selection(volumes=[volume_id])
 
     def toggle_nodal_normals_symbols_visibility(self):
-        show_normals = (self.comboBox_nodal_normals.currentText() == "Show")
+        show_normals = self.comboBox_nodal_normals.currentText() == "Show"
         app().main_window.results_widget.visualization_filter.nodal_normal_symbols = show_normals
         app().main_window.update_symbols()
 
@@ -123,7 +123,7 @@ class AcousticImpedanceInputs(AcousticImpedanceInputs_UI):
         if surfaces and index == 0:
             text = ", ".join([str(i) for i in surfaces])
             self.lineEdit_selection_id.setText(text)
-            
+
             self.check_volumes_from_surfaces(surfaces)
 
         elif nodes and index == 1:
@@ -144,8 +144,8 @@ class AcousticImpedanceInputs(AcousticImpedanceInputs_UI):
     def check_volumes_from_surfaces(self, surface_ids: list[int]):
 
         external_surfaces_map = {}
-        internal_surfaces_map = {}  
-        self.comboBox_volumes.blockSignals(True) 
+        internal_surfaces_map = {}
+        self.comboBox_volumes.blockSignals(True)
 
         for surface_id in surface_ids:
             volumes_from_surface = self.mesh.volumes_from_surface.get(surface_id, list())
@@ -221,7 +221,7 @@ class AcousticImpedanceInputs(AcousticImpedanceInputs_UI):
 
         self.join_model_data()
 
-        show_normals = (self.comboBox_nodal_normals.currentText() == "Show")
+        show_normals = self.comboBox_nodal_normals.currentText() == "Show"
         app().main_window.results_widget.visualization_filter.nodal_normal_symbols = show_normals
         if show_normals:
             app().main_window.update_symbols()
@@ -256,23 +256,22 @@ class AcousticImpedanceInputs(AcousticImpedanceInputs_UI):
                 volume_id = self.mesh.volumes_from_surface.get(surfaces_from_node[0])[0]
         else:
             volume_id = int(self.comboBox_volumes.currentText())
-       
+
         def function_callback():
 
             if selection_type == "surfaces":
                 acoustic_impedance = self.acoustic_post.compute_acoustic_impedance(
-                    surface_id = selected_id,
-                    volume_id = volume_id,
-                    )
+                    surface_id=selected_id,
+                    volume_id=volume_id,
+                )
 
             else:
                 acoustic_impedance = self.acoustic_post.compute_acoustic_impedance(
-                    node_id = selected_id,
-                    volume_id = volume_id,
-                    )
+                    node_id=selected_id,
+                    volume_id=volume_id,
+                )
 
             if self.comboBox_normalized_impedance.currentText() == "Enabled":
-
                 if app().project.assembler.fluid_properties_from_volume:
                     prop_data: dict = app().project.assembler.fluid_properties_from_volume.get(volume_id)
                     rho_f = prop_data.get("rho_f")
@@ -308,7 +307,7 @@ class AcousticImpedanceInputs(AcousticImpedanceInputs_UI):
             particle_velocities_data = self.acoustic_post.get_particle_velocity_from_surface(self.selected_ids, volume_id=volume_id)
 
             return AcousticImpedanceData(
-                path = path,
+                path=path,
                 nodal_coordinates=self.mesh.nodal_coordinates[nodes, :],
                 nodal_pressures=nodal_pressures,
                 normal_particle_velocities=particle_velocities_data.Vn_array(),
@@ -330,7 +329,6 @@ class AcousticImpedanceInputs(AcousticImpedanceInputs_UI):
             unit_label = "Pa/m/s"
 
         for i, selected_id in enumerate(self.selected_ids):
-
             key = (selection_type, (selected_id))
             legend_label = f"{plot_type} at {selection_type} [{selected_id}]"
 
@@ -349,15 +347,7 @@ class AcousticImpedanceInputs(AcousticImpedanceInputs_UI):
 
     def get_color(self, index):
 
-        colors = [  
-                  (0,0,1), 
-                  (0,0,0), 
-                  (1,0,0),
-                  (0,1,1), 
-                  (1,0,1), 
-                  (1,1,0),
-                  (0.25,0.25,0.25)
-                  ]
+        colors = [(0, 0, 1), (0, 0, 0), (1, 0, 0), (0, 1, 1), (1, 0, 1), (1, 1, 0), (0.25, 0.25, 0.25)]
 
         if index <= 6:
             return colors[index]
