@@ -81,7 +81,7 @@ class GeometryRenderWidget(CommonRenderWidget):
         self.update_logo()
         self.create_axes()
         self.create_scale_bar()
-        self.create_camera_light(0.1, 0.1)
+        # self.create_camera_light(0.1, 0.1)
         self.update_plot()
 
     def update_logo(self):

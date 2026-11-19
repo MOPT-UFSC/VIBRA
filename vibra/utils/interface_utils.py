@@ -74,8 +74,8 @@ class VisualizationFilter:
 
 @dataclass
 class GeometryRendererConfig:
-    points_color: Color = color_names.WHITE
-    lines_color: Color = color_names.WHITE
+    points_color: Color = color_names.YELLOW_5
+    lines_color: Color = color_names.BLACK
     surfaces_color: Color = color_names.WHITE
     selected_points_color: Color = color_names.RED
     selected_lines_color: Color = color_names.RED
