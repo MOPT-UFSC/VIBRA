@@ -19,7 +19,8 @@ class NewMeshRenderWidget(VibraRenderWidget):
         self.left_released.connect(self.click_end_callback)
 
     def create_actors(self):
-        self.create_common_actors()
+        self.create_axes()
+        self.create_scale_bar()
 
         self.mesh_actor = MeshActor(self.model)
         self.add_actors(self.mesh_actor)

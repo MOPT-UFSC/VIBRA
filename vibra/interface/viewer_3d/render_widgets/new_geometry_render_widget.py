@@ -25,7 +25,8 @@ class NewGeometryRenderWidget(VibraRenderWidget):
         self.left_released.connect(self.click_end_callback)
 
     def create_actors(self):
-        self.create_common_actors()
+        self.create_axes()
+        self.create_scale_bar()
 
         self.acoustic_symbols_actor = SymbolsActorAcoustic(self.model, self.renderer.GetActiveCamera())
         self.add_actors(self.acoustic_symbols_actor)

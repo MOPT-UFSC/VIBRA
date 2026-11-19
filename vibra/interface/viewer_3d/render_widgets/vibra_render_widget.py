@@ -39,10 +39,6 @@ class VibraRenderWidget(CommonRenderWidget):
         # I will update it later inside Molde
         self.update()
 
-    def create_common_actors(self):
-        self.create_axes()
-        self.create_scale_bar()
-
     def set_model(self, model: Model | None):
         self.model = model
 
