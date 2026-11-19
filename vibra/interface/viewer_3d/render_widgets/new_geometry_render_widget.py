@@ -44,7 +44,7 @@ class NewGeometryRenderWidget(VibraRenderWidget):
 
     @function_timer
     def update_plot(self, reset_camera: bool = False):
-        if self.isVisible():
+        if self.isVisible() or reset_camera:
             self._must_update = False
         else:
             self._must_update = True
