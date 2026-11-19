@@ -393,9 +393,11 @@ class MainWindow(MainWindow_UI):
 
     def action_show_empty_callback(self, condition: bool):
         if condition:
-            self.geometry_widget.visualization_filter.color_mode = GeometryColorMode.EMPTY
+            self.geometry_render_widget.visualization_filter.color_mode = GeometryColorMode.EMPTY
+            self.mesh_render_widget.visualization_filter.color_mode = GeometryColorMode.EMPTY
         else:
-            self.geometry_widget.visualization_filter.color_mode = GeometryColorMode.COLORED
+            self.geometry_render_widget.visualization_filter.color_mode = GeometryColorMode.COLORED
+            self.mesh_render_widget.visualization_filter.color_mode = GeometryColorMode.COLORED
         self.visualization_changed.emit()
 
     def get_renderer_widgets(self) -> list[CommonRenderWidget]:

@@ -11,7 +11,7 @@ from vibra.interface.viewer_3d.actors.geometry_actor import GeometryActor, Geome
 from vibra.interface.viewer_3d.actors.symbols_actor_acoustic import SymbolsActorAcoustic
 from vibra.interface.viewer_3d.actors.symbols_actor_structural import SymbolsActorStructural
 from vibra.interface.viewer_3d.render_widgets.vibra_render_widget import VibraRenderWidget
-from vibra.utils.interface_utils import SectionPlane
+from vibra.utils.interface_utils import GeometryColorMode, SectionPlane
 from vibra.utils.time_utils import function_timer
 
 
@@ -111,6 +111,26 @@ class NewGeometryRenderWidget(VibraRenderWidget):
         if not self.visualization_filter.faces:
             return
 
+        if self.visualization_filter.color_mode == GeometryColorMode.EMPTY:
+            self.geometry_actor.set_surface_color(self.user_preferences.faces_color)
+        else:
+            self._paint_surfaces_with_composition()
+
+        if self.selection_handler is not None:
+            self.geometry_actor.paint_volumes(
+                self.user_preferences.selection_volumes_color,
+                self.selection_handler.geometry_volumes,
+            )
+            self.geometry_actor.paint_surfaces(
+                self.user_preferences.selection_faces_color,
+                self.selection_handler.geometry_surfaces,
+            )
+
+        if self.entity_visibility_handler is not None:
+            self.geometry_actor.hide_surfaces()
+            self.geometry_actor.show_surfaces(self.entity_visibility_handler.get_visible_surfaces())
+
+    def _paint_surfaces_with_composition(self):
         if self.model is None:
             return
 
@@ -159,21 +179,6 @@ class NewGeometryRenderWidget(VibraRenderWidget):
 
         for texture, surfaces in texture_to_surfaces.items():
             self.geometry_actor.set_surfaces_texture(texture, surfaces)
-
-        # self.geometry_actor.set_surface_color(self.user_preferences.faces_color)
-        if self.selection_handler is not None:
-            self.geometry_actor.paint_volumes(
-                self.user_preferences.selection_volumes_color,
-                self.selection_handler.geometry_volumes,
-            )
-            self.geometry_actor.paint_surfaces(
-                self.user_preferences.selection_faces_color,
-                self.selection_handler.geometry_surfaces,
-            )
-
-        if self.entity_visibility_handler is not None:
-            self.geometry_actor.hide_surfaces()
-            self.geometry_actor.show_surfaces(self.entity_visibility_handler.get_visible_surfaces())
 
     def click_end_callback(self, x1: int, y1: int):
         # TODO: move this method to the tools
