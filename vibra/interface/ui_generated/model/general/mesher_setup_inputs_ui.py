@@ -449,6 +449,15 @@ class Ui_Dialog(object):
         self.gridLayout_12 = QGridLayout(self.frame_11)
         self.gridLayout_12.setObjectName(u"gridLayout_12")
         self.gridLayout_12.setContentsMargins(4, 4, 4, 4)
+        self.pushButton_delete = QPushButton(self.frame_11)
+        self.pushButton_delete.setObjectName(u"pushButton_delete")
+        self.pushButton_delete.setMinimumSize(QSize(68, 28))
+        self.pushButton_delete.setMaximumSize(QSize(140, 16777215))
+        self.pushButton_delete.setFont(font1)
+        self.pushButton_delete.setAutoDefault(False)
+
+        self.gridLayout_12.addWidget(self.pushButton_delete, 0, 0, 1, 1)
+
         self.pushButton_add = QPushButton(self.frame_11)
         self.pushButton_add.setObjectName(u"pushButton_add")
         self.pushButton_add.setMinimumSize(QSize(68, 28))
@@ -458,14 +467,14 @@ class Ui_Dialog(object):
 
         self.gridLayout_12.addWidget(self.pushButton_add, 0, 1, 1, 1)
 
-        self.pushButton_delete = QPushButton(self.frame_11)
-        self.pushButton_delete.setObjectName(u"pushButton_delete")
-        self.pushButton_delete.setMinimumSize(QSize(68, 28))
-        self.pushButton_delete.setMaximumSize(QSize(140, 16777215))
-        self.pushButton_delete.setFont(font1)
-        self.pushButton_delete.setAutoDefault(False)
+        self.pushButton_small_areas_detection = QPushButton(self.frame_11)
+        self.pushButton_small_areas_detection.setObjectName(u"pushButton_small_areas_detection")
+        self.pushButton_small_areas_detection.setMinimumSize(QSize(80, 28))
+        self.pushButton_small_areas_detection.setMaximumSize(QSize(180, 16777215))
+        self.pushButton_small_areas_detection.setFont(font1)
+        self.pushButton_small_areas_detection.setAutoDefault(False)
 
-        self.gridLayout_12.addWidget(self.pushButton_delete, 0, 0, 1, 1)
+        self.gridLayout_12.addWidget(self.pushButton_small_areas_detection, 0, 2, 1, 1)
 
 
         self.gridLayout_7.addWidget(self.frame_11, 3, 1, 1, 1)
@@ -834,8 +843,9 @@ class Ui_Dialog(object):
         self.pushButton_select_group.setToolTip(QCoreApplication.translate("Dialog", u"<html><head/><body><p><span style=\" font-size:10pt; font-weight:400;\">Process the entities selection.</span></p></body></html>", None))
 #endif // QT_CONFIG(tooltip)
         self.pushButton_select_group.setText("")
-        self.pushButton_add.setText(QCoreApplication.translate("Dialog", u"Add", None))
         self.pushButton_delete.setText(QCoreApplication.translate("Dialog", u"Delete", None))
+        self.pushButton_add.setText(QCoreApplication.translate("Dialog", u"Add", None))
+        self.pushButton_small_areas_detection.setText(QCoreApplication.translate("Dialog", u"Small areas detection", None))
         ___qtablewidgetitem = self.tableWidget_local_mesh_size_control_data.horizontalHeaderItem(0)
         ___qtablewidgetitem.setText(QCoreApplication.translate("Dialog", u"Element size [mm]", None));
         ___qtablewidgetitem1 = self.tableWidget_local_mesh_size_control_data.horizontalHeaderItem(1)
@@ -955,8 +965,9 @@ class MesherSetupInputs_UI(QDialog, Ui_Dialog):
                                                                     - pushButton_select_group: QPushButton
                                                         - frame_11: QFrame
                                                             - (Layout): QGridLayout
-                                                                    - pushButton_add: QPushButton
                                                                     - pushButton_delete: QPushButton
+                                                                    - pushButton_add: QPushButton
+                                                                    - pushButton_small_areas_detection: QPushButton
                                                         - tableWidget_local_mesh_size_control_data: QTableWidget
                                             - tab_advanced_controls: QWidget
                                                 - (Layout): QGridLayout

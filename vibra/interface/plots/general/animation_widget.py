@@ -26,8 +26,10 @@ from vibra.interface.viewer_3d.plot_setup import (
 
 
 class AnimationWidget(AnimationWidget_UI):
-    def __init__(self):
+    def __init__(self, frame_factor_visible: bool = True):
         super().__init__()
+
+        self.set_frame_factor_visible(frame_factor_visible)
 
         self._initialize()
         self._configure_icons()
@@ -52,18 +54,15 @@ class AnimationWidget(AnimationWidget_UI):
 
     @property
     def magnification_factor(self):
-        value = self.magnification_factor_slider.value()
-        if value == 0:
-            return 0
+        text = self.comboBox_multiplification_factor.currentText()
+        if text == "True scale":
+            return
 
-        if value >= 17:
-            return (3 / 16) * value - 35 / 16
-        else:
-            return (7 / 128) * value + 9 / 128
+        return float(text.replace("x", ""))
 
     @property
     def true_scale(self):
-        return not self.checkBox_magnification.isChecked()
+        return self.comboBox_multiplification_factor.currentText() == "True scale"
 
     def _initialize(self):
         self.animating = False
@@ -78,21 +77,14 @@ class AnimationWidget(AnimationWidget_UI):
 
     def _config_widgets(self):
 
+        # QComboBox
+        self.comboBox_multiplification_factor.setCurrentText("1.00x")
+
         # QLabel
         self.label_phase_angle.setFixedWidth(72)
-        self.label_factor.setFixedWidth(72)
 
-        # QCheckButton
-        self.checkBox_magnification.setChecked(True)
-        self.checkBox_magnification.setStyleSheet("""
-            QCheckBox {
-                spacing: 4px;
-                padding-left: 4px;
-                padding-right: 0px;
-                margin: 0px;
-            }
-        """)
-        self.checkBox_magnification.setToolTip("Controls when the scale factor is active.")
+        # QLineEdit
+        self.lineEdit_multiplication_factor.setDisabled(True)
 
         # QPushButton
         # self.pushButton_animate.setFixedSize(50, 30)
@@ -118,13 +110,6 @@ class AnimationWidget(AnimationWidget_UI):
         self.phase_slider.setMinimum(0)
         self.phase_slider.setMaximum(360)
 
-        self.magnification_factor_slider.setOrientation(Qt.Orientation.Horizontal)
-        self.magnification_factor_slider.setCursor(Qt.PointingHandCursor)
-        self.magnification_factor_slider.setMinimum(0)
-        self.magnification_factor_slider.setMaximum(33)
-        self.magnification_factor_slider.setValue(17)
-        self.magnification_factor_slider.setSingleStep(1)
-
         # QSpinBox
         self.spinBox_cycles.setFixedSize(60, 30)
         self.spinBox_cycles.setAlignment(Qt.AlignHCenter)
@@ -146,8 +131,9 @@ class AnimationWidget(AnimationWidget_UI):
 
     def _create_connections(self):
 
-        # QCheckBox connection
-        self.checkBox_magnification.stateChanged.connect(self.magnification_state_changed)
+        # QComboBox connection
+        self.comboBox_multiplification_factor.currentIndexChanged.connect(self.pause_animation)
+        self.comboBox_multiplification_factor.currentIndexChanged.connect(self.magnification_factor_slider_callback)
 
         # QPushButton connections
         self.pushButton_animate.clicked.connect(self.process_animation)
@@ -157,22 +143,14 @@ class AnimationWidget(AnimationWidget_UI):
         # QSlider connections
         self.phase_slider.sliderPressed.connect(self.pause_animation)
         self.phase_slider.valueChanged.connect(self.phase_slider_callback)
-        self.magnification_factor_slider.sliderPressed.connect(self.pause_animation)
-        self.magnification_factor_slider.valueChanged.connect(self.magnification_factor_slider_callback)
 
         # QSpinBox connection
         self.spinBox_frames.valueChanged.connect(self.frames_value_changed)
 
         app().main_window.render_widget_changed.connect(self.update_current_render_widget)
-        app().main_window.render_widget_changed.connect(self.update_toolbar)
 
-    def update_toolbar(self):
-        current_domain = app().main_window.analysis_toolbar.combo_box_physical_domain.currentText()
-        structural_domain = current_domain.lower() in [PhysicalDomain.STRUCTURAL, PhysicalDomain.COUPLED]
-        self.magnification_factor_slider.setEnabled(structural_domain)
-
-        self.checkBox_magnification.setEnabled(structural_domain)
-        self.label_factor.setEnabled(structural_domain)
+    def set_frame_factor_visible(self, visible: bool = True):
+        self.frame_factors.setVisible(visible)
 
     def update_current_render_widget(self):
         self.current_render_widget = app().main_window.render_widgets_stack.currentWidget()
@@ -196,12 +174,16 @@ class AnimationWidget(AnimationWidget_UI):
         font = QFont()
         for widget in [QLabel, QPushButton, QSpinBox]:
             for _widget in self.findChildren(widget):
-                if _widget in [self.label_factor, self.label_phase_angle]:
+                if _widget == self.label_phase_angle:
                     font.setPointSize(8)
                 else:
                     font.setPointSize(10)
 
                 _widget.setFont(font)
+
+    def hide_true_scale_item(self):
+        view = self.comboBox_multiplification_factor.view()
+        view.setRowHidden(0, True)
 
     def set_visible(self, visible: bool):
         for action in self.actions():
@@ -210,11 +192,6 @@ class AnimationWidget(AnimationWidget_UI):
         stylesheet = self.stylesheet if visible else "QToolBar { border: none; }"
         self.setStyleSheet(stylesheet)
         self.setMovable(visible)
-
-    def magnification_state_changed(self):
-        is_checked = self.checkBox_magnification.isChecked()
-        if not is_checked:
-            self.magnification_factor_slider.setValue(17)
 
     def frames_value_changed(self):
         self.frames = self.spinBox_frames.value()
@@ -247,8 +224,7 @@ class AnimationWidget(AnimationWidget_UI):
         self.spinBox_frames.setMaximum(frames_number)
         self.spinBox_frames.setValue(frames_number)
 
-    def magnification_factor_slider_callback(self, value: int):
-        self.update_factor_label()
+    def magnification_factor_slider_callback(self):
         self.update_color_and_deformation()
 
         if hasattr(self.current_render_widget, "update_deformations"):
@@ -328,15 +304,6 @@ class AnimationWidget(AnimationWidget_UI):
     def update_time_frame_label(self):
         self.label_phase_angle.setText(f"{self.time: .4e}s")
 
-    def update_factor_label(self, max_value=None):
-        value = self.magnification_factor
-        if isinstance(max_value, float | int):
-            if max_value:
-                value /= 10 * max_value
-            else:
-                value = 1.0
-        self.label_factor.setText(f"{value: .2e}x")
-
     def update_phase_slider_steps(self):
         frames = self.spinBox_frames.value()
         single_step = int(360 / frames)
@@ -347,6 +314,7 @@ class AnimationWidget(AnimationWidget_UI):
         file_path = FileDialogService.save_file(
             file_extensions=extensions,
             caption="Save As",
+            last_folder="exported_animation_folder"
         )
 
         if file_path is None:

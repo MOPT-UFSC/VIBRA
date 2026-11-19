@@ -15,7 +15,7 @@ from vtkmodules.vtkCommonDataModel import VTK_HEXAHEDRON, VTK_QUADRATIC_HEXAHEDR
 from vtkmodules.vtkIOXML import vtkXMLUnstructuredGridWriter
 
 from vibra.engine.mesher.mesh_setup import Hexahedron8, Hexahedron20, Tetrahedron4, Tetrahedron10, ElementTopology, LocalMeshSizeControlSetup, MeshSetup
-from vibra.errors import InvalidMeshSetupError, MeshingAlgorithmError
+from vibra.errors import MeshingAlgorithmError
 from vibra.interface.numeric_checks.unit_utilities import convert_length_unit
 
 MeshQualityParams = Literal["gamma", "volume", "minSJ", "aspectRatio"]
@@ -972,6 +972,114 @@ class Mesh:
         writer.SetFileName(filename)
         writer.SetInputData(vtk_dataset)
         writer.Write()
+
+    def detect_small_areas(
+        self,
+        element_size: float,
+        area_factor: float = 1.0,
+        area_threshold: float | None = None,
+    ) -> dict:
+        """
+        Selects the surfaces whose area is smaller than a reference element area.
+
+        ``element_size`` is given in the mesh length unit and ``area_factor``
+        multiplies the area of one element at that size to obtain the detection
+        threshold. When ``area_threshold`` is provided, it replaces the computed
+        threshold and must be given in square meters. The returned surface areas
+        and threshold are expressed in square meters.
+        """
+        if element_size <= 0 and area_threshold is None:
+            return {
+                "surface_ids": [],
+                "surface_areas": {},
+                "threshold_area": 0.0,
+            }
+
+        element_size_in_meters = convert_length_unit(element_size, self.length_unit, "meter")
+
+        if area_threshold is None:
+            area_factor = max(0.0, float(area_factor))
+            threshold_area = area_factor * element_size_in_meters**2
+        else:
+            threshold_area = float(area_threshold)
+
+        selected_surfaces = []
+        for surface_id, area in self.area_from_surfaces.items():
+            if 0 < area <= threshold_area:
+                selected_surfaces.append((surface_id, area))
+
+        selected_surfaces.sort(key=lambda item: item[1])
+
+        surface_ids = []
+        surface_areas = {}
+        for surface_id, area in selected_surfaces:
+            surface_ids.append(surface_id)
+            surface_areas[surface_id] = area
+
+        return {
+            "surface_ids": surface_ids,
+            "surface_areas": surface_areas,
+            "threshold_area": threshold_area,
+        }
+
+    def group_small_areas(
+        self,
+        surface_ids: list[int],
+        max_groups: int = 5,
+        representative: str = "median",
+        size_multiplier: float = 1.0,
+    ) -> list[dict]:
+        """
+        Splits the detected surfaces into size groups ordered by area.
+
+        The surfaces are sorted by area and divided into up to ``max_groups``
+        contiguous groups. Each group receives an element size based on the
+        ``representative`` of the square root of its surface areas, multiplied
+        by ``size_multiplier``. The element sizes are returned in meters.
+        """
+        selected_surfaces = []
+        for surface_id in surface_ids:
+            area = self.area_from_surfaces.get(surface_id, 0.0)
+            if area > 0:
+                selected_surfaces.append((surface_id, area))
+
+        if not selected_surfaces:
+            return []
+
+        selected_surfaces.sort(key=lambda item: item[1])
+        number_of_groups = max(1, min(int(max_groups), len(selected_surfaces)))
+        base_size, remainder = divmod(len(selected_surfaces), number_of_groups)
+
+        bins = []
+        start = 0
+        for index in range(number_of_groups):
+            chunk_size = base_size + (1 if index < remainder else 0)
+            chunk = selected_surfaces[start : start + chunk_size]
+            start += chunk_size
+
+            edge_lengths = []
+            for _, area in chunk:
+                edge_lengths.append(area**0.5)
+
+            if representative == "max":
+                element_size = max(edge_lengths)
+            elif representative == "min":
+                element_size = min(edge_lengths)
+            else:
+                element_size = float(np.median(edge_lengths))
+
+            element_size *= max(1e-12, float(size_multiplier))
+
+            chunk_surface_ids = []
+            for surface_id, _ in chunk:
+                chunk_surface_ids.append(surface_id)
+
+            bins.append({
+                "element_size": element_size,
+                "surface_ids": chunk_surface_ids,
+            })
+
+        return bins
 
     def _apply_local_mesh_size_control(self, global_size: float, size_control_setups: list[LocalMeshSizeControlSetup]):
         setup_sizes = [setup.element_size for setup in size_control_setups]

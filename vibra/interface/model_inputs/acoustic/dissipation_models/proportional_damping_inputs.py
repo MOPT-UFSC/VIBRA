@@ -1,14 +1,16 @@
-from PySide6.QtCore import QItemSelectionModel, QPoint, Qt
+from PySide6.QtCore import Qt
 from PySide6.QtGui import QCloseEvent
-from PySide6.QtWidgets import QAbstractItemView, QLineEdit, QTreeWidgetItem
+from PySide6.QtWidgets import QAbstractItemView, QDialog, QLineEdit, QTreeWidgetItem
 
 from vibra import app
 from vibra.interface import error_title
 from vibra.interface.common.common_interface import update_entities_selection
 from vibra.interface.general.get_user_confirmation_input import GetUserConfirmationInput
 from vibra.interface.general.print_message_input import PrintMessageInput
+from vibra.interface.numeric_checks.double_validator import StrictDoubleValidator
 from vibra.interface.model_inputs.acoustic.definitions.enums import AttributionBodiesType, SetupTabType
 from vibra.interface.ui_generated.model.acoustic.dissipation_models.proportional_damping_inputs_ui import ProportionalDampingInputs_UI
+from vibra.interface.model_inputs.general.grouping_assistant_inputs import GroupingAssistantInputs
 
 
 class ProportionalDampingInput(ProportionalDampingInputs_UI):
@@ -19,17 +21,26 @@ class ProportionalDampingInput(ProportionalDampingInputs_UI):
         app().main_window.workspace_updating_for_model_setup()
         app().main_window.selection.volume_selection_mode = True
 
-        self.model = app().project.model
-        self.mesh = app().project.model.mesh
-        self.properties = app().project.model.properties
-
         self._config_window()
+        self._configure_validators()
         self._initialize()
         self._create_connections()
-        self.load_info()
+        self.load_model_info()
 
         while self.keep_window_open:
             self.exec()
+
+    @property
+    def model(self):
+        return app().project.model
+
+    @property
+    def mesh(self):
+        return app().project.model.mesh
+
+    @property
+    def properties(self):
+        return app().project.model.properties
 
     def _config_window(self):
         self.setWindowFlags(Qt.WindowStaysOnTopHint)
@@ -37,62 +48,77 @@ class ProportionalDampingInput(ProportionalDampingInputs_UI):
         self.setWindowIcon(app().main_window.vibra_icon)
         self.setWindowTitle("Vibra")
 
+    def _config_widgets(self):
+
+        self.treeWidget_proportional_damping.setSelectionMode(QAbstractItemView.SelectionMode.ExtendedSelection)
+
+        for i, w in enumerate([70, 180]):
+            self.treeWidget_proportional_damping.setColumnWidth(i, w)
+            self.treeWidget_proportional_damping.headerItem().setTextAlignment(i, Qt.AlignCenter)
+
     def _initialize(self):
+        self.group_assistant = None
         self.keep_window_open = True
-        self.tree_item_clicked = False
+
+    def _configure_validators(self):
+        self.lineEdit_speed_of_sound_complex_factor.setValidator(StrictDoubleValidator(0, 1, 8))
+        self.lineEdit_fluid_density_complex_factor.setValidator(StrictDoubleValidator(0, 1, 8))
 
     def _create_connections(self):
-        #
+
+        # QComboBox connection
         self.comboBox_attribution_type.currentIndexChanged.connect(self.attribution_type_callback)
-        #
+
+        # QPushButton connection
         self.pushButton_apply.clicked.connect(self.apply_callback)
         self.pushButton_apply_and_close.clicked.connect(lambda: self.apply_callback(True))
         self.pushButton_cancel.clicked.connect(self.close)
         self.pushButton_remove.clicked.connect(self.remove_callback)
         self.pushButton_reset.clicked.connect(self.reset_callback)
-        #
+        self.pushButton_select_group.clicked.connect(self.group_assistant_callback)
+
+        # QTabWidget connection
         self.tabWidget_main.currentChanged.connect(self.tab_event_callback)
-        #
+
+        # QTreeWidget connection
         self.treeWidget_proportional_damping.itemClicked.connect(self.on_click_item)
         self.treeWidget_proportional_damping.itemDoubleClicked.connect(self.on_doubleclick_item)
-        #
+
         app().main_window.selection.selection_changed.connect(self.geometry_selection_callback)
-        #
+
         self.geometry_selection_callback()
         self.attribution_type_callback()
 
     def attribution_type_callback(self):
-
         index = self.comboBox_attribution_type.currentIndex()
-        if index == AttributionBodiesType.ALL_BODIES:
+        all_bodies = index == AttributionBodiesType.ALL_BODIES
+        self.lineEdit_selection_id.setDisabled(all_bodies)
+
+        if all_bodies:
             self.lineEdit_selection_id.setText("All bodies")
-        elif index == AttributionBodiesType.SELECTED_BODIES:
-            self.clear_line_edit_selection_id()
-
-        self.lineEdit_selection_id.setEnabled(bool(index))
-
-    def geometry_selection_callback(self):
-        if self.tabWidget_main.currentIndex() == SetupTabType.LIST:
-            self.verify_if_selected_volumes_are_in_tree_widget_proportional_damping()
             return
 
+        self.clear_line_edit_selection_id()
+
+    def geometry_selection_callback(self):
         volumes = app().main_window.selection.geometry_volumes
+        if not volumes:
+            return
 
-        if volumes:
-            volume_ids = [int(vol_id) for vol_id in volumes]
+        volume_ids = [int(vol_id) for vol_id in volumes]
 
-            if self.comboBox_attribution_type.currentIndex() == AttributionBodiesType.ALL_BODIES:
-                self.comboBox_attribution_type.setCurrentIndex(AttributionBodiesType.SELECTED_BODIES)
+        if self.comboBox_attribution_type.currentIndex() == AttributionBodiesType.ALL_BODIES:
+            self.comboBox_attribution_type.setCurrentIndex(AttributionBodiesType.SELECTED_BODIES)
 
-            text = ", ".join([str(i) for i in volume_ids])
-            self.lineEdit_selection_id.setText(text)
+        text = ", ".join([str(i) for i in volume_ids])
+        self.lineEdit_selection_id.setText(text)
 
-            if len(volume_ids) == 1:
-                p_data = self.properties._get_property("proportional_damping", volume=volume_ids[0])
-                if p_data is None:
-                    return
-                
-                self.load_dissipation_model_data(p_data)
+        if len(volume_ids) == 1:
+            p_data = self.properties._get_property("proportional_damping", volume=volume_ids[0])
+            if p_data is None:
+                return
+            
+            self.load_dissipation_model_data(p_data)
 
     def load_dissipation_model_data(self, data: dict):
 
@@ -109,52 +135,6 @@ class ProportionalDampingInput(ProportionalDampingInputs_UI):
         self.lineEdit_fluid_density_complex_factor.setText(f"{density_factor : .4f}")
         self.actions_to_finalize()
     
-    def verify_if_selected_volumes_are_in_tree_widget_proportional_damping(self):
-        if self.tree_item_clicked:
-            return
-
-        selected_volumes = app().main_window.selection.geometry_volumes
-
-        if not selected_volumes:
-            return
-
-        self.clear_line_edit_selection_id()
-        self.treeWidget_proportional_damping.clearSelection()
-        self.pushButton_remove.setDisabled(True)
-
-        map_id_to_model_index = self.get_tree_widget_proportional_damping_items_map()
-        selected_ids = set(map_id_to_model_index.keys())
-        selected_volumes_in_tree_widget = selected_volumes.intersection(selected_ids)
-
-        if not selected_volumes_in_tree_widget:
-            return
-        
-        self.pushButton_remove.setEnabled(True)
-        
-        model_selector = self.treeWidget_proportional_damping.selectionModel()
-
-        for volume_id in selected_volumes_in_tree_widget:
-            model_index = map_id_to_model_index[volume_id]
-
-            model_selector.select(model_index, QItemSelectionModel.SelectionFlag.Select | QItemSelectionModel.SelectionFlag.Rows)
-
-        self.treeWidget_proportional_damping.setSelectionMode(QAbstractItemView.SingleSelection)
-        self.set_selection_text(selected_volumes_in_tree_widget)
-
-    def get_tree_widget_proportional_damping_items_map(self) -> dict:
-        map_id_to_model_index = dict()
-
-        index = self.treeWidget_proportional_damping.indexAt(QPoint(0, 0))
-        while index.isValid():
-            item = self.treeWidget_proportional_damping.itemFromIndex(index)
-            volume_id = int(item.text(0))
-
-            map_id_to_model_index[volume_id] = index
-
-            index = self.treeWidget_proportional_damping.indexBelow(index)
-        
-        return map_id_to_model_index
-
     def check_inputs(self, lineEdit: QLineEdit, label: str, only_positive=False, zero_included=True, _float=True):
 
         message = ""
@@ -220,17 +200,17 @@ class ProportionalDampingInput(ProportionalDampingInputs_UI):
             update_entities_selection(self.lineEdit_selection_id, "volumes", volume_ids)
             app().main_window.selection.selection_changed.connect(self.geometry_selection_callback)
 
-        lineEdit = self.lineEdit_speed_of_sound_complex_factor
-        speed_of_sound_factor = self.check_inputs(lineEdit, "Speed of sound complex factor", only_positive=True)
-        if speed_of_sound_factor is None:
-            lineEdit.setFocus()
-            return True
+        _eta_speed = self.lineEdit_speed_of_sound_complex_factor.text()
+        speed_of_sound_factor = 0 if _eta_speed == "" else float(_eta_speed)
 
-        lineEdit = self.lineEdit_fluid_density_complex_factor
-        fluid_density_factor = self.check_inputs(lineEdit, "Fluid density complex factor", only_positive=True)
-        if fluid_density_factor is None:
-            lineEdit.setFocus()
-            return True
+        _eta_density = self.lineEdit_fluid_density_complex_factor.text()
+        fluid_density_factor = 0 if _eta_density == "" else float(_eta_density)
+
+        if not any((speed_of_sound_factor, fluid_density_factor)):
+            title = "Invalid inputs detected"
+            message = "Enter a non-zero positive value to proceed with the proportional damping configuration."
+            PrintMessageInput([error_title, title, message])
+            return
 
         data = {
             "speed_of_sound_factor": speed_of_sound_factor,
@@ -243,17 +223,16 @@ class ProportionalDampingInput(ProportionalDampingInputs_UI):
         self.actions_to_finalize(close_window)
 
     def remove_callback(self):
-        selected_volumes = self.get_selected_volumes_from_tree_widget_proportional_damping()
-
-        if not selected_volumes:
+        selected_items = self.treeWidget_proportional_damping.selectedItems()
+        if not selected_items:
             return
 
-        for volume_id in selected_volumes:
+        for item in selected_items:
+            volume_id = int(item.text(0))
             self.properties._remove_volume_property("proportional_damping", volume_id)
 
         self.clear_line_edit_selection_id()
         self.treeWidget_proportional_damping.clearSelection()
-        self.pushButton_remove.setDisabled(True)
 
         app().main_window.selection.clear_selection()
         self.actions_to_finalize()
@@ -274,68 +253,37 @@ class ProportionalDampingInput(ProportionalDampingInputs_UI):
             self.actions_to_finalize()
 
     def tab_event_callback(self):
-        app().main_window.selection.clear_selection()
-
         list_tab = self.tabWidget_main.currentIndex() == SetupTabType.LIST
         self.pushButton_apply.setDisabled(list_tab)
         self.pushButton_apply_and_close.setDisabled(list_tab)
         self.lineEdit_selection_id.setDisabled(list_tab)
         self.comboBox_attribution_type.setDisabled(list_tab)
 
-        self.clear_line_edit_selection_id()
-
-        if list_tab:
-            self.pushButton_remove.setDisabled(True)
-            self.treeWidget_proportional_damping.clearSelection()
-
     def on_click_item(self, item):
-        self.tree_item_clicked = True
+        selected_items = self.treeWidget_proportional_damping.selectedItems()
+        if not selected_items:
+            return
 
-        volume_ids = self.get_selected_volumes_from_tree_widget_proportional_damping()
+        volume_ids = []
+        for item in selected_items:
+            volume_ids.append(int(item.text(0)))
 
         if not volume_ids:
             return
 
         app().main_window.selection.set_geometry_selection(volumes=volume_ids)
 
-        self.pushButton_remove.setEnabled(True)
-        self.set_selection_text(volume_ids)
-
-        self.tree_item_clicked = False
-
     def on_doubleclick_item(self, item):
         self.on_click_item(item)
-    
-    def get_selected_volumes_from_tree_widget_proportional_damping(self) -> list:
-        selected_items = self.treeWidget_proportional_damping.selectedItems()
-
-        if not selected_items:
-            return list()
-        
-        return [int(item.text(0)) for item in selected_items]
-    
-    def set_selection_text(self, selected_volumes: list | set):
-        selected_volumes = list(selected_volumes)
-        selected_volumes.sort()
-
-        selected_volumes = map(str, selected_volumes)
-        selection_text = ", ".join(selected_volumes)
-
-        self.lineEdit_selection_id.setText(selection_text)
-        self.lineEdit_selection_id.setToolTip(selection_text)
-    
+          
     def clear_line_edit_selection_id(self):
         self.lineEdit_selection_id.clear()
         self.lineEdit_selection_id.setToolTip("")
 
-    def load_info(self):
+    def load_model_info(self):
         self.treeWidget_proportional_damping.clear()
-        self.treeWidget_proportional_damping.setColumnWidth(0, 80)
-        self.treeWidget_proportional_damping.setColumnWidth(1, 160)
 
-        for key, data in self.properties.volume_properties.items():
-
-            property, volume_id = key
+        for (property, volume_id), data in self.properties.volume_properties.items():
             if property != "proportional_damping":
                 continue
 
@@ -362,8 +310,19 @@ class ProportionalDampingInput(ProportionalDampingInputs_UI):
         self.tabWidget_main.setTabVisible(SetupTabType.LIST, False)
         self.tabWidget_main.setCurrentIndex(SetupTabType.SETUP)
 
+    def group_assistant_callback(self):
+        if self.group_assistant is None:
+            self.group_assistant = GroupingAssistantInputs(selector_mode=True)
+            self.group_assistant.exec()
+            self.group_assistant = None
+            return
+
+        self.group_assistant.raise_()
+        self.group_assistant.activateWindow()
+
     def actions_to_finalize(self, close_window: bool = False):
-        self.load_info()
+
+        self.load_model_info()
         app().main_window.update_info_text()
         app().project.update_model_properties_file()
         app().main_window.update_symbols()
@@ -378,16 +337,11 @@ class ProportionalDampingInput(ProportionalDampingInputs_UI):
             self.remove_callback()
         elif event.key() == Qt.Key_Escape:
             self.close()
-        elif event.key() == Qt.Key_Control:
-            self.treeWidget_proportional_damping.setSelectionMode(QAbstractItemView.MultiSelection)
-        elif event.key() == Qt.Key_Shift:
-            self.treeWidget_proportional_damping.setSelectionMode(QAbstractItemView.ContiguousSelection)
-    
-    def keyReleaseEvent(self, event):
-        if event.key() == Qt.Key_Control:
-            self.treeWidget_proportional_damping.setSelectionMode(QAbstractItemView.SingleSelection)
 
     def closeEvent(self, a0: QCloseEvent | None) -> None:
+        if isinstance(self.group_assistant, QDialog):
+            self.group_assistant.close()
+
         self.keep_window_open = False
         app().main_window.selection.selection_changed.disconnect(self.geometry_selection_callback)
         app().main_window.selection.volume_selection_mode = False

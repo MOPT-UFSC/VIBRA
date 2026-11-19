@@ -20,11 +20,13 @@ from PySide6.QtWidgets import (QApplication, QComboBox, QDialog, QFrame,
     QPushButton, QSizePolicy, QSpacerItem, QTabWidget,
     QTreeWidget, QTreeWidgetItem, QWidget)
 
+from vibra.interface.formatters.icons import Icon
+
 class Ui_Dialog(object):
     def setupUi(self, Dialog):
         if not Dialog.objectName():
             Dialog.setObjectName(u"Dialog")
-        Dialog.resize(450, 388)
+        Dialog.resize(450, 392)
         self.gridLayout = QGridLayout(Dialog)
         self.gridLayout.setSpacing(4)
         self.gridLayout.setObjectName(u"gridLayout")
@@ -64,13 +66,13 @@ class Ui_Dialog(object):
         font1 = QFont()
         font1.setPointSize(10)
         self.tabWidget_main.setFont(font1)
-        self.tab_proportional_damping = QWidget()
-        self.tab_proportional_damping.setObjectName(u"tab_proportional_damping")
-        self.gridLayout_12 = QGridLayout(self.tab_proportional_damping)
+        self.tab_main = QWidget()
+        self.tab_main.setObjectName(u"tab_main")
+        self.gridLayout_12 = QGridLayout(self.tab_main)
         self.gridLayout_12.setSpacing(2)
         self.gridLayout_12.setObjectName(u"gridLayout_12")
-        self.gridLayout_12.setContentsMargins(2, 10, 2, 10)
-        self.frame_8 = QFrame(self.tab_proportional_damping)
+        self.gridLayout_12.setContentsMargins(2, 8, 2, 8)
+        self.frame_8 = QFrame(self.tab_main)
         self.frame_8.setObjectName(u"frame_8")
         self.frame_8.setMinimumSize(QSize(340, 80))
         self.frame_8.setMaximumSize(QSize(400, 160))
@@ -109,8 +111,8 @@ class Ui_Dialog(object):
 
         self.lineEdit_speed_of_sound_complex_factor = QLineEdit(self.frame_8)
         self.lineEdit_speed_of_sound_complex_factor.setObjectName(u"lineEdit_speed_of_sound_complex_factor")
-        self.lineEdit_speed_of_sound_complex_factor.setMinimumSize(QSize(80, 28))
-        self.lineEdit_speed_of_sound_complex_factor.setMaximumSize(QSize(80, 28))
+        self.lineEdit_speed_of_sound_complex_factor.setMinimumSize(QSize(100, 28))
+        self.lineEdit_speed_of_sound_complex_factor.setMaximumSize(QSize(100, 28))
         self.lineEdit_speed_of_sound_complex_factor.setFont(font2)
         self.lineEdit_speed_of_sound_complex_factor.setStyleSheet(u"")
         self.lineEdit_speed_of_sound_complex_factor.setAlignment(Qt.AlignmentFlag.AlignCenter)
@@ -119,8 +121,8 @@ class Ui_Dialog(object):
 
         self.lineEdit_fluid_density_complex_factor = QLineEdit(self.frame_8)
         self.lineEdit_fluid_density_complex_factor.setObjectName(u"lineEdit_fluid_density_complex_factor")
-        self.lineEdit_fluid_density_complex_factor.setMinimumSize(QSize(80, 28))
-        self.lineEdit_fluid_density_complex_factor.setMaximumSize(QSize(80, 28))
+        self.lineEdit_fluid_density_complex_factor.setMinimumSize(QSize(100, 28))
+        self.lineEdit_fluid_density_complex_factor.setMaximumSize(QSize(100, 28))
         self.lineEdit_fluid_density_complex_factor.setFont(font2)
         self.lineEdit_fluid_density_complex_factor.setStyleSheet(u"")
         self.lineEdit_fluid_density_complex_factor.setAlignment(Qt.AlignmentFlag.AlignCenter)
@@ -134,7 +136,7 @@ class Ui_Dialog(object):
 
         self.gridLayout_12.addWidget(self.frame_8, 0, 0, 1, 1)
 
-        self.tabWidget_main.addTab(self.tab_proportional_damping, "")
+        self.tabWidget_main.addTab(self.tab_main, "")
         self.tab_list = QWidget()
         self.tab_list.setObjectName(u"tab_list")
         self.gridLayout_6 = QGridLayout(self.tab_list)
@@ -208,24 +210,6 @@ class Ui_Dialog(object):
         self.gridLayout_5 = QGridLayout(self.frame_4)
         self.gridLayout_5.setObjectName(u"gridLayout_5")
         self.gridLayout_5.setContentsMargins(6, 6, 6, 6)
-        self.comboBox_attribution_type = QComboBox(self.frame_4)
-        self.comboBox_attribution_type.addItem("")
-        self.comboBox_attribution_type.addItem("")
-        self.comboBox_attribution_type.setObjectName(u"comboBox_attribution_type")
-        self.comboBox_attribution_type.setMinimumSize(QSize(0, 28))
-        self.comboBox_attribution_type.setMaximumSize(QSize(16777215, 28))
-        self.comboBox_attribution_type.setFont(font1)
-
-        self.gridLayout_5.addWidget(self.comboBox_attribution_type, 0, 3, 1, 1)
-
-        self.horizontalSpacer_3 = QSpacerItem(40, 20, QSizePolicy.Policy.Expanding, QSizePolicy.Policy.Minimum)
-
-        self.gridLayout_5.addItem(self.horizontalSpacer_3, 0, 4, 1, 1)
-
-        self.horizontalSpacer_4 = QSpacerItem(40, 20, QSizePolicy.Policy.Expanding, QSizePolicy.Policy.Minimum)
-
-        self.gridLayout_5.addItem(self.horizontalSpacer_4, 0, 0, 1, 1)
-
         self.label_2 = QLabel(self.frame_4)
         self.label_2.setObjectName(u"label_2")
         self.label_2.setMinimumSize(QSize(0, 28))
@@ -240,6 +224,10 @@ class Ui_Dialog(object):
 
         self.gridLayout_5.addWidget(self.label_2, 0, 1, 1, 1)
 
+        self.horizontalSpacer_4 = QSpacerItem(40, 20, QSizePolicy.Policy.Expanding, QSizePolicy.Policy.Minimum)
+
+        self.gridLayout_5.addItem(self.horizontalSpacer_4, 0, 0, 1, 1)
+
         self.lineEdit_selection_id = QLineEdit(self.frame_4)
         self.lineEdit_selection_id.setObjectName(u"lineEdit_selection_id")
         self.lineEdit_selection_id.setEnabled(True)
@@ -251,6 +239,39 @@ class Ui_Dialog(object):
         self.lineEdit_selection_id.setAlignment(Qt.AlignmentFlag.AlignCenter)
 
         self.gridLayout_5.addWidget(self.lineEdit_selection_id, 0, 2, 1, 1)
+
+        self.horizontalSpacer_3 = QSpacerItem(40, 20, QSizePolicy.Policy.Expanding, QSizePolicy.Policy.Minimum)
+
+        self.gridLayout_5.addItem(self.horizontalSpacer_3, 0, 5, 1, 1)
+
+        self.comboBox_attribution_type = QComboBox(self.frame_4)
+        self.comboBox_attribution_type.addItem("")
+        self.comboBox_attribution_type.addItem("")
+        self.comboBox_attribution_type.setObjectName(u"comboBox_attribution_type")
+        self.comboBox_attribution_type.setMinimumSize(QSize(0, 28))
+        self.comboBox_attribution_type.setMaximumSize(QSize(16777215, 28))
+        self.comboBox_attribution_type.setFont(font1)
+
+        self.gridLayout_5.addWidget(self.comboBox_attribution_type, 0, 3, 1, 1)
+
+        self.pushButton_select_group = QPushButton(self.frame_4)
+        self.pushButton_select_group.setObjectName(u"pushButton_select_group")
+        self.pushButton_select_group.setMinimumSize(QSize(40, 30))
+        self.pushButton_select_group.setMaximumSize(QSize(40, 30))
+        font5 = QFont()
+        font5.setFamilies([u"MS Shell Dlg 2"])
+        font5.setPointSize(11)
+        font5.setBold(True)
+        font5.setItalic(False)
+        self.pushButton_select_group.setFont(font5)
+        self.pushButton_select_group.setStyleSheet(u"")
+        icon = Icon(u":/icons/selection_icon.png")
+        self.pushButton_select_group.setIcon(icon)
+        self.pushButton_select_group.setIconSize(QSize(20, 20))
+        self.pushButton_select_group.setAutoDefault(False)
+        self.pushButton_select_group.setFlat(False)
+
+        self.gridLayout_5.addWidget(self.pushButton_select_group, 0, 4, 1, 1)
 
 
         self.gridLayout_4.addWidget(self.frame_4, 0, 0, 1, 1)
@@ -272,11 +293,11 @@ class Ui_Dialog(object):
         self.pushButton_apply_and_close.setObjectName(u"pushButton_apply_and_close")
         self.pushButton_apply_and_close.setMinimumSize(QSize(72, 30))
         self.pushButton_apply_and_close.setMaximumSize(QSize(72, 30))
-        font5 = QFont()
-        font5.setPointSize(10)
-        font5.setBold(False)
-        font5.setItalic(False)
-        self.pushButton_apply_and_close.setFont(font5)
+        font6 = QFont()
+        font6.setPointSize(10)
+        font6.setBold(False)
+        font6.setItalic(False)
+        self.pushButton_apply_and_close.setFont(font6)
         self.pushButton_apply_and_close.setStyleSheet(u"")
         self.pushButton_apply_and_close.setAutoDefault(False)
         self.pushButton_apply_and_close.setFlat(False)
@@ -287,7 +308,7 @@ class Ui_Dialog(object):
         self.pushButton_apply.setObjectName(u"pushButton_apply")
         self.pushButton_apply.setMinimumSize(QSize(72, 30))
         self.pushButton_apply.setMaximumSize(QSize(72, 30))
-        self.pushButton_apply.setFont(font5)
+        self.pushButton_apply.setFont(font6)
         self.pushButton_apply.setStyleSheet(u"")
         self.pushButton_apply.setAutoDefault(False)
         self.pushButton_apply.setFlat(False)
@@ -298,7 +319,7 @@ class Ui_Dialog(object):
         self.pushButton_cancel.setObjectName(u"pushButton_cancel")
         self.pushButton_cancel.setMinimumSize(QSize(72, 30))
         self.pushButton_cancel.setMaximumSize(QSize(72, 30))
-        self.pushButton_cancel.setFont(font5)
+        self.pushButton_cancel.setFont(font6)
         self.pushButton_cancel.setStyleSheet(u"")
         self.pushButton_cancel.setAutoDefault(False)
         self.pushButton_cancel.setFlat(False)
@@ -335,7 +356,7 @@ class Ui_Dialog(object):
 #if QT_CONFIG(tooltip)
         self.lineEdit_fluid_density_complex_factor.setToolTip(QCoreApplication.translate("Dialog", u"<html><head/><body><p align=\"center\">Complex factor '\u03b7' for fluid density:</p><p align=\"center\">\u03c1<span style=\" vertical-align:sub;\">complex</span> = (1 + \u03b7*1j)*\u03c1<span style=\" vertical-align:sub;\">o</span></p></body></html>", None))
 #endif // QT_CONFIG(tooltip)
-        self.tabWidget_main.setTabText(self.tabWidget_main.indexOf(self.tab_proportional_damping), QCoreApplication.translate("Dialog", u"Setup", None))
+        self.tabWidget_main.setTabText(self.tabWidget_main.indexOf(self.tab_main), QCoreApplication.translate("Dialog", u"Setup", None))
         ___qtreewidgetitem = self.treeWidget_proportional_damping.headerItem()
         ___qtreewidgetitem.setText(2, QCoreApplication.translate("Dialog", u"Fluid density factor", None));
         ___qtreewidgetitem.setText(1, QCoreApplication.translate("Dialog", u"Speed of sound factor", None));
@@ -346,11 +367,15 @@ class Ui_Dialog(object):
         self.pushButton_reset.setText(QCoreApplication.translate("Dialog", u"Reset", None))
         self.pushButton_remove.setText(QCoreApplication.translate("Dialog", u"Remove", None))
         self.tabWidget_main.setTabText(self.tabWidget_main.indexOf(self.tab_list), QCoreApplication.translate("Dialog", u"List", None))
+        self.label_2.setText(QCoreApplication.translate("Dialog", u"Selected bodies:", None))
+        self.lineEdit_selection_id.setText("")
         self.comboBox_attribution_type.setItemText(0, QCoreApplication.translate("Dialog", u" All bodies", None))
         self.comboBox_attribution_type.setItemText(1, QCoreApplication.translate("Dialog", u" Selected bodies", None))
 
-        self.label_2.setText(QCoreApplication.translate("Dialog", u"Selected bodies:", None))
-        self.lineEdit_selection_id.setText("")
+#if QT_CONFIG(tooltip)
+        self.pushButton_select_group.setToolTip(QCoreApplication.translate("Dialog", u"<html><head/><body><p><span style=\" font-size:10pt; font-weight:400;\">Show the created groups</span></p></body></html>", None))
+#endif // QT_CONFIG(tooltip)
+        self.pushButton_select_group.setText("")
         self.pushButton_apply_and_close.setText(QCoreApplication.translate("Dialog", u"Ok", None))
         self.pushButton_apply.setText(QCoreApplication.translate("Dialog", u"Apply", None))
         self.pushButton_cancel.setText(QCoreApplication.translate("Dialog", u"Cancel", None))
@@ -369,7 +394,7 @@ class ProportionalDampingInputs_UI(QDialog, Ui_Dialog):
                 - frame_2: QFrame
                     - (Layout): QGridLayout
                             - tabWidget_main: QTabWidget
-                                - tab_proportional_damping: QWidget
+                                - tab_main: QWidget
                                     - (Layout): QGridLayout
                                             - frame_8: QFrame
                                                 - (Layout): QGridLayout
@@ -386,9 +411,10 @@ class ProportionalDampingInputs_UI(QDialog, Ui_Dialog):
                                                         - pushButton_remove: QPushButton
                             - frame_4: QFrame
                                 - (Layout): QGridLayout
-                                        - comboBox_attribution_type: QComboBox
                                         - label_2: QLabel
                                         - lineEdit_selection_id: QLineEdit
+                                        - comboBox_attribution_type: QComboBox
+                                        - pushButton_select_group: QPushButton
                 - frame_buttons: QFrame
                     - (Layout): QGridLayout
                             - pushButton_apply_and_close: QPushButton

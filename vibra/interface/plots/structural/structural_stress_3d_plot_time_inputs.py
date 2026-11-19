@@ -89,7 +89,7 @@ class StructuralStress3dPlotTimeInputs(StructuralStress3dPlotTimeInputs_UI):
 
         self.animation_widget = AnimationWidget()
         self.grid_layout.addWidget(self.animation_widget)
-        self.frame_animation.adjustSize()
+        self.frame_animation.setFixedHeight(230)
 
         self.animation_widget.label_animation_phase.setText("Time step:")
         self.animation_widget.label_phase_angle.setText(f"{0: .4e}s")
@@ -103,7 +103,7 @@ class StructuralStress3dPlotTimeInputs(StructuralStress3dPlotTimeInputs_UI):
 
         self.results_display_widget = ResultsDisplayWidget()
         grid_layout.addWidget(self.results_display_widget)
-        self.frame_color.adjustSize()
+        self.frame_color.setFixedHeight(140)
 
     def _initialize(self):
         self.plot_setup = None
@@ -137,7 +137,7 @@ class StructuralStress3dPlotTimeInputs(StructuralStress3dPlotTimeInputs_UI):
         # QPushButton connection
         self.pushButton_process_nodal_stresses.clicked.connect(self.plot_data_callback)
 
-        self.animation_widget.checkBox_magnification.stateChanged.connect(self.plot_data_callback)
+        self.animation_widget.comboBox_multiplification_factor.currentIndexChanged.connect(self.plot_data_callback)
         self.ifft_controls_widget.ifft_controls_changed.connect(self.enable_process_ifft_button)
         self.results_display_widget.colormap_changed.connect(self.animation_widget.update_color_and_deformation)
         self.results_display_widget.min_max_value_changed.connect(self.animation_widget.update_color_and_deformation)
@@ -177,7 +177,6 @@ class StructuralStress3dPlotTimeInputs(StructuralStress3dPlotTimeInputs_UI):
 
         plot_setup = StressFieldPlotSetupTime(
             time_index=0,
-            true_scale=self.animation_widget.true_scale,
             magnification_factor=self.animation_widget.magnification_factor,
             stress_type=stress_index,
             plot_type=plot_type,

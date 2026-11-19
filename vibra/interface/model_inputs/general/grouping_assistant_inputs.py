@@ -1,6 +1,6 @@
 from enum import IntEnum
 
-from PySide6.QtCore import Qt
+from PySide6.QtCore import QSignalBlocker, Qt
 from PySide6.QtGui import QCloseEvent
 from PySide6.QtWidgets import QAbstractItemView, QTreeWidgetItem
 
@@ -40,10 +40,11 @@ class GroupingAssistantInputs(GroupingAssistantInputs_UI):
         app().main_window.workspace_updating_for_model_setup()
 
         self._config_window()
-        self._initialize()
-        self._configure_widgets()
-        self._create_connections()
         self._configure_validators()
+        self._configure_widgets()
+        self._initialize()
+        self._create_connections()
+
         self.load_model_info()
 
         if selector_mode:
@@ -74,13 +75,13 @@ class GroupingAssistantInputs(GroupingAssistantInputs_UI):
     def _initialize(self):
         self.imported_values = None
         self.keep_window_open = True
-        self.last_tab = self.tabWidget_main.currentIndex()
 
     def _configure_widgets(self):
 
         self.lineEdit_selected_ids.setDisabled(True)
         self.pushButton_select.setDisabled(True)
         self.treeWidget_group_info.setSelectionMode(QAbstractItemView.SelectionMode.ExtendedSelection)
+        self.treeWidget_group_info.setEditTriggers(QAbstractItemView.EditTrigger.NoEditTriggers)
 
         for i, w in enumerate([60, 120, 120, 180]):
             self.treeWidget_group_info.setColumnWidth(i, w)
@@ -110,6 +111,8 @@ class GroupingAssistantInputs(GroupingAssistantInputs_UI):
 
         # QTreeWidget connections
         self.treeWidget_group_info.itemClicked.connect(self.item_clicked_callback)
+        self.treeWidget_group_info.itemDoubleClicked.connect(self.group_item_double_clicked_callback)
+        self.treeWidget_group_info.itemChanged.connect(self.group_item_changed_callback)
 
         app().main_window.selection.selection_changed.connect(self.geometry_selection_callback)
 
@@ -299,12 +302,15 @@ class GroupingAssistantInputs(GroupingAssistantInputs_UI):
 
                 app().main_window.selection.set_geometry_selection(lines=lines_invert)
 
-    def get_new_group_id(self) -> int:
+    def get_new_group_id(self, group_label: str) -> int:
 
         used_ids = []
-        for property, _id in self.properties.group_properties:
+        for (property, _id), data in self.properties.group_properties.items():
             if property != "selection_group":
                 continue
+
+            if data.get("group_label", "") == group_label:
+                return _id
 
             used_ids.append(_id)
 
@@ -313,6 +319,36 @@ class GroupingAssistantInputs(GroupingAssistantInputs_UI):
                 continue
 
             return new_id
+
+    def get_next_group_index(self, base_label: str) -> int:
+        prefix = f"{base_label}_"
+        next_index = 1
+
+        for (property, _), data in self.properties.group_properties.items():
+            if property != "selection_group" or not isinstance(data, dict):
+                continue
+
+            group_label = data.get("group_label", "")
+            if not group_label.startswith(prefix):
+                continue
+
+            suffix = group_label[len(prefix):]
+            if suffix.isdigit():
+                next_index = max(next_index, int(suffix) + 1)
+
+        return next_index
+
+    def add_selection_groups(self, base_label: str, entity_groups: list[list[int]], entity_type: str = "Surfaces"):
+        next_index = self.get_next_group_index(base_label)
+
+        for offset, entities_id in enumerate(entity_groups):
+            group_label = f"{base_label}_{next_index + offset}"
+            group_id = self.get_new_group_id(group_label)
+            data = GroupData(group_label, entity_type, entities_id)
+            self.properties._set_property("selection_group", data.as_dict(), group=group_id)
+
+        self.actions_to_finalize()
+        self.tabWidget_main.setCurrentIndex(SetupTabType.LIST)
 
     def is_group_label_valid(self, group_label: str):
         for (property, _), data in self.properties.group_properties.items():
@@ -327,6 +363,16 @@ class GroupingAssistantInputs(GroupingAssistantInputs_UI):
 
         return True
 
+    def get_selected_entities_ids(self) -> list[int]:
+        text = self.lineEdit_selected_ids.text().replace(" ", "").strip(",")
+        if not text:
+            return []
+
+        try:
+            return [int(value) for value in text.split(",")]
+        except ValueError:
+            return []
+
     def apply_callback(self, close_window: bool = False):
 
         group_label = self.lineEdit_group_label.text()
@@ -337,18 +383,15 @@ class GroupingAssistantInputs(GroupingAssistantInputs_UI):
             self.lineEdit_group_label.setFocus()
             return
 
-        if not self.is_group_label_valid(group_label):
-            title = "Invalid group label"
-            message = f"The group label '{group_label}' already exists. Please, enter a different "
-            message += "valid group label to proceed with creating the group selection."
+        entities_id = self.get_selected_entities_ids()
+        if not entities_id:
+            title = "Empty selection"
+            message = "Select at least one entity to proceed with creating the group."
             PrintMessageInput([error_title, title, message])
-            self.lineEdit_group_label.setFocus()
-            self.lineEdit_group_label.selectAll()
             return
 
-        group_id = self.get_new_group_id()
+        group_id = self.get_new_group_id(group_label)
         entity_type = self.comboBox_selector_filter.currentText()
-        entities_id = [int(text) for text in self.lineEdit_selected_ids.text().replace(" ", "").split(",")]
 
         data = GroupData(group_label, entity_type, entities_id)
         self.properties._set_property("selection_group", data.as_dict(), group=group_id)
@@ -359,25 +402,27 @@ class GroupingAssistantInputs(GroupingAssistantInputs_UI):
         self.actions_to_finalize(close_window)
 
     def load_model_info(self):
-        self.treeWidget_group_info.clear()
+        with QSignalBlocker(self.treeWidget_group_info):
+            self.treeWidget_group_info.clear()
 
-        for (property, group_id), data in self.properties.group_properties.items():
-            if property != "selection_group":
-                continue
+            for (property, group_id), data in self.properties.group_properties.items():
+                if property != "selection_group":
+                    continue
 
-            if not isinstance(data, dict):
-                continue
+                if not isinstance(data, dict):
+                    continue
 
-            group_label = data.get("group_label")
-            entity_type = data.get("entity_type")
-            entities_id = ", ".join([str(i) for i in data.get("entities_id")])
+                group_label = data.get("group_label")
+                entity_type = data.get("entity_type")
+                entities_id = ", ".join([str(i) for i in data.get("entities_id")])
 
-            item = QTreeWidgetItem([str(group_id), group_label, entity_type, entities_id])
+                item = QTreeWidgetItem([str(group_id), group_label, entity_type, entities_id])
+                item.setFlags(item.flags() | Qt.ItemFlag.ItemIsEditable)
 
-            for i in range(4):
-                item.setTextAlignment(i, Qt.AlignCenter)
+                for i in range(4):
+                    item.setTextAlignment(i, Qt.AlignCenter)
 
-            self.treeWidget_group_info.addTopLevelItem(item)
+                self.treeWidget_group_info.addTopLevelItem(item)
 
         self.update_tabs_visibility()
 
@@ -431,8 +476,11 @@ class GroupingAssistantInputs(GroupingAssistantInputs_UI):
         if not isinstance(data, dict):
             return
 
+        group_label = data.get("group_label")
         entity_type = data.get("entity_type")
         entities_id = data.get("entities_id")
+
+        self.lineEdit_group_label.setText(group_label)
 
         match entity_type:
             case "Volumes":
@@ -444,17 +492,42 @@ class GroupingAssistantInputs(GroupingAssistantInputs_UI):
             case "Lines":
                 app().main_window.selection.set_geometry_selection(lines=entities_id)
 
+    def group_item_double_clicked_callback(self, item: QTreeWidgetItem, column: int):
+        self.treeWidget_group_info.editItem(item, 1)
+
+    def group_item_changed_callback(self, item: QTreeWidgetItem, column: int):
+        if column != 1:
+            return
+
+        group_id = int(item.text(0))
+        data = self.properties.group_properties.get(("selection_group", group_id))
+
+        if not isinstance(data, dict):
+            return
+
+        old_label = data.get("group_label")
+        new_label = item.text(1).strip()
+
+        if new_label == old_label:
+            return
+
+        if not new_label or not self.is_group_label_valid(new_label):
+            self._restore_group_label(item, old_label)
+            return
+
+        group_data = GroupData(new_label, data.get("entity_type"), data.get("entities_id"))
+        self.properties._set_property("selection_group", group_data.as_dict(), group=group_id)
+        app().project.update_model_properties_file()
+        app().main_window.update_symbols()
+
+    def _restore_group_label(self, item: QTreeWidgetItem, group_label: str):
+        with QSignalBlocker(self.treeWidget_group_info):
+            item.setText(1, group_label)
+
     def tab_event_callback(self):
-        current_tab = self.tabWidget_main.currentIndex()
-        list_tab = current_tab == SetupTabType.LIST
-
-        if self.last_tab == SetupTabType.LIST or list_tab:
-            app().main_window.selection.clear_selection()
-
+        list_tab = self.tabWidget_main.currentIndex() == SetupTabType.LIST
         self.pushButton_apply.setDisabled(list_tab)
         self.pushButton_apply_and_close.setDisabled(list_tab)
-
-        self.last_tab = current_tab
 
     def actions_to_finalize(self, close_window: bool = False):
         self.load_model_info()

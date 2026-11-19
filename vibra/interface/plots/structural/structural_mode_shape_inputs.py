@@ -55,8 +55,10 @@ class StructuralModeShapeInputs(StructuralModeShapeInputs_UI):
         self.frame_animation.setLayout(self.grid_layout)
 
         self.animation_widget = AnimationWidget()
+        self.animation_widget.hide_true_scale_item()
+
         self.grid_layout.addWidget(self.animation_widget)
-        self.frame_animation.adjustSize()
+        self.frame_animation.setFixedHeight(230)
 
     def _add_color_widget(self):
         grid_layout = QGridLayout()
@@ -65,12 +67,12 @@ class StructuralModeShapeInputs(StructuralModeShapeInputs_UI):
 
         self.results_display_widget = ResultsDisplayWidget()
         grid_layout.addWidget(self.results_display_widget)
-        self.frame_color.adjustSize()
+        self.frame_color.setFixedHeight(140)
 
     def _configure_qt_variables(self):
         self.lineEdit_natural_frequency.setDisabled(True)
         self.lineEdit_natural_frequency.setProperty("status", "information")
-        #
+
         if app().project.solver.complex_natural_frequencies.size:
             widths = [60, 170]
             headers = ["Mode", "Damped frequency [Hz]", "Damping ratio [--]"]
