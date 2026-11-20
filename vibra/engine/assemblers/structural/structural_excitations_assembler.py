@@ -78,25 +78,16 @@ class StructuralExcitationsAssembler:
         analysis_setup = self.model.analysis_setup
         assert isinstance(analysis_setup, HarmonicAnalysisSetup)
 
-        alpha, beta, eta = self.model.global_damping
         frequencies = analysis_setup.get_frequencies()
 
         omega = 2 * np.pi * frequencies[index]
         values = self.assembler.array_prescribed_values[:, index]
 
-        Kr = self.assembler.stiffness_matrix_r + self.assembler.distributed_stiffness_matrix_r
+        Cr = self.assembler.damping_matrix_r
         Mr = self.assembler.mass_matrix_r + self.assembler.distributed_mass_matrix_r
-        Cr = self.assembler.distributed_damping_matrix_r
+        Kr = self.assembler.stiffness_matrix_r + self.assembler.distributed_stiffness_matrix_r
 
-        Kr_add = Kr @ values
-        Mr_add = Mr @ values
-
-        if isinstance(Cr, csr_matrix):
-            Cr_add = Cr @ values
-        else:
-            Cr_add = 0.
-
-        f_eq = (1 + 1j * (eta + omega * beta)) * Kr_add + (-(omega**2) + 1j * (omega * alpha)) * Mr_add + 1j * omega * Cr_add
+        f_eq = (-(omega**2) * Mr + 1j * omega * Cr + Kr) @ values
 
         return f_eq[self.assembler.unprescribed_dof_indices]
 

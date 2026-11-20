@@ -3,7 +3,7 @@ import sys
 from time import time
 
 import numpy as np
-from scipy.sparse import block_array, csr_matrix
+from scipy.sparse import block_array, coo_matrix, csr_matrix
 from tqdm import tqdm
 
 from vibra.engine.analysis_info import HarmonicAnalysisSetup
@@ -28,13 +28,7 @@ class AcousticAssembler:
     def reset(self):
 
         # global matrices and excitation vector
-        self.stiffness_matrix = None
-        self.stiffness_matrix_r = None
-        self.mass_matrix = None
-        self.mass_matrix_r = None
-        self.damping_matrices_2d: DampingMatrices2D = None
-        self.damping_matrices_3d: DampingMatrices3D = None
-        self.mass_flow_vector = None
+        self. reset_global_matrices_related_attributes()
 
         self.frequencies = None
         self.frequency_dependent = False
@@ -48,6 +42,21 @@ class AcousticAssembler:
         self.element_1d = None
         self.element_2d = None
         self.element_3d = None
+
+
+    def reset_global_matrices_related_attributes(self):
+        self.ind_rows = None
+        self.ind_cols = None
+        self.int3d_NtN = None
+        self.int3d_BtB = None
+        self.mass_matrix = None
+        self.mass_matrix_r = None
+        self.stiffness_matrix = None
+        self.stiffness_matrix_r = None
+        self.mass_flow_vector = None
+
+        self.damping_matrices_2d: DampingMatrices2D = None
+        self.damping_matrices_3d: DampingMatrices3D = None
 
 
     @property
@@ -392,7 +401,7 @@ class AcousticAssembler:
             An array containing all elementary mass factors in stacked form.
         """
         data_M = self.int3d_NtN * factor_M
-        self.mass_matrix = csr_matrix((data_M.ravel(), (self.ind_rows, self.ind_cols)), shape=self.model.gm_shape)
+        self.mass_matrix = coo_matrix((data_M.ravel(), (self.ind_rows, self.ind_cols)), shape=self.model.gm_shape).tocsr()
 
         if self.model.drop_domain:
             self.mass_matrix = self.mass_matrix[self.acoustic_dofs_indices, :][:, self.acoustic_dofs_indices]
@@ -413,7 +422,7 @@ class AcousticAssembler:
             An array containing all elementary stiffness factors in stacked form.
         """
         data_K = self.int3d_BtB * factor_K
-        self.stiffness_matrix = csr_matrix((data_K.ravel(), (self.ind_rows, self.ind_cols)), shape=self.model.gm_shape)
+        self.stiffness_matrix = coo_matrix((data_K.ravel(), (self.ind_rows, self.ind_cols)), shape=self.model.gm_shape).tocsr()
 
         if self.model.drop_domain:
             self.stiffness_matrix = self.stiffness_matrix[self.acoustic_dofs_indices, :][:, self.acoustic_dofs_indices]

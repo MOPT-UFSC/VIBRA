@@ -469,6 +469,7 @@ class Project:
         else:
             raise ValueError(f"Unsupported analysis method: {analysis_method}")
 
+        self.solver.assembler.reset_global_matrices_data()
         self.project_writer.write_harmonic_solution(self.model.solution)
 
         self.mark_project_as_modified()
