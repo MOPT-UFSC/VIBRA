@@ -123,18 +123,18 @@ def load_external_mesh_and_solve():
     # Configure the viscous-thermal models
 
     narrow_slit_duct_data = get_viscous_thermal_model_data_for_narrow_slit_duct(0.003)
-    model.set_viscous_thermal_model_data(narrow_slit_duct_data, volume=1)
+    model.properties._set_property("viscous_thermal_model", narrow_slit_duct_data, volume=1)
 
     # rectangular_duct_data = get_viscous_thermal_model_data_for_rectangular_duct(0.03, 0.003, 200)
-    # model.set_viscous_thermal_model_data(rectangular_duct_data, volume=1)
+    # model.properties._set_property("viscous_thermal_model", rectangular_duct_data, volume=1)
 
     major_duct_data = get_viscous_thermal_model_data_for_circular_duct(0.016)
-    model.set_viscous_thermal_model_data(major_duct_data, volume=2)
-    model.set_viscous_thermal_model_data(major_duct_data, volume=3)
+    model.properties._set_property("viscous_thermal_model", major_duct_data, volume=2)
+    model.properties._set_property("viscous_thermal_model", major_duct_data, volume=3)
 
     minor_duct_data = get_viscous_thermal_model_data_for_circular_duct(0.004)
-    model.set_viscous_thermal_model_data(minor_duct_data, volume=4)
-    model.set_viscous_thermal_model_data(minor_duct_data, volume=5)
+    model.properties._set_property("viscous_thermal_model", minor_duct_data, volume=4)
+    model.properties._set_property("viscous_thermal_model", minor_duct_data, volume=5)
 
     model.process_viscous_thermal_model_properties()
 

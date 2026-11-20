@@ -1219,9 +1219,6 @@ class Model:
 
         return rho_eff, C_eff
 
-    def set_viscous_thermal_model_data(self, data, group=None, volume=None):
-        self.properties._set_property("viscous_thermal_model", data, group=group, volume=volume)
-
     def process_perforated_plate_impedance(self, solution: np.ndarray | None = None):
         """
         This method processes the internal perforated plate acoustic impedance.

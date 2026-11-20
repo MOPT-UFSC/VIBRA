@@ -72,7 +72,7 @@ def viscous_thermal_acoustic_model(acoustic_model: Model) -> Model:
         "section_type": "Circular duct",
         "diameter": 0.005,
     }
-    acoustic_model.set_viscous_thermal_model_data(viscous_thermal_model_data, volume=1)
+    acoustic_model.properties._set_property("viscous_thermal_model", viscous_thermal_model_data, volume=1)
     analysis_setup = acoustic_model.get_harmonic_analysis_setup(
         analysis_id=AnalysisID.ACOUSTIC_HARMONIC,
         frequency_spacing=FrequencySpacing.EQUALLY_DISTRIBUTED,
