@@ -36,20 +36,6 @@ class IncidentPlaneWaveData:
     element_face_normals: np.ndarray
 
 
-@dataclass
-class DampingMatrices2D:
-    damping_matrix: np.ndarray
-    damping_matrix_r: np.ndarray
-
-
-@dataclass
-class DampingMatrices3D:
-    visc_damping_matrix: np.ndarray
-    visc_damping_matrix_r: np.ndarray
-    visc_load_matrix: np.ndarray
-    visc_load_matrix_r: np.ndarray
-
-
 class AcousticImpedancesAssembler:
     def __init__(self, assembler : "AcousticAssembler"):
 
@@ -661,7 +647,7 @@ class AcousticImpedancesAssembler:
         self.process_perforated_plate_impedance_data_to_assemble_damping_matrix()
 
 
-    def assemble_global_damping_matrix_3d_elements(self, factor_Cvsic: np.ndarray, factor_fvsic: np.ndarray) -> DampingMatrices3D:
+    def assemble_global_damping_matrix_3d_elements(self, factor_Cvsic: np.ndarray, factor_fvsic: np.ndarray) -> [csr_matrix, csr_matrix]:
         """
         This method assembles the global damping matrix to account
         the bulk damping effects.
@@ -680,20 +666,10 @@ class AcousticImpedancesAssembler:
             visc_damping_matrix = visc_damping_matrix[acoustic_dofs_indices, :][:, acoustic_dofs_indices]
             visc_load_matrix = visc_load_matrix[acoustic_dofs_indices, :][:, acoustic_dofs_indices]
 
-        prescribed_dof_indices = self.assembler.prescribed_dof_indices
-
-        visc_damping_matrix_r = visc_damping_matrix[:, prescribed_dof_indices]
-        visc_load_matrix_r = visc_load_matrix[:, prescribed_dof_indices]
-
-        if prescribed_dof_indices:
-            unprescribed_dof_indices = self.assembler.unprescribed_dof_indices
-            visc_damping_matrix = visc_damping_matrix[unprescribed_dof_indices, :][:, unprescribed_dof_indices]
-            visc_load_matrix = visc_load_matrix[unprescribed_dof_indices, :][:, unprescribed_dof_indices]
-
-        return DampingMatrices3D(visc_damping_matrix, visc_damping_matrix_r, visc_load_matrix, visc_load_matrix_r)
+        return visc_damping_matrix, visc_load_matrix
 
 
-    def assemble_global_damping_matrix_2d_elements(self, index: int = 0) -> DampingMatrices2D:
+    def assemble_global_damping_matrix_2d_elements(self, index: int = 0) -> csr_matrix:
         """
         This method assembles the global damping matrix at the boundaries.
 
@@ -761,11 +737,4 @@ class AcousticImpedancesAssembler:
             acoustic_dofs_indices = self.assembler.acoustic_dofs_indices
             damping_matrix = damping_matrix[acoustic_dofs_indices, :][:, acoustic_dofs_indices]
 
-        prescribed_dof_indices = self.assembler.prescribed_dof_indices
-        damping_matrix_r = damping_matrix[:, prescribed_dof_indices]
-
-        if prescribed_dof_indices:
-            unprescribed_dof_indices = self.assembler.unprescribed_dof_indices
-            damping_matrix = damping_matrix[unprescribed_dof_indices, :][:, unprescribed_dof_indices]
-
-        return DampingMatrices2D(damping_matrix, damping_matrix_r)
+        return damping_matrix
