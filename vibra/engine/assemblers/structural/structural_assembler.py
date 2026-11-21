@@ -676,8 +676,8 @@ class StructuralAssembler:
         alpha, beta, eta = self.model.global_damping
 
         # compute the dynamic stiffness matrix Kd
-        self.damping_matrix = alpha * M + (beta * eta / omega) * K + C_dist
-        self.damping_matrix_r = alpha * M_r + (beta * eta / omega) * K_r + C_dist_r
+        self.damping_matrix = alpha * M + (beta + eta / omega) * K + C_dist
+        self.damping_matrix_r = alpha * M_r + (beta + eta / omega) * K_r + C_dist_r
 
         # process the contribution for structural local dampings
         if not self.dampings_from_volume:
