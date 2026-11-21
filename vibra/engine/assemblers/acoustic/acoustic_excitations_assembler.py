@@ -702,12 +702,13 @@ class AcousticExcitationsAssembler:
             return
 
         factor_Qms1, factor_Qms2 = self.compute_mass_source_load_factors_for_volumes(index=index)
+        ind_rows, ind_cols = self.assembler.get_rows_and_cols_indices()
 
-        data_Qms1: np.ndarray = factor_Qms1 * self.int3d_NtN
-        self.Qms1_3d = csr_matrix((data_Qms1.ravel(), (self.ind_rows, self.ind_cols)), shape=self.model.gm_shape)
+        data_Qms1 = self.assembler.compute_NtN_factor_product(factor_Qms1)
+        self.Qms1_3d = csr_matrix((data_Qms1.ravel(), (ind_rows, ind_cols)), shape=self.model.gm_shape)
 
-        data_Qms2: np.ndarray = factor_Qms2 * self.int3d_BtB
-        self.Qms2_3d = csr_matrix((data_Qms2.ravel(), (self.ind_rows, self.ind_cols)), shape=self.model.gm_shape)
+        data_Qms2 = self.assembler.compute_BtB_factor_product(factor_Qms2)
+        self.Qms2_3d = csr_matrix((data_Qms2.ravel(), (ind_rows, ind_cols)), shape=self.model.gm_shape)
 
         if self.model.drop_domain:
             acoustic_dofs_indices = self.assembler.acoustic_dofs_indices

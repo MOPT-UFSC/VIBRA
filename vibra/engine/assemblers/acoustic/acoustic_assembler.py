@@ -11,6 +11,7 @@ from vibra.engine.assemblers.acoustic.acoustic_excitations_assembler import Acou
 from vibra.engine.assemblers.acoustic.acoustic_impedances_assembler import AcousticImpedancesAssembler, DampingMatrices2D, DampingMatrices3D
 from vibra.engine.model import Model
 from vibra.engine.properties.fluid import Fluid
+from time import perf_counter
 
 
 class AcousticAssembler:
@@ -28,7 +29,7 @@ class AcousticAssembler:
     def reset(self):
 
         # global matrices and excitation vector
-        self. reset_global_matrices_related_attributes()
+        self. reset_global_matrices_attributes()
 
         self.frequencies = None
         self.frequency_dependent = False
@@ -44,11 +45,7 @@ class AcousticAssembler:
         self.element_3d = None
 
 
-    def reset_global_matrices_related_attributes(self):
-        self.ind_rows = None
-        self.ind_cols = None
-        self.int3d_NtN = None
-        self.int3d_BtB = None
+    def reset_global_matrices_attributes(self):
         self.mass_matrix = None
         self.mass_matrix_r = None
         self.stiffness_matrix = None
@@ -278,10 +275,10 @@ class AcousticAssembler:
             Control when the connectivity matrix will be reordered.
         """
 
-        self.ind_rows, self.ind_cols, _ = self.element_3d.generate_ind_rows_cols(reorder=reorder)
+        ind_rows, ind_cols, _ = self.element_3d.generate_ind_rows_cols(reorder=reorder)
 
         logging.info("Processing the elementary matrices data... [25/100]")
-        self.int3d_BtB, self.int3d_NtN = self.element_3d.stacked_elementary_matrices_NtN_BtB()
+        int3d_BtB, int3d_NtN = self.element_3d.stacked_elementary_matrices_NtN_BtB()
 
         if self.model.stop_processing:
             return True
@@ -291,6 +288,54 @@ class AcousticAssembler:
 
         logging.info("Processing the elementary matrices data... [95/100]")
         self.process_dofs_indices()
+
+        print()
+        print("Allocated RAM for acoustic global matrices")
+        print(f"data K -> {self.get_size_in_GB(int3d_BtB) : .4f} GB")
+        print(f"data M -> {self.get_size_in_GB(int3d_NtN) : .4f} GB")
+        print(f"rows I -> {self.get_size_in_GB(ind_rows) : .4f} GB")
+        print(f"cols J -> {self.get_size_in_GB(ind_cols) : .4f} GB")
+
+        self.write_array_in_disc("acoustic_ind_cols.npy", ind_cols)
+        self.write_array_in_disc("acoustic_ind_rows.npy", ind_rows)
+        self.write_array_in_disc("acoustic_int3d_NtN.npy", int3d_NtN)
+        self.write_array_in_disc("acoustic_int3d_BtB.npy", int3d_BtB)
+
+
+    def write_array_in_disc(self, filename, data: np.ndarray):
+        t0 = perf_counter()
+
+        # np.memmap(filename, dtype=data.dtype, mode="w+", shape=data.shape)
+        array = np.lib.format.open_memmap(filename, mode="w+", dtype=data.dtype, shape=data.shape)
+        array[:] = data
+        array.flush()
+
+        dt = perf_counter() - t0
+        print(f"Elapsed time to write array: {dt} s")
+
+
+    def read_array_from_disc(self, filename: str) -> np.ndarray:
+        t0 = perf_counter()
+        array = np.load(filename, mmap_mode="r")
+        dt = perf_counter() - t0
+        print(f"Elapsed time to read array: {dt} s")
+        return array
+
+
+    def get_rows_and_cols_indices(self):
+        ind_rows = self.read_array_from_disc("acoustic_ind_rows.npy")
+        ind_cols = self.read_array_from_disc("acoustic_ind_cols.npy")
+        return ind_rows, ind_cols
+
+
+    def compute_NtN_factor_product(self, factor: np.ndarray):
+        int3d_NtN = self.read_array_from_disc("acoustic_int3d_NtN.npy")
+        return factor * int3d_NtN
+
+
+    def compute_BtB_factor_product(self, factor: np.ndarray):
+        int3d_BtB = self.read_array_from_disc("acoustic_int3d_BtB.npy")
+        return factor * int3d_BtB
 
 
     def compute_data_to_assemble_global_matrices_using_loop(self, reorder: bool = True):
@@ -305,10 +350,10 @@ class AcousticAssembler:
         """
 
         dof = self.element_3d.dof_per_element
-        self.int3d_BtB = np.zeros((self.number_3d_elements, dof, dof), dtype=complex)
-        self.int3d_NtN = np.zeros((self.number_3d_elements, dof, dof), dtype=complex)
+        int3d_BtB = np.zeros((self.number_3d_elements, dof, dof), dtype=complex)
+        int3d_NtN = np.zeros((self.number_3d_elements, dof, dof), dtype=complex)
 
-        self.ind_rows, self.ind_cols, _ = self.element_3d.generate_ind_rows_cols(reorder=reorder)
+        ind_rows, ind_cols, _ = self.element_3d.generate_ind_rows_cols(reorder=reorder)
 
         last_progress = 0
         for index, element_id in enumerate(self.model.domains_processor.elements_of_domain.get("acoustic", [])):
@@ -323,14 +368,26 @@ class AcousticAssembler:
             last_progress = progress
 
             Ke, Me = self.element_3d.elementary_matrices(element_id)
-            self.int3d_BtB[index, :, :] = Ke
-            self.int3d_NtN[index, :, :] = Me
+            int3d_BtB[index, :, :] = Ke
+            int3d_NtN[index, :, :] = Me
 
         logging.info("Processing the elementary matrices data... [85/100]")
         self.fluid_properties_from_volume, self.frequency_dependent = self.model.map_fluid_properties_to_volumes()
 
         logging.info("Processing the elementary matrices data... [95/100]")
         self.process_dofs_indices()
+
+        print()
+        print("Allocated RAM for acoustic global matrices")
+        print(f"data K -> {self.get_size_in_GB(int3d_BtB) : .4f} GB")
+        print(f"data M -> {self.get_size_in_GB(int3d_NtN) : .4f} GB")
+        print(f"rows I -> {self.get_size_in_GB(ind_rows) : .4f} GB")
+        print(f"cols J -> {self.get_size_in_GB(ind_cols) : .4f} GB")
+
+        self.write_array_in_disc("acoustic_ind_cols.npy", ind_cols)
+        self.write_array_in_disc("acoustic_ind_rows.npy", ind_rows)
+        self.write_array_in_disc("acoustic_int3d_NtN.npy", int3d_NtN)
+        self.write_array_in_disc("acoustic_int3d_BtB.npy", int3d_BtB)
 
 
     def compute_global_matrices_factors(self, index: int = 0):
@@ -400,8 +457,11 @@ class AcousticAssembler:
         factor_M: np.ndarray
             An array containing all elementary mass factors in stacked form.
         """
-        data_M = self.int3d_NtN * factor_M
-        self.mass_matrix = coo_matrix((data_M.ravel(), (self.ind_rows, self.ind_cols)), shape=self.model.gm_shape).tocsr()
+        
+        data_M = self.compute_NtN_factor_product(factor_M)
+        ind_rows, ind_cols = self.get_rows_and_cols_indices()
+
+        self.mass_matrix = coo_matrix((data_M.ravel(), (ind_rows, ind_cols)), shape=self.model.gm_shape).tocsr()
 
         if self.model.drop_domain:
             self.mass_matrix = self.mass_matrix[self.acoustic_dofs_indices, :][:, self.acoustic_dofs_indices]
@@ -421,8 +481,11 @@ class AcousticAssembler:
         factor_K: np.ndarray
             An array containing all elementary stiffness factors in stacked form.
         """
-        data_K = self.int3d_BtB * factor_K
-        self.stiffness_matrix = coo_matrix((data_K.ravel(), (self.ind_rows, self.ind_cols)), shape=self.model.gm_shape).tocsr()
+
+        data_K = self.compute_BtB_factor_product(factor_K)
+        ind_rows, ind_cols = self.get_rows_and_cols_indices()
+
+        self.stiffness_matrix = coo_matrix((data_K.ravel(), (ind_rows, ind_cols)), shape=self.model.gm_shape).tocsr()
 
         if self.model.drop_domain:
             self.stiffness_matrix = self.stiffness_matrix[self.acoustic_dofs_indices, :][:, self.acoustic_dofs_indices]
@@ -709,3 +772,7 @@ class AcousticAssembler:
             full_solution[self.prescribed_dof_indices] = self.prescribed_values[:, freq_index]
 
         return full_solution
+
+
+    def get_size_in_GB(self, data: np.ndarray):
+        return sys.getsizeof(data) / (1024**3)
