@@ -20,6 +20,7 @@ __pycache__/
 *.dat
 *.ini
 *.json
+*.npy
 
 # Distribution / packaging
 .idea/
