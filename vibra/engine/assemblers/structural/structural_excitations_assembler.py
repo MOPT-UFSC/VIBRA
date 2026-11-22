@@ -79,17 +79,21 @@ class StructuralExcitationsAssembler:
         assert isinstance(analysis_setup, HarmonicAnalysisSetup)
 
         frequencies = analysis_setup.get_frequencies()
-
         omega = 2 * np.pi * frequencies[index]
+
+        # prescribed values
         values = self.assembler.array_prescribed_values[:, index]
 
-        Cr = self.assembler.damping_matrix_r
-        Mr = self.assembler.mass_matrix_r + self.assembler.distributed_mass_matrix_r
-        Kr = self.assembler.stiffness_matrix_r + self.assembler.distributed_stiffness_matrix_r
+        # prescribed indexes
+        idx = self.assembler.prescribed_dof_indices
+
+        Cr = self.assembler.damping_matrix[:, idx]
+        Mr = self.assembler.mass_matrix[:, idx] + self.assembler.distributed_mass_matrix[:, idx]
+        Kr = self.assembler.stiffness_matrix[:, idx] + self.assembler.distributed_stiffness_matrix[:, idx]
 
         f_eq = (-(omega**2) * Mr + 1j * omega * Cr + Kr) @ values
 
-        return f_eq[self.assembler.unprescribed_dof_indices]
+        return f_eq
 
 
     def get_prescribed_dof_model_excitation_reference(self, freq_dependent: bool = False):
@@ -480,8 +484,5 @@ class StructuralExcitationsAssembler:
         if self.model.drop_domain:
             structural_dofs = self.assembler.structural_dofs_indices
             self.structural_load = self.structural_load[structural_dofs, :]
-
-        if self.assembler.prescribed_dof_indices:
-            self.structural_load = self.structural_load[self.assembler.unprescribed_dof_indices, :]
 
         return self.structural_load

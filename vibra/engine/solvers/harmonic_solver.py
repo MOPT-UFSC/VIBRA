@@ -278,7 +278,7 @@ class HarmonicSolver:
                 # if print_log:
                 # print(f"Solution step {i} -> frequency {freq} Hz")
 
-                f = self.assembler.get_combined_nodal_loads_vector(index=i)
+                f = self.assembler.compute_load_vector(i)
 
                 omega = 2 * np.pi * freq
                 A = omega_n**2 - omega**2 + 1j * (omega * (beta * (omega_n**2) + alpha) + eta * (omega_n**2))

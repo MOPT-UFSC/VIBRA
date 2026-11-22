@@ -8,7 +8,7 @@ from tqdm import tqdm
 
 from vibra.engine.analysis_info import HarmonicAnalysisSetup
 from vibra.engine.assemblers.acoustic.acoustic_excitations_assembler import AcousticExcitationsAssembler
-from vibra.engine.assemblers.acoustic.acoustic_impedances_assembler import AcousticImpedancesAssembler, DampingMatrices2D, DampingMatrices3D
+from vibra.engine.assemblers.acoustic.acoustic_impedances_assembler import AcousticImpedancesAssembler
 from vibra.engine.model import Model
 from vibra.engine.properties.fluid import Fluid
 
@@ -27,9 +27,6 @@ class AcousticAssembler:
 
     def reset(self):
 
-        # global matrices and excitation vector
-        self. reset_global_matrices_related_attributes()
-
         self.frequencies = None
         self.frequency_dependent = False
 
@@ -43,20 +40,22 @@ class AcousticAssembler:
         self.element_2d = None
         self.element_3d = None
 
+        # global matrices and excitation vector
+        self.reset_global_matrices_attributes()
 
-    def reset_global_matrices_related_attributes(self):
+
+    def reset_global_matrices_attributes(self):
         self.ind_rows = None
         self.ind_cols = None
         self.int3d_NtN = None
         self.int3d_BtB = None
         self.mass_matrix = None
-        self.mass_matrix_r = None
         self.stiffness_matrix = None
-        self.stiffness_matrix_r = None
         self.mass_flow_vector = None
 
-        self.damping_matrices_2d: DampingMatrices2D = None
-        self.damping_matrices_3d: DampingMatrices3D = None
+        self.damping_matrix_2d = None
+        self.damping_matrix_3d: None
+        self.visc_load_matrix: None
 
 
     @property
@@ -406,11 +405,6 @@ class AcousticAssembler:
         if self.model.drop_domain:
             self.mass_matrix = self.mass_matrix[self.acoustic_dofs_indices, :][:, self.acoustic_dofs_indices]
 
-        self.mass_matrix_r = self.mass_matrix[:, self.prescribed_dof_indices]
-
-        if self.prescribed_dof_indices:
-            self.mass_matrix = self.mass_matrix[self.unprescribed_dof_indices, :][:, self.unprescribed_dof_indices]
-
 
     def assemble_global_stiffness_matrix(self, factor_K: np.ndarray):
         """
@@ -426,11 +420,6 @@ class AcousticAssembler:
 
         if self.model.drop_domain:
             self.stiffness_matrix = self.stiffness_matrix[self.acoustic_dofs_indices, :][:, self.acoustic_dofs_indices]
-
-        self.stiffness_matrix_r = self.stiffness_matrix[:, self.prescribed_dof_indices]
-
-        if self.prescribed_dof_indices:
-            self.stiffness_matrix = self.stiffness_matrix[self.unprescribed_dof_indices, :][:, self.unprescribed_dof_indices]
 
 
     def assemble_global_matrices(self, reorder: bool = True, stacked_matrices: bool = True, print_log: bool = False):
@@ -486,13 +475,13 @@ class AcousticAssembler:
         if print_log:
             print(f"Elapsed time to assemble the global mass matrix: {dt : .6f} [s]")
 
-        logging.info("Assembling global mass matrix... [70/100]")
+        logging.info("Assembling the damping matrices... [70/100]")
         t0 = time()
-        self.damping_matrices_3d = self.impedances_assembler.assemble_global_damping_matrix_3d_elements(factor_Cvisc, factor_fvisc)
-        self.damping_matrices_2d = self.impedances_assembler.assemble_global_damping_matrix_2d_elements()
+        self.damping_matrix_2d = self.impedances_assembler.assemble_global_damping_matrix_2d_elements()
+        self.damping_matrix_3d, self.visc_load_matrix = self.impedances_assembler.assemble_global_damping_matrix_3d_elements(factor_Cvisc, factor_fvisc)
         dt = time() - t0
         if print_log:
-            print(f"Elapsed time to assemble the global damping matrix: {dt : .6f} [s]\n")
+            print(f"Elapsed time to assemble the damping matrices: {dt : .6f} [s]\n")
 
 
     def assemble_global_matrices_and_excitations(self, reorder: bool = True, stacked_matrices: bool = True, print_log: bool = False):
@@ -573,15 +562,18 @@ class AcousticAssembler:
         f_ms = self.excitations_assembler.compute_mass_source_load_vector(omega, index=index)
 
         # viscous damping-related load vector
-        f_visc = self.damping_matrices_3d.visc_load_matrix @ self.mass_flow_vector[:, index]
+        f_visc = self.visc_load_matrix @ self.mass_flow_vector[:, index]
 
         # mass flow-related load vector
         f_mf = 1j * omega * self.mass_flow_vector[:, index]
 
         # compute the load vector {f}
-        f = f_ms + f_visc - f_mf - f_eq
+        load_vector = f_ms + f_visc - f_mf - f_eq
 
-        return f
+        if self.prescribed_dof_indices:
+            return load_vector[self.unprescribed_dof_indices]
+
+        return load_vector
 
 
     def compute_dynamic_stiffness_matrix(self, freq: float, index: int) -> csr_matrix:
@@ -610,12 +602,12 @@ class AcousticAssembler:
         # create the frequency vector
         omega = 2 * np.pi * freq
 
-        # update the damping matrix [C]
+        # update the damping matrix for impendaces
         if index > 0:
-            self.damping_matrices_2d = self.impedances_assembler.assemble_global_damping_matrix_2d_elements(index=index)
+            self.damping_matrix_2d = self.impedances_assembler.assemble_global_damping_matrix_2d_elements(index=index)
 
         # sum damping matrices
-        C = self.damping_matrices_2d.damping_matrix + self.damping_matrices_3d.visc_damping_matrix
+        C = self.damping_matrix_2d + self.damping_matrix_3d
 
         if self.frequency_dependent:
 
@@ -629,6 +621,9 @@ class AcousticAssembler:
         # compute the dynamic stiffness matrix Kd
         Kd = K - (omega ** 2) * M + 1j * omega * C
 
+        if self.prescribed_dof_indices:
+            Kd = Kd[self.unprescribed_dof_indices, :][:, self.unprescribed_dof_indices]
+
         return Kd
 
 
@@ -636,7 +631,7 @@ class AcousticAssembler:
         K = self.stiffness_matrix
         M = self.mass_matrix
 
-        C_imp = self.damping_matrices_2d.damping_matrix
+        C_imp = self.damping_matrix_2d
 
         is_complex = np.any(np.iscomplex(K.data)) or np.any(np.iscomplex(M.data)) or np.any(np.iscomplex(C_imp.data))
         if not is_complex:

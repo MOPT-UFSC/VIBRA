@@ -104,23 +104,21 @@ class AcousticExcitationsAssembler:
         frequencies = analysis_setup.get_frequencies()
         omega = 2 * np.pi * frequencies[index]
 
+        # prescribed values
         values = self.assembler.prescribed_values[:, index]
 
-        Kr = self.assembler.stiffness_matrix_r
-        Mr = self.assembler.mass_matrix_r
-        Cr = self.assembler.damping_matrices_2d.damping_matrix_r
-        Cr_visc = self.assembler.damping_matrices_3d.visc_damping_matrix_r
+        # prescribed indexes
+        idx = self.assembler.prescribed_dof_indices
 
-        Kr_add = Kr @ values
-        Mr_add = Mr @ values
-        Cr_add = (Cr + Cr_visc) @ values
+        Cr = 0.
+        Cr += self.assembler.damping_matrix_2d[:, idx]
+        Cr += self.assembler.damping_matrix_3d[:, idx]
+        Mr = self.assembler.mass_matrix[:, idx]
+        Kr = self.assembler.stiffness_matrix[:, idx]
 
-        F_Kadd = Kr_add
-        F_Madd = -(omega**2) * Mr_add
-        F_Cadd = 1j * omega * Cr_add
-        F_eq = F_Kadd + F_Madd + F_Cadd
+        F_eq = (-(omega**2) * Mr + (1j * omega) * Cr + Kr) @ values
 
-        return F_eq[self.assembler.unprescribed_dof_indices]
+        return F_eq
 
 
     def get_excitation_data_for_element_integration(self, property_label: str) -> AcousticExcitationData | None:
@@ -890,7 +888,7 @@ class AcousticExcitationsAssembler:
             acoustic_dofs_indices = self.assembler.acoustic_dofs_indices
             self.mass_flow_vector = self.mass_flow_vector[acoustic_dofs_indices, :]
 
-        if self.assembler.prescribed_dof_indices:
-            self.mass_flow_vector = self.mass_flow_vector[self.assembler.unprescribed_dof_indices, :]
+        # if self.assembler.prescribed_dof_indices:
+        #     self.mass_flow_vector = self.mass_flow_vector[self.assembler.unprescribed_dof_indices, :]
 
         return self.mass_flow_vector
