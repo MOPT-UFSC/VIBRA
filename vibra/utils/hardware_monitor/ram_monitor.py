@@ -110,6 +110,7 @@ class RamMonitor:
             return MemorySample()
 
         rss = 0.0
+        rss_subprocess = 0.0
         for proc in processes:
             try:
                 mem = proc.memory_info()
@@ -120,11 +121,12 @@ class RamMonitor:
                     self.monitor_error = error
                 return MemorySample()
 
-            rss += mem.rss
+            if self.process.pid == proc.pid:
+                rss += mem.rss
+            else:
+                rss_subprocess += mem.rss
 
-        return MemorySample(
-            rss=rss / self._BYTES_PER_MIB,
-        )
+        return MemorySample(rss=rss / self._BYTES_PER_MIB, rss_subprocess=rss_subprocess / self._BYTES_PER_MIB)
 
     def _read_full_memory_mib(self) -> MemorySample:
         processes = self._get_processes()
@@ -132,11 +134,15 @@ class RamMonitor:
             return MemorySample()
 
         rss = uss = 0.0
+        rss_subprocess = uss_subprocess = 0.0
         uss_complete = True
         for proc in processes:
             try:
                 mem = proc.memory_full_info()
-                uss += mem.uss  # exclusive from full_info
+                if self.process.pid == proc.pid:
+                    uss += mem.uss  # exclusive from full_info
+                else:
+                    uss_subprocess += mem.uss
             except psutil.NoSuchProcess:
                 continue
             except psutil.Error as error:
@@ -152,11 +158,16 @@ class RamMonitor:
 
                 uss_complete = False
 
-            rss += mem.rss
+            if self.process.pid == proc.pid:
+                rss += mem.rss
+            else:
+                rss_subprocess += mem.rss
 
         return MemorySample(
             rss=rss / self._BYTES_PER_MIB,
+            rss_subprocess=rss_subprocess / self._BYTES_PER_MIB,
             uss=uss / self._BYTES_PER_MIB if uss_complete else None,
+            uss_subprocess=uss_subprocess / self._BYTES_PER_MIB if uss_complete else None,
         )
 
     def _record_sample(self, sample: MemorySample) -> None:
@@ -170,7 +181,9 @@ class RamMonitor:
             MemoryRecord(
                 elapsed=time.monotonic() - self._start_time,
                 rss=sample.rss,
+                rss_subprocess=sample.rss_subprocess,
                 uss=sample.uss,
+                uss_subprocess=sample.uss_subprocess,
             )
         )
 
@@ -198,7 +211,7 @@ class RamMonitor:
         else:
             self.min_available_percent = min(self.min_available_percent, available_percent)
 
-    def _update_peak(self, metric: MemoryMetric, value: float | None) -> None:
+    def _update_peak(self, metric: MemoryMetric, value: float | None, value_subprocess: float | None = None) -> None:
         if value is None:
             return
 
@@ -206,6 +219,21 @@ class RamMonitor:
             metric.peak = value
         else:
             metric.peak = max(metric.peak, value)
+
+        if metric.peak_total is None:
+            metric.peak_total = metric.peak
+        else:
+            metric.peak_total = max(metric.peak, metric.peak_total)
+
+        if value_subprocess is None:
+            return
+
+        if metric.peak_subprocess is None:
+            metric.peak_subprocess = value_subprocess
+        else:
+            metric.peak_subprocess = max(metric.peak_subprocess, value_subprocess)
+
+        metric.peak_total = max(value + value_subprocess, metric.peak_total)
 
     def _monitor(self, stop_event: threading.Event) -> None:
         uss_time_ref = time.monotonic()
@@ -219,8 +247,8 @@ class RamMonitor:
             if self.output_path is not None:
                 self._record_sample(sample)
 
-            self._update_peak(self.rss, sample.rss)
-            self._update_peak(self.uss, sample.uss)
+            self._update_peak(self.rss, sample.rss, sample.rss_subprocess)
+            self._update_peak(self.uss, sample.uss, sample.uss_subprocess)
             self._update_available_memory()
 
     def start(self) -> Self:
@@ -242,10 +270,12 @@ class RamMonitor:
         if self.output_path is not None:
             self._record_sample(sample)
 
-        self._update_peak(self.rss, sample.rss)
+        self._update_peak(self.rss, sample.rss, sample.rss_subprocess)
         self.rss.initial = sample.rss
-        self._update_peak(self.uss, sample.uss)
+        self.rss.initial_subprocess = sample.rss_subprocess
+        self._update_peak(self.uss,sample.uss,  sample.uss_subprocess)
         self.uss.initial = sample.uss
+        self.uss.initial_subprocess = sample.uss_subprocess
         self._update_available_memory()
 
         self.stop_event = threading.Event()
@@ -266,10 +296,12 @@ class RamMonitor:
         if self.output_path is not None:
             self._record_sample(sample)
 
-        self._update_peak(self.rss, sample.rss)
-        self.rss.final = sample.rss
-        self._update_peak(self.uss, sample.uss)
-        self.uss.final = sample.uss
+        self._update_peak(self.rss, sample.rss, sample.rss_subprocess)
+        self.rss.final= sample.rss
+        self.rss.final_subprocess = sample.rss_subprocess
+        self._update_peak(self.uss, sample.uss, sample.uss_subprocess)
+        self.uss.final= sample.uss
+        self.uss.final_subprocess = sample.uss_subprocess
         self._update_available_memory()
 
     def __enter__(self) -> Self:
@@ -300,23 +332,36 @@ class RamMonitor:
         if self.output_path is None:
             return
 
+        columns = [
+            "root_pid", "elapsed_s", "rss_mib", "uss_mib",
+            "rss_subprocess_mib", "uss_subprocess_mib", "rss_total_mib", "uss_total_mib",
+        ]
         history_path = self.output_path.with_suffix(".csv")
-        with open(history_path, "a", newline="", encoding="utf-8") as file:
+        if history_path.exists():
+            with history_path.open(newline="", encoding="utf-8") as existing:
+                if next(csv.reader(existing), None) == columns[:4]:
+                    history_path = history_path.with_stem(history_path.stem + "_by_process")
+
+        with history_path.open("a", newline="", encoding="utf-8") as file:
             writer = csv.writer(file)
             if file.tell() == 0:
-                writer.writerow(["root_pid", "elapsed_s", "rss_mib", "uss_mib"])
+                writer.writerow(columns)
             else:
-                writer.writerow(["# SESSION", "", "", ""])
+                writer.writerow(["# SESSION"] + [""] * (len(columns) - 1))
 
             for record in self.ram_record:
-                writer.writerow(
-                    [
-                        self.process.pid,
-                        record.elapsed,
-                        record.rss,
-                        record.uss,
-                    ]
-                )
+                rss_total = None
+                if record.rss is not None and record.rss_subprocess is not None:
+                    rss_total = record.rss + record.rss_subprocess
+
+                uss_total = None
+                if record.uss is not None and record.uss_subprocess is not None:
+                    uss_total = record.uss + record.uss_subprocess
+
+                writer.writerow([
+                    self.process.pid, record.elapsed, record.rss, record.uss,
+                    record.rss_subprocess, record.uss_subprocess, rss_total, uss_total,
+                ])
 
     def __str__(self) -> str:
         def _format_number(value: float | None, *, signed: bool = False) -> str:
@@ -325,12 +370,14 @@ class RamMonitor:
 
             return f"{value:+.2f}" if signed else f"{value:.2f}"
 
-        table = [f"{'Metric':<6} {'Initial':>12} {'Peak':>12} {'Diff peak':>12} {'Final':>12} {'Diff final':>12}"]
+        table = [f"{'Metric':<6} {'Initial':>12} {'Peak':>12} {'Peak subprocess':>15} {'Peak total':>12} {'Diff peak':>12} {'Final':>12} {'Diff final':>12}"]
         for name, metric in (("RSS", self.rss), ("USS", self.uss)):
             table.append(
                 f"{name:<6} "
                 f"{_format_number(metric.initial):>12} "
                 f"{_format_number(metric.peak):>12} "
+                f"{_format_number(metric.peak_subprocess):>15} "
+                f"{_format_number(metric.peak_total):>12} "
                 f"{_format_number(metric.peak_increase, signed=True):>12} "
                 f"{_format_number(metric.final):>12} "
                 f"{_format_number(metric.final_change, signed=True):>12}"

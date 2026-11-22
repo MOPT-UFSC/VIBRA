@@ -13,6 +13,7 @@ from vibra.interface.analysis.modal_analysis_input import ModalAnalysisInput
 from vibra.interface.formatters.icons import Icon
 from vibra.interface.general.get_user_confirmation_input import GetUserConfirmationInput
 from vibra.interface.loading_window import LoadingWindow
+from vibra.utils.hardware_monitor.ram_monitor import RamMonitor
 from vibra.utils.subprocess.subprocess_handler import SubProcessHandler, SubProcessStatus
 
 
@@ -240,6 +241,7 @@ class AnalysisToolbar(QToolBar):
         enable_normals_plot = new_analysis_id.is_coupled() and len(self.model.domains_processor.fluid_structure_interfaces)
         app().main_window.action_show_fluid_structure_interface_normals.setEnabled(enable_normals_plot)
 
+    @RamMonitor()
     def run_analysis_callback(self, is_resume: bool = False):
         app().project.mark_solution_as_outdated(reset=True)
 
