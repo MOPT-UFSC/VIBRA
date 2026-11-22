@@ -255,6 +255,7 @@ class AnalysisToolbar(QToolBar):
         else:
             self.run_analysis_in_current_process(is_resume)
 
+        # save the project after solving the model if the auto-save is enabled
         if auto_save:
             save_path = app().project.save_path
             app().main_window.save_project_as(save_path)
