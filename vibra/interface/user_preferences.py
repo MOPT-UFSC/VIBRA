@@ -27,6 +27,7 @@ class UserPreferences:
     run_analysis_in_subprocess: bool = True
     generate_mesh_in_subprocess: bool = True
     print_solution_log: bool = False
+    save_solution_automatically: bool = False
     color_map: str = "jet"
 
     def set_light_theme(self):

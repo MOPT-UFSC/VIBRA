@@ -156,6 +156,7 @@ class UserPreferencesInput(UserPreferencesWindow_UI):
         self._add_checkbox_row(layout, "Run analysis in subprocess", "run_analysis_in_subprocess")
         self._add_checkbox_row(layout, "Generate mesh in subprocess", "generate_mesh_in_subprocess")
         self._add_checkbox_row(layout, "Print the solution log (terminal)", "print_solution_log")
+        self._add_checkbox_row(layout, "Save soluton automatically", "save_solution_automatically")
 
         self._finalize_page(layout)
 

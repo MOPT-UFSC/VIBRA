@@ -241,12 +241,23 @@ class AnalysisToolbar(QToolBar):
         app().main_window.action_show_fluid_structure_interface_normals.setEnabled(enable_normals_plot)
 
     def run_analysis_callback(self, is_resume: bool = False):
+
+        # save the project before solving the model if the auto-save is enabled
+        auto_save = app().config.user_preferences.save_solution_automatically
+        if auto_save:
+            if not app().main_window.save_project_dialog():
+                return
+
         app().project.mark_solution_as_outdated(reset=True)
 
         if app().config.user_preferences.run_analysis_in_subprocess:
             self.run_analysis_in_subprocess(is_resume)
         else:
             self.run_analysis_in_current_process(is_resume)
+
+        if auto_save:
+            save_path = app().project.save_path
+            app().main_window.save_project_as(save_path)
 
     def run_analysis_in_current_process(self, is_resume: bool = False):
         if self.model.analysis_setup is None:
