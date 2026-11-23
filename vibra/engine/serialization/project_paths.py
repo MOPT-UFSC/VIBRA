@@ -32,6 +32,7 @@ class ProjectPaths:
         self.modal_solution_filepath = self.working_directory / "modal_solution.hdf5"
         self.hashes_filepath = self.working_directory / "hashes.json"
         self.geometry_folder = self.working_directory / "geometry_file"
+        self.temporary_arrays_folder = self.working_directory / "temporary_arrays_folder"
 
     def clear_data(self):
         shutil.rmtree(self.working_directory, ignore_errors=True)
@@ -39,3 +40,7 @@ class ProjectPaths:
 
     def is_empty(self):
         return not any(self.working_directory.iterdir())
+
+    def remove_temporary_arrays_folder(self):
+        if self.temporary_arrays_folder.exists():
+            shutil.rmtree(self.temporary_arrays_folder, ignore_errors=True)

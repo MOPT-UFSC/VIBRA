@@ -9,6 +9,7 @@ from typing import Optional
 import h5py
 import numpy as np
 from PIL.Image import Image
+from time import perf_counter
 
 from vibra.engine.analysis_info import AnalysisID, AnalysisSetup, HarmonicAnalysisSetup, ModalAnalysisSetup
 from vibra.engine.assemblers import AcousticAssembler, StructuralAssembler
@@ -419,6 +420,17 @@ class ProjectReader:
                 tables[name] = np.array(dataset)
 
         return tables
+
+    def read_array_from_disc(self, filename: str) -> np.ndarray:
+        """
+        Use this method to read temporary array data from disc.
+        """
+        path = self.project_paths.temporary_arrays_folder / filename
+        t0 = perf_counter()
+        array = np.load(path, mmap_mode="r")
+        dt = perf_counter() - t0
+        print(f"Elapsed time to read array data from disc: {dt} s")
+        return array
 
     def read_thumbnail(self) -> Optional[Image]:
         if not self.project_paths.thumbnail_filepath.exists():

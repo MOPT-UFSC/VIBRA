@@ -10,6 +10,7 @@ from typing import Optional
 import h5py
 import numpy as np
 from PIL import Image
+from time import perf_counter
 
 from vibra.engine.analysis_info import AnalysisID, AnalysisSetup
 from vibra.engine.mesher.mesh import Mesh
@@ -282,6 +283,19 @@ class ProjectWriter:
                 file[f"structural/{name}"] = array
 
         self._write_hash(HashEnum.TABLES, current_hash)
+
+    def write_array_in_disc(self, filename, data: np.ndarray):
+        if not self.project_paths.temporary_arrays_folder.exists():
+            self.project_paths.temporary_arrays_folder.mkdir(parents=True, exist_ok=True)
+
+        path = self.project_paths.temporary_arrays_folder / filename
+        t0 = perf_counter()
+        # np.memmap(filename, dtype=data.dtype, mode="w+", shape=data.shape)
+        array = np.lib.format.open_memmap(path, mode="w+", dtype=data.dtype, shape=data.shape)
+        array[:] = data
+        array.flush()
+        dt = perf_counter() - t0
+        print(f"Elapsed time to write array data in disc: {dt} s")
 
     def write_thumbnail(self, thumbnail: Image):
         logger.info("Writing thumbnail")

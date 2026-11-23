@@ -4,6 +4,7 @@ import logging
 from pathlib import Path
 from time import perf_counter
 from typing import Optional
+from gc import collect
 
 import numpy as np
 from PIL.Image import Image
@@ -43,6 +44,11 @@ class Project:
         self.solver: Optional[HarmonicSolver | ModalSolver] = None
         self.acoustic_postprocessing: Optional[AcousticPostprocessing] = None
         self.structural_postprocessing: Optional[StructuralPostprocessing] = None
+
+    def set_reduced_memory_mode_on(self):
+        self.model.reduced_memory_mode = True
+        self.model.array_reader = self.project_reader.read_array_from_disc
+        self.model.array_writer = self.project_writer.write_array_in_disc
 
     def reset_solution(self):
         self.assembler = None
@@ -137,7 +143,7 @@ class Project:
             structural_postprocessing.min_max_processor.get_values_for_displacement_frequency.cache_clear()
             structural_postprocessing.min_max_processor.get_values_for_displacement_time.cache_clear()
 
-    def run_analysis(self, is_resume: bool = False, print_log: bool = False):
+    def run_analysis(self, is_resume: bool = False, print_log: bool = False, reduced_memory: bool = False):
         """
         It performs the solution of the currently configured model.
         It might raise errors if the analysis is not properly configured.
@@ -149,13 +155,13 @@ class Project:
             case AnalysisID.STRUCTURAL_MODAL:
                 return self.solve_structural_modal_analysis(is_resume=is_resume, print_log=print_log)
             case AnalysisID.STRUCTURAL_HARMONIC:
-                return self.solve_structural_harmonic_analysis(is_resume=is_resume, print_log=print_log)
+                return self.solve_structural_harmonic_analysis(is_resume=is_resume, print_log=print_log, reduced_memory=reduced_memory)
             case AnalysisID.ACOUSTIC_MODAL:
                 return self.solve_acoustic_modal_analysis(is_resume=is_resume, print_log=print_log)
             case AnalysisID.ACOUSTIC_HARMONIC:
-                return self.solve_acoustic_harmonic_analysis(is_resume=is_resume, print_log=print_log)
+                return self.solve_acoustic_harmonic_analysis(is_resume=is_resume, print_log=print_log, reduced_memory=reduced_memory)
             case AnalysisID.COUPLED_HARMONIC:
-                return self.solve_coupled_harmonic_analysis(is_resume=is_resume, print_log=print_log)
+                return self.solve_coupled_harmonic_analysis(is_resume=is_resume, print_log=print_log, reduced_memory=reduced_memory)
             case AnalysisID.NO_ANALYSIS:
                 raise errors.IncompleteSetupError("No AnalysisID was provided.")
             case _:
@@ -370,9 +376,10 @@ class Project:
         return self.model.solution
 
     def solve_structural_harmonic_analysis(
-            self, 
-            is_resume: bool = False, 
-            print_log: bool = False, 
+            self,
+            is_resume: bool = False,
+            print_log: bool = False,
+            reduced_memory: bool = False,
             update_domain_mappings: bool = True,
             ) -> HarmonicSolution:
 
@@ -403,6 +410,7 @@ class Project:
         else:
             raise ValueError(f"Unsupported analysis method: {analysis_method}")
 
+        self.solver.assembler.reset()
         self.project_writer.write_harmonic_solution(self.model.solution)
         self.mark_project_as_modified()
         dt = perf_counter() - t0
@@ -411,6 +419,8 @@ class Project:
             print(f"Elapsed time to solve structural harmonic analysis: {dt: .6f} [s]")
 
         logging.info(f"Elapsed time to solve structural harmonic analysis: {dt: .6f} [s]")
+
+        collect()
 
         return self.model.solution
 
@@ -440,7 +450,12 @@ class Project:
 
         return self.model.solution
 
-    def solve_acoustic_harmonic_analysis(self, is_resume: bool = False, print_log: bool = False) -> HarmonicSolution:
+    def solve_acoustic_harmonic_analysis(
+            self,
+            is_resume: bool = False,
+            print_log: bool = False,
+            reduced_memory: bool = False,
+            ) -> HarmonicSolution:
 
         self.update_project_setup_file()
 
@@ -469,7 +484,7 @@ class Project:
         else:
             raise ValueError(f"Unsupported analysis method: {analysis_method}")
 
-        self.solver.assembler.reset_global_matrices_attributes()
+        self.solver.assembler.reset()
         self.project_writer.write_harmonic_solution(self.model.solution)
 
         self.mark_project_as_modified()
@@ -480,17 +495,20 @@ class Project:
 
         logging.info(f"Elapsed time to solve acoustic harmonic analysis: {dt: .6f} [s]")
 
+        collect()
+
         return self.model.solution
 
-    def solve_coupled_harmonic_analysis(self, is_resume: bool = False, print_log: bool = False) -> HarmonicSolution:
+    def solve_coupled_harmonic_analysis(self, is_resume: bool = False, print_log: bool = False, reduced_memory: bool = False) -> HarmonicSolution:
 
         logging.info("Building the acoustic harmonic problem...")
-        self.solve_acoustic_harmonic_analysis(is_resume=is_resume, print_log=print_log)
+        self.solve_acoustic_harmonic_analysis(is_resume=is_resume, print_log=print_log, reduced_memory=reduced_memory)
 
         logging.info("Building the structural harmonic problem...")
         self.solve_structural_harmonic_analysis(
             is_resume=is_resume,
             print_log=print_log,
+            reduced_memory=reduced_memory,
             update_domain_mappings=False,
             )
 

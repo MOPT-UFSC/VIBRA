@@ -123,6 +123,11 @@ class HarmonicSolver:
             disable=not print_log,
         ) as progress_bar:
 
+            if isinstance(self.assembler, AcousticAssembler):
+                analysis_label = "acoustic harmonic analysis"
+            else:
+                analysis_label = "structural harmonic analysis"
+
             for i, freq in enumerate(progress_bar):
                 if self.assembler.model.stop_processing:
                     return
@@ -130,7 +135,7 @@ class HarmonicSolver:
                 if is_resume and (i != 0) and isinstance(self._file_writer, LazyHDF5MatrixWriter) and self._file_writer.has_column(i):
                     continue
 
-                logging.info(f"Solution step {i + 1} and frequency {freq} Hz [{i + 1}/{len(frequencies)}]")
+                logging.info(f"Solving the {analysis_label} for step {i + 1} and frequency {freq} Hz [{i + 1}/{len(frequencies)}]")
 
                 if freq == 0:
                     # In case of freq=0, the matrix may differ from the non-zero frequencies,

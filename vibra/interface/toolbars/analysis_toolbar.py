@@ -244,9 +244,14 @@ class AnalysisToolbar(QToolBar):
 
         # save the project before solving the model if the auto-save is enabled
         auto_save = app().config.user_preferences.save_solution_automatically
-        if auto_save:
+        if auto_save and app().project.save_path is None:
             if not app().main_window.save_project_dialog():
                 return
+
+        if app().config.user_preferences.reduced_memory_usage_mode:
+            app().project.set_reduced_memory_mode_on()
+        else:
+            self.model.set_reduced_memory_mode_off()
 
         app().project.mark_solution_as_outdated(reset=True)
 
@@ -255,12 +260,14 @@ class AnalysisToolbar(QToolBar):
         else:
             self.run_analysis_in_current_process(is_resume)
 
+        app().project.project_paths.remove_temporary_arrays_folder()
+
         # save the project after solving the model if the auto-save is enabled
         if auto_save:
             save_path = app().project.save_path
             app().main_window.save_project_as(save_path)
 
-    def run_analysis_in_current_process(self, is_resume: bool = False):
+    def run_analysis_in_current_process(self, is_resume: bool = False, reduced_memory: bool = False):
         if self.model.analysis_setup is None:
             self.configure_analysis_callback()
             if not self.solve_analysis:
@@ -281,7 +288,7 @@ class AnalysisToolbar(QToolBar):
         # load the user preferences for printing the solution log
         print_log = app().config.user_preferences.print_solution_log
 
-        LoadingWindow(app().project.run_analysis, interrupt_function, delayed=False).run(is_resume, print_log=print_log)
+        LoadingWindow(app().project.run_analysis, interrupt_function, delayed=False).run(is_resume, print_log=print_log, reduced_memory=reduced_memory)
 
         self.solve_analysis = False
 

@@ -655,11 +655,19 @@ class AcousticImpedancesAssembler:
         https://www.mm.bme.hu/~gyebro/files/ans_help_v182/ans_thry/thy_acou2.html#thyeqacous-75
         """
 
-        data_C = self.assembler.int3d_BtB * factor_Cvsic
-        visc_damping_matrix = csr_matrix((data_C.ravel(), (self.assembler.ind_rows, self.assembler.ind_cols)), shape=self.model.gm_shape)
+        if self.model.reduced_memory_mode:
+            rows, cols = self.assembler.get_rows_and_cols_indices()
+            data_C: np.ndarray = self.assembler.compute_BtB_factor_product(factor_Cvsic)
+            data_f: np.ndarray = self.assembler.compute_BtB_factor_product(factor_fvsic)
 
-        data_f = self.assembler.int3d_BtB * factor_fvsic
-        visc_load_matrix = csr_matrix((data_f.ravel(), (self.assembler.ind_rows, self.assembler.ind_cols)), shape=self.model.gm_shape)
+        else:
+            rows = self.assembler.rows
+            cols = self.assembler.cols
+            data_C = self.assembler.int3d_BtB * factor_Cvsic
+            data_f = self.assembler.int3d_BtB * factor_fvsic
+
+        visc_damping_matrix = csr_matrix((data_C.ravel(), (rows, cols)), shape=self.model.gm_shape)
+        visc_load_matrix = csr_matrix((data_f.ravel(), (rows, cols)), shape=self.model.gm_shape)
 
         if self.model.drop_domain:
             acoustic_dofs_indices = self.assembler.acoustic_dofs_indices

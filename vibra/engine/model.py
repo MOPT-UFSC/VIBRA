@@ -82,46 +82,12 @@ class Model:
     def __init__(self, disable_resume_callback: Optional[Callable] = None):
 
         self.disable_resume_callback = disable_resume_callback
+
         self.reset_variables()
+        self.set_reduced_memory_mode_off()
 
         self.domains_processor = ModelDomainsProcessor(self)
         self.model_selection_tools = ModelSelectionTools(self)
-
-    def reset_variables(self):
-        self.name: str = "Model"
-        self.thumbnail: Optional[Image] = None
-
-        self.length_unit: LengthUnits = "millimeter"
-        self.mesh_setup: Optional[MeshSetup] = None
-        self.analysis_setup: Optional[AnalysisSetup] = None
-
-        self.solution: Optional[Solution] = None
-
-        # TODO: review these variables
-        self.mesh: Optional[Mesh] = None
-        self.stop_processing = False
-        self.geometry_path: Optional[Path | str] = None
-        self.initial_element_size = None
-        self.geometry_qf = 1.0
-
-        self.coupling_type = CouplingType.WEAK
-
-        self.current_frequencies = []
-
-        self.decouple_info = {}
-        self.nodes_mapping = {}
-
-        self.acoustic_element_1d = None
-        self.acoustic_element_2d = None
-        self.acoustic_element_3d = None
-
-        self.structural_element_1d = None
-        self.structural_element_2d = None
-        self.structural_element_3d = None
-
-        self.properties = ModelProperties(self.disable_resume_callback)
-
-        self.reset_dissipation_model_properties()
 
     @property
     def volumes_of_domain(self):
@@ -202,6 +168,47 @@ class Model:
             return not np.all(self.solution.status)
         except Exception:
             return False
+
+    def reset_variables(self):
+        self.name: str = "Model"
+        self.thumbnail: Optional[Image] = None
+
+        self.length_unit: LengthUnits = "millimeter"
+        self.mesh_setup: Optional[MeshSetup] = None
+        self.analysis_setup: Optional[AnalysisSetup] = None
+
+        self.solution: Optional[Solution] = None
+
+        # TODO: review these variables
+        self.mesh: Optional[Mesh] = None
+        self.stop_processing = False
+        self.geometry_path: Optional[Path | str] = None
+        self.initial_element_size = None
+        self.geometry_qf = 1.0
+
+        self.coupling_type = CouplingType.WEAK
+
+        self.current_frequencies = []
+
+        self.decouple_info = {}
+        self.nodes_mapping = {}
+
+        self.acoustic_element_1d = None
+        self.acoustic_element_2d = None
+        self.acoustic_element_3d = None
+
+        self.structural_element_1d = None
+        self.structural_element_2d = None
+        self.structural_element_3d = None
+
+        self.properties = ModelProperties(self.disable_resume_callback)
+
+        self.reset_dissipation_model_properties()
+
+    def set_reduced_memory_mode_off(self):
+        self.array_reader: None
+        self.array_writer: None
+        self.reduced_memory_mode = False
 
     def get_mapped_nodes(self, node_ids: list[int] | np.ndarray, domain: str) -> np.ndarray:
         """

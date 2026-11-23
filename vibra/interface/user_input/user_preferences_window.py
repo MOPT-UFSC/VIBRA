@@ -153,6 +153,7 @@ class UserPreferencesInput(UserPreferencesWindow_UI):
     def _create_subprocess_page(self):
         layout = self._add_category_page("Processing")
 
+        self._add_checkbox_row(layout, "Reduced memory usage mode", "reduced_memory_usage_mode")
         self._add_checkbox_row(layout, "Run analysis in subprocess", "run_analysis_in_subprocess")
         self._add_checkbox_row(layout, "Generate mesh in subprocess", "generate_mesh_in_subprocess")
         self._add_checkbox_row(layout, "Print the solution log (terminal)", "print_solution_log")
