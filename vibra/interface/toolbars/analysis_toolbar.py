@@ -248,7 +248,8 @@ class AnalysisToolbar(QToolBar):
             if not app().main_window.save_project_dialog():
                 return
 
-        if app().config.user_preferences.reduced_memory_usage_mode:
+        reduced_memory = app().config.user_preferences.reduced_memory_usage_mode
+        if reduced_memory:
             app().project.set_reduced_memory_mode_on()
         else:
             self.model.set_reduced_memory_mode_off()
@@ -256,7 +257,7 @@ class AnalysisToolbar(QToolBar):
         app().project.mark_solution_as_outdated(reset=True)
 
         if app().config.user_preferences.run_analysis_in_subprocess:
-            self.run_analysis_in_subprocess(is_resume)
+            self.run_analysis_in_subprocess(is_resume, reduced_memory)
         else:
             self.run_analysis_in_current_process(is_resume)
 
@@ -302,7 +303,7 @@ class AnalysisToolbar(QToolBar):
 
         LoadingWindow(self.post_processing_analysis).run()
 
-    def run_analysis_in_subprocess(self, is_resume: bool = True) -> bool:
+    def run_analysis_in_subprocess(self, is_resume: bool = True, reduced_memory: bool = False) -> bool:
         if app().main_window.action_results_workspace.isChecked():
             app().main_window.action_model_workspace_callback()
 
@@ -316,6 +317,9 @@ class AnalysisToolbar(QToolBar):
         command = SubProcessHandler.get_executable()
         if app().config.user_preferences.print_solution_log:
             command += ["--print_log"]
+
+        if reduced_memory:
+            command += ["--reduced_memory"]
 
         flag = "--continue-analysis" if is_resume else "--run-analysis"
         command += [flag, str(app().project.working_directory)]

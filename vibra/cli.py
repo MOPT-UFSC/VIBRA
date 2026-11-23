@@ -6,11 +6,11 @@ def run_interface(project_path: str | None = None, open_last: bool = False):
 
     launch.main()
 
-def run_analysis(working_dir: str, print_log: bool):
+def run_analysis(working_dir: str, print_log: bool, reduced_memory: bool):
     from vibra.utils.subprocess import analysis_subprocess
 
     try:
-        analysis_subprocess.main(is_resume=False, working_dir=working_dir, print_log=print_log)
+        analysis_subprocess.main(is_resume=False, working_dir=working_dir, print_log=print_log, reduced_memory=reduced_memory)
     except Exception:
         import sys
         import traceback
@@ -89,11 +89,16 @@ def main():
         action="store_true",
         help="Print logs in terminal.",
     )
+    parser.add_argument(
+        "--reduced_memory",
+        action="store_true",
+        help="Run analysis in reduced memory usage mode.",
+    )
 
     args = parser.parse_args()
 
     if args.run_analysis is not None:
-        run_analysis(args.run_analysis, print_log=args.print_log)
+        run_analysis(args.run_analysis, print_log=args.print_log, reduced_memory=args.reduced_memory)
     elif args.continue_analysis is not None:
         continue_analysis(args.continue_analysis, print_log=args.print_log)
     elif args.generate_mesh is not None:

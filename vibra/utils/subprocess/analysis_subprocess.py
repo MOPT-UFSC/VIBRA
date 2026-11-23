@@ -17,10 +17,14 @@ logging.basicConfig(
 )
 
 
-def main(is_resume: bool, working_dir: Path, print_log : bool = False):
+def main(is_resume: bool, working_dir: Path, print_log: bool = False, reduced_memory: bool = False):
     project = Project(working_dir)
     project.read_from_working_dir()
-    project.run_analysis(is_resume, print_log)
+
+    if reduced_memory:
+        project.set_reduced_memory_mode_on()
+
+    project.run_analysis(is_resume, print_log, reduced_memory)
 
 
 if __name__ == "__main__":
