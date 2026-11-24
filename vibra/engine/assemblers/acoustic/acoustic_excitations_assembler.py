@@ -46,11 +46,11 @@ class AcousticExcitationsAssembler:
         self.integration_data_Qms_1d: MassSourceData | None = None
         self.integration_data_Qms_2d: MassSourceData | None = None
 
-        self.ind_rows_Qmsf_1d = np.array([], dtype=int)
-        self.ind_cols_Qmsf_1d = np.array([], dtype=int)
+        self.ind_rows_Qmsf_1d = np.array([], dtype=np.int32)
+        self.ind_cols_Qmsf_1d = np.array([], dtype=np.int32)
 
-        self.ind_rows_Qmsf_2d = np.array([], dtype=int)
-        self.ind_cols_Qmsf_2d = np.array([], dtype=int)
+        self.ind_rows_Qmsf_2d = np.array([], dtype=np.int32)
+        self.ind_cols_Qmsf_2d = np.array([], dtype=np.int32)
 
 
     @property
@@ -107,16 +107,15 @@ class AcousticExcitationsAssembler:
         # prescribed values
         values = self.assembler.prescribed_values[:, index]
 
-        # prescribed indexes
-        idx = self.assembler.prescribed_dof_indices
-
-        Cr = 0.
-        Cr += self.assembler.damping_matrix_2d[:, idx]
-        Cr += self.assembler.damping_matrix_3d[:, idx]
-        Mr = self.assembler.mass_matrix[:, idx]
-        Kr = self.assembler.stiffness_matrix[:, idx]
+        # reduced global matrices C, M, K
+        Cr = self.assembler.damping_matrix_r
+        Mr = self.assembler.mass_matrix_r
+        Kr = self.assembler.stiffness_matrix_r
 
         F_eq = (-(omega**2) * Mr + (1j * omega) * Cr + Kr) @ values
+
+        if self.model.reduced_memory_mode:
+            self.assembler.reset_reduced_matrices_attributes()
 
         return F_eq
 
@@ -197,8 +196,8 @@ class AcousticExcitationsAssembler:
         if connectivities:
 
             integration_data = {
-                "connectivities" : np.array(list(connectivities.values()), dtype=int),
-                "surface_data" : np.array(list(aux_data.values()), dtype=complex),
+                "connectivities" : np.array(list(connectivities.values()), dtype=np.int32),
+                "surface_data" : np.array(list(aux_data.values()), dtype=np.complex128),
                 }
 
             return AcousticExcitationData(**integration_data)
@@ -280,7 +279,7 @@ class AcousticExcitationsAssembler:
         if aux_connect:
 
             integration_data = {
-                "connectivities": np.array(list(aux_connect.values()), dtype=int),
+                "connectivities": np.array(list(aux_connect.values()), dtype=np.int32),
                 "factor_Qms1": np.array(list(factor_Qms1.values())),
                 "factor_Qms2": np.array(list(factor_Qms2.values())),
             }
@@ -334,7 +333,7 @@ class AcousticExcitationsAssembler:
         if aux_connect:
 
             integration_data = {
-                "connectivities": np.array(list(aux_connect.values()), dtype=int),
+                "connectivities": np.array(list(aux_connect.values()), dtype=np.int32),
                 "factor_Qms1": np.array(list(factor_Qms1.values())),
                 "factor_Qms2": np.array(list(factor_Qms2.values())),
             }
@@ -373,7 +372,7 @@ class AcousticExcitationsAssembler:
                     continue
 
                 if self.mass_source_vector_points is None:
-                    self.mass_source_vector_points = np.zeros((self.model.total_dofs, self.assembler.number_frequencies), dtype=complex)
+                    self.mass_source_vector_points = np.zeros((self.model.total_dofs, self.assembler.number_frequencies), dtype=np.complex128)
 
                 volume_id = data.get("volume_id")
                 if volume_id is None:
@@ -424,7 +423,7 @@ class AcousticExcitationsAssembler:
                 continue
 
             if self.mass_source_vector_lines is None:
-                self.mass_source_vector_lines = np.zeros((self.model.total_dofs, self.assembler.number_frequencies), dtype=complex)
+                self.mass_source_vector_lines = np.zeros((self.model.total_dofs, self.assembler.number_frequencies), dtype=np.complex128)
 
             values = data.get("values")
             if values is None:
@@ -467,7 +466,7 @@ class AcousticExcitationsAssembler:
                 continue
 
             if self.mass_source_vector_surfaces is None:
-                self.mass_source_vector_surfaces = np.zeros((self.model.total_dofs, self.assembler.number_frequencies), dtype=complex)
+                self.mass_source_vector_surfaces = np.zeros((self.model.total_dofs, self.assembler.number_frequencies), dtype=np.complex128)
 
             values = data.get("values")
             if values is None:
@@ -510,7 +509,7 @@ class AcousticExcitationsAssembler:
                 continue
 
             if self.mass_source_vector_volumes is None:
-                self.mass_source_vector_volumes = np.zeros((self.model.total_dofs, self.assembler.number_frequencies), dtype=complex)
+                self.mass_source_vector_volumes = np.zeros((self.model.total_dofs, self.assembler.number_frequencies), dtype=np.complex128)
 
             values = data.get("values")
             if values is None:
@@ -701,16 +700,11 @@ class AcousticExcitationsAssembler:
 
         factor_Qms1, factor_Qms2 = self.compute_mass_source_load_factors_for_volumes(index=index)
 
-        if self.model.reduced_memory_mode:
-            rows, cols = self.assembler.get_rows_and_cols_indices()
-            data_Qms1 = self.assembler.compute_NtN_factor_product(factor_Qms1)
-            data_Qms2 = self.assembler.compute_BtB_factor_product(factor_Qms2)
+        rows = self.assembler.rows
+        cols = self.assembler.cols
 
-        else:
-            rows = self.assembler.rows
-            cols = self.assembler.cols
-            data_Qms1: np.ndarray = factor_Qms1 * self.assembler.int3d_NtN
-            data_Qms2: np.ndarray = factor_Qms2 * self.assembler.int3d_BtB
+        data_Qms1: np.ndarray = factor_Qms1 * self.assembler.int3d_NtN
+        data_Qms2: np.ndarray = factor_Qms2 * self.assembler.int3d_BtB
 
         self.Qms1_3d = csr_matrix((data_Qms1.ravel(), (rows, cols)), shape=self.model.gm_shape)
         self.Qms2_3d = csr_matrix((data_Qms2.ravel(), (rows, cols)), shape=self.model.gm_shape)
@@ -771,10 +765,10 @@ class AcousticExcitationsAssembler:
         """
 
         if self.mass_flow_vector is None:
-            self.mass_flow_vector = np.zeros((self.model.total_dofs, self.assembler.number_frequencies), dtype=complex)
+            self.mass_flow_vector = np.zeros((self.model.total_dofs, self.assembler.number_frequencies), dtype=np.complex128)
 
         acoustic_excitation = defaultdict(float)
-        aux_ones = np.ones((self.assembler.number_frequencies), dtype=complex)
+        aux_ones = np.ones((self.assembler.number_frequencies), dtype=np.complex128)
 
         for (property, surface_id), data in self.properties.surface_properties.items():
             if property in ["surface_velocity", "reciprocating_compressor_excitation"]:
@@ -823,7 +817,7 @@ class AcousticExcitationsAssembler:
         """
 
         if self.mass_flow_vector is None:
-            self.mass_flow_vector = np.zeros((self.model.total_dofs, self.assembler.number_frequencies), dtype=complex)
+            self.mass_flow_vector = np.zeros((self.model.total_dofs, self.assembler.number_frequencies), dtype=np.complex128)
 
         prop_labels = [
             "surface_velocity",
@@ -895,8 +889,5 @@ class AcousticExcitationsAssembler:
         if self.model.drop_domain:
             acoustic_dofs_indices = self.assembler.acoustic_dofs_indices
             self.mass_flow_vector = self.mass_flow_vector[acoustic_dofs_indices, :]
-
-        # if self.assembler.prescribed_dof_indices:
-        #     self.mass_flow_vector = self.mass_flow_vector[self.assembler.unprescribed_dof_indices, :]
 
         return self.mass_flow_vector

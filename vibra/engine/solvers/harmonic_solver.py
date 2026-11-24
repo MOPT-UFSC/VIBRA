@@ -135,8 +135,6 @@ class HarmonicSolver:
                 if is_resume and (i != 0) and isinstance(self._file_writer, LazyHDF5MatrixWriter) and self._file_writer.has_column(i):
                     continue
 
-                logging.info(f"Solving the {analysis_label} for step {i + 1} and frequency {freq} Hz [{i + 1}/{len(frequencies)}]")
-
                 if freq == 0:
                     # In case of freq=0, the matrix may differ from the non-zero frequencies,
                     # so we solve it with a particular linear solver
@@ -149,6 +147,8 @@ class HarmonicSolver:
 
                 # compute the load vector
                 f = self.assembler.compute_load_vector(i)
+
+                logging.info(f"Solving the {analysis_label} for step {i + 1} and frequency {freq} Hz [{i + 1}/{len(frequencies)}]")
 
                 if np.any(f):
 
@@ -166,7 +166,7 @@ class HarmonicSolver:
 
                 else:
                     # We will have the trivial solution whenever there is no excitation
-                    solution_freq = np.zeros_like(f, dtype=complex)
+                    solution_freq = np.zeros_like(f, dtype=np.complex128)
 
                 del f
 
@@ -324,7 +324,7 @@ class HarmonicSolver:
             self.project_paths.harmonic_solution_filepath,
             self.total_dofs,
             self.assembler.frequencies,
-            dtype=complex,
+            dtype=np.complex128,
             is_resume=is_resume,
         )
 
@@ -347,5 +347,5 @@ class HarmonicSolver:
         num_rows = self.total_dofs
         num_cols = len(self.assembler.frequencies)
 
-        solution = np.zeros((num_rows, num_cols), dtype=complex)
+        solution = np.zeros((num_rows, num_cols), dtype=np.complex128)
         return solution

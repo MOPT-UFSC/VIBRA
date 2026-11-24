@@ -45,10 +45,11 @@ class StructuralAssembler:
 
     def reset(self):
 
+        self.frequency_dependent = False
         self.frequencies = None
 
         self.prescribed_dof_values = {}
-        self.array_prescribed_values = np.array([])
+        self.prescribed_values = np.array([])
 
         self.displacement_dof = np.array([])
         self.prescribed_dof_indices = None
@@ -60,6 +61,7 @@ class StructuralAssembler:
 
         # global matrices and excitation vector
         self.reset_global_matrices_attributes()
+        self.reset_reduced_matrices_attributes()
 
 
     def reset_global_matrices_attributes(self):
@@ -67,13 +69,17 @@ class StructuralAssembler:
         self.data_M = None
         self.cols = None
         self.rows = None
-        self.structural_load = None
         self.mass_matrix = None
         self.stiffness_matrix = None
         self.structural_local_dampings = None
-        self.distributed_stiffness_matrix = None
 
         self.sparse_matrix_data: dict[str, SparseMatrixData] = {}
+
+
+    def reset_reduced_matrices_attributes(self):
+        self.mass_matrix_r = None
+        self.stiffness_matrix_r = None
+        self.damping_matrix_r = None
 
 
     @property
@@ -164,7 +170,7 @@ class StructuralAssembler:
                 continue
 
             _nodes = self.model.get_mapped_nodes(node_id, "structural")
-            # _nodes = np.array([node_id], dtype=int)
+            # _nodes = np.array([node_id], dtype=np.int32)
             property_data_from_nodes = self.model.get_structural_property_data_from_nodes(_nodes, data, "points")
             for gdof, p_data in property_data_from_nodes.items():
                 output_data[gdof] += p_data
@@ -174,7 +180,7 @@ class StructuralAssembler:
                 continue
 
             _nodes = self.model.get_mapped_nodes(node_id, "structural")
-            # _nodes = np.array([node_id], dtype=int)
+            # _nodes = np.array([node_id], dtype=np.int32)
             property_data_from_nodes = self.model.get_structural_property_data_from_nodes(_nodes, data, "nodes")
             for gdof, p_data in property_data_from_nodes.items():
                 output_data[gdof] += p_data
@@ -204,7 +210,7 @@ class StructuralAssembler:
             for gdof in data:
                 value = data[gdof]
 
-                aux_ones = np.ones(self.number_frequencies, dtype=complex)
+                aux_ones = np.ones(self.number_frequencies, dtype=np.complex128)
                 if isinstance(value, complex):
                     property_data[gdof] = aux_ones * value
 
@@ -234,14 +240,14 @@ class StructuralAssembler:
         self.prescribed_dof_values = self.process_property_arrays(output_prescribed_dof_data)
 
         self.prescribed_dof_indices = list(self.prescribed_dof_values.keys())
-        self.array_prescribed_values = np.array(list(self.prescribed_dof_values.values()), dtype=complex)
+        self.prescribed_values = np.array(list(self.prescribed_dof_values.values()), dtype=np.complex128)
 
 
     def process_unprescribed_indices(self):
         """ 
         Returns the unprescribed dof indices.
         """
-        all_indices = np.arange(self.model.domains_processor.total_str_dofs, dtype=int)
+        all_indices = np.arange(self.model.domains_processor.total_str_dofs, dtype=np.int32)
         self.unprescribed_dof_indices = np.delete(all_indices, self.prescribed_dof_indices)
 
 
@@ -260,10 +266,10 @@ class StructuralAssembler:
             return self.structural_dofs_indices
 
         else:
-            nodes_from_2d_elements = np.array([*set(self.model.mesh.faces_connectivity[:, 4:].ravel())], dtype=int)
+            nodes_from_2d_elements = np.array([*set(self.model.mesh.faces_connectivity[:, 4:].ravel())], dtype=np.int32)
 
             dof = self.element_2d.dof_per_node
-            local_dof_2d = np.arange(self.element_2d.dof_per_node, dtype=int)            
+            local_dof_2d = np.arange(self.element_2d.dof_per_node, dtype=np.int32)            
             displacement_ldof_2d = local_dof_2d[0 : int(self.element_2d.dof_per_node / 2)]
 
             displacement_dof_from_2d_elements = dof * nodes_from_2d_elements.reshape(-1, 1) + displacement_ldof_2d
@@ -297,8 +303,8 @@ class StructuralAssembler:
             values_list = []
             n_freq = self.number_frequencies
 
-            aux_ones = np.ones(n_freq, dtype=complex)
-            aux_zeros = np.zeros(n_freq, dtype=complex)
+            aux_ones = np.ones(n_freq, dtype=np.complex128)
+            aux_zeros = np.zeros(n_freq, dtype=np.complex128)
 
             for value in values:
 
@@ -316,7 +322,7 @@ class StructuralAssembler:
             # TODO: check matrix dimensions for compatibility
             return aux_ones
 
-        array_of_values = np.array(values_list, dtype=complex) / denominator
+        array_of_values = np.array(values_list, dtype=np.complex128) / denominator
 
         # filter values based on frequency mask
         if array_of_values.shape[1] - n_freq:
@@ -388,8 +394,8 @@ class StructuralAssembler:
         if connectivities:
 
             integration_data = {
-                "element_ids" : np.array(list(connectivities.keys()), dtype=int),
-                "connectivities" : np.array(list(connectivities.values()), dtype=int),
+                "element_ids" : np.array(list(connectivities.keys()), dtype=np.int32),
+                "connectivities" : np.array(list(connectivities.values()), dtype=np.int32),
                 "pdata_values" : list(pdata_values.values()),
                 "is_normal" : np.array(list(is_normal.values()), dtype=bool),
                 }
@@ -450,8 +456,8 @@ class StructuralAssembler:
         if connectivities:
 
             integration_data = {
-                "element_ids" : np.array(list(connectivities.keys()), dtype=int),
-                "connectivities" : np.array(list(connectivities.values()), dtype=int),
+                "element_ids" : np.array(list(connectivities.keys()), dtype=np.int32),
+                "connectivities" : np.array(list(connectivities.values()), dtype=np.int32),
                 "pdata_values" : list(pdata_values.values()),
                 "is_normal" : np.array(list(is_normal.values()), dtype=bool),
                 }
@@ -496,8 +502,8 @@ class StructuralAssembler:
 
         self.displacement_dof = self.get_displacement_dof()
     
-        self.data_K = np.zeros((self.number_2d_elements, self.dof, self.dof), dtype=complex)
-        self.data_M = np.zeros((self.number_2d_elements, self.dof, self.dof), dtype=complex)
+        self.data_K = np.zeros((self.number_2d_elements, self.dof, self.dof), dtype=np.complex128)
+        self.data_M = np.zeros((self.number_2d_elements, self.dof, self.dof), dtype=np.complex128)
 
         # initialize variable
         last_progress = 0
@@ -623,35 +629,61 @@ class StructuralAssembler:
         """
         This method assembles the global mass matrix.
         """
-        if self.model.reduced_memory_mode:
-            rows, cols = self.get_rows_and_cols_indices()
-            data_M: np.ndarray = self.model.array_reader("structural_data_M.npy")
-            self.mass_matrix = coo_matrix((data_M.ravel(), (rows, cols)), shape=self.model.gm_shape).tocsr()
-
-        else:
-            self.mass_matrix = coo_matrix((self.data_M.ravel(), (self.rows, self.cols)), shape=self.model.gm_shape).tocsr()
+        M = coo_matrix((self.data_M.ravel(), (self.rows, self.cols)), shape=self.model.gm_shape).tocsr()
 
         if self.model.drop_domain:
-            self.mass_matrix = self.mass_matrix[self.structural_dofs_indices, :][:, self.structural_dofs_indices]
+            idx = self.structural_dofs_indices
+            M = M[idx, :][:, idx]
+
+        if not self.model.reduced_memory_mode:
+            self.mass_matrix = M
+
+        return M
 
 
     def assemble_global_stiffness_matrix(self, index: int = 0):
         """
         This method assembles the global stiffness matrix.
         """
-        if self.model.reduced_memory_mode:
-            rows, cols = self.get_rows_and_cols_indices()
-            data_K: np.ndarray = self.model.array_reader("structural_data_K.npy")
-            self.stiffness_matrix = coo_matrix((data_K.ravel(), (rows, cols)), shape=self.model.gm_shape).tocsr()
-
-        else:
-            self.stiffness_matrix = coo_matrix((self.data_K.ravel(), (self.rows, self.cols)), shape=self.model.gm_shape).tocsr()
+        K = coo_matrix((self.data_K.ravel(), (self.rows, self.cols)), shape=self.model.gm_shape).tocsr()
 
         if self.model.drop_domain:
-            self.stiffness_matrix = self.stiffness_matrix[self.structural_dofs_indices, :][:, self.structural_dofs_indices]
+            idx = self.structural_dofs_indices
+            K = K[idx, :][:, idx]
+
+        if not self.model.reduced_memory_mode:
+            self.stiffness_matrix = K
+
+        return K
 
 
-    def assemble_global_damping_matrix(self, freq: float, index: int):
+    def assemble_global_mass_and_stiffness_matrices(self, index: int = 0):
+        """
+        This method assembles the global mass matrix.
+        """
+
+        if (self.rows, self.cols, self.data_M, self.data_K).count(None):
+            self.load_global_matrices_data()
+
+        logging.info("Processing global mass matrix... [35/100]")
+        M = coo_matrix((self.data_M.ravel(), (self.rows, self.cols)), shape=self.model.gm_shape).tocsr()
+
+        logging.info("Processing global stiffness matrix... [75/100]")
+        K = coo_matrix((self.data_K.ravel(), (self.rows, self.cols)), shape=self.model.gm_shape).tocsr()
+
+        if self.model.drop_domain:
+            idx = self.structural_dofs_indices
+            M = M[idx, :][:, idx]
+            K = K[idx, :][:, idx]
+
+        if not self.model.reduced_memory_mode:
+            self.mass_matrix = M
+            self.stiffness_matrix = K
+
+        return M, K
+
+
+    def assemble_global_damping_matrix(self, freq: float, index: int, M: csr_matrix, K: csr_matrix):
 
         if not freq:
             raise ValueError(f"Unsupported frequency value: {freq} [Hz]")
@@ -662,25 +694,18 @@ class StructuralAssembler:
         # assemble the global damping distributed matrix
         C_dist = self.assemble_distributed_damping_global_matrix(index=index)
 
-        M = self.mass_matrix
-        K = self.stiffness_matrix
-
         omega = 2 * np.pi * freq
 
         # compute the damping matrix contribution for structural global dampings
         if any(self.model.global_damping):
             alpha, beta, eta = self.model.global_damping
-            self.damping_matrix = alpha * M + (beta + eta / omega) * K + C_dist
+            C = alpha * M + (beta + eta / omega) * K + C_dist
         else:
-            self.damping_matrix = csr_matrix(shape=self.model.gm_shape)
+            C = csr_matrix(shape=self.model.gm_shape)
 
         # process the contribution for structural local dampings
         if not self.dampings_from_volume:
-            self.rows = None
-            self.cols = None
-            self.data_K = None
-            self.data_M = None
-            return
+            return C
 
         # proportional damping constants
         alpha = self.structural_local_dampings[:, 0].reshape(-1, 1, 1)
@@ -689,23 +714,15 @@ class StructuralAssembler:
         # hysteretic structural damping constant
         eta = self.structural_local_dampings[:, 2].reshape(-1, 1, 1)
 
-        # read the data to assemble the global damping matrix (reduced memory mode)
-        if self.model.reduced_memory_mode:
-            rows, cols = self.get_rows_and_cols_indices()
-            data_K: np.ndarray = self.model.array_reader("structural_data_K.npy")
-            data_M: np.ndarray = self.model.array_reader("structural_data_M.npy")
-
-            data = alpha * data_M + (beta + eta / omega) * data_K 
-            C_mat = coo_matrix((data.ravel(), (rows, cols)), shape=self.model.gm_shape).tocsr()
-
-        else:
-            data = alpha * self.data_M + (beta + eta / omega) * self.data_K 
-            C_mat = coo_matrix((data.ravel(), (self.rows, self.cols)), shape=self.model.gm_shape).tocsr()
+        # compute the global damping matrix
+        data = alpha * self.data_M + (beta + eta / omega) * self.data_K 
+        C_mat = coo_matrix((data.ravel(), (self.rows, self.cols)), shape=self.model.gm_shape).tocsr()
 
         if self.model.drop_domain:
-            C_mat = C_mat[self.structural_dofs_indices, :][:, self.structural_dofs_indices]
+            idx = self.structural_dofs_indices
+            C_mat = C_mat[idx, :][:, idx]
 
-        self.damping_matrix += C_mat
+        return C + C_mat
 
 
     def process_data_to_assemble_distributed_global_matrices(self):
@@ -779,7 +796,7 @@ class StructuralAssembler:
         e_dofs = element.dof_per_element
 
         # intialize the 4D data array
-        data = np.zeros((n_freq, n_el, e_dofs, e_dofs), dtype=complex)
+        data = np.zeros((n_freq, n_el, e_dofs, e_dofs), dtype=np.complex128)
 
         # process the rows and columns indices to assemble sparse matrices
         rows, cols = element.get_rows_and_cols_indices_2D(connectivities)
@@ -813,26 +830,28 @@ class StructuralAssembler:
             The frequency step index.
 
         """
-        self.distributed_mass_matrix = 0.
-        self.distributed_mass_matrix_r = 0.
+        M_dist = 0.
 
         if "distributed_mass_1d" in self.sparse_matrix_data:
             sp_data = self.sparse_matrix_data.get("distributed_mass_1d")
-            self.distributed_mass_matrix += csr_matrix(
+            M_dist += csr_matrix(
                 (sp_data.data[index, :, :, :].ravel(), (sp_data.rows, sp_data.cols)), shape=self.model.gm_shape
             )
 
         if "distributed_mass_2d" in self.sparse_matrix_data:
             sp_data = self.sparse_matrix_data.get("distributed_mass_2d")
-            self.distributed_mass_matrix += csr_matrix(
+            M_dist += csr_matrix(
                 (sp_data.data[index, :, :, :].ravel(), (sp_data.rows, sp_data.cols)), shape=self.model.gm_shape
             )
 
-        if not isinstance(self.distributed_mass_matrix, csr_matrix):
-            return
+        if not isinstance(M_dist, csr_matrix):
+            return 0.
  
         if self.model.drop_domain:
-            self.distributed_mass_matrix = self.distributed_mass_matrix[self.structural_dofs_indices, :][:, self.structural_dofs_indices]
+            idx = self.structural_dofs_indices
+            M_dist = M_dist[idx, :][:, idx]
+
+        return M_dist
 
 
     def assemble_distributed_stiffness_global_matrix(self, index: int = 0):
@@ -846,26 +865,28 @@ class StructuralAssembler:
             The frequency step index.
 
         """
-        self.distributed_stiffness_matrix = 0.
-        self.distributed_stiffness_matrix_r = 0.
+        K_dist = 0.
 
         if "distributed_stiffness_1d" in self.sparse_matrix_data:
             sp_data = self.sparse_matrix_data.get("distributed_stiffness_1d")
-            self.distributed_stiffness_matrix += coo_matrix(
+            K_dist += coo_matrix(
                 (sp_data.data[index, :, :, :].ravel(), (sp_data.rows, sp_data.cols)), shape=self.model.gm_shape
             ).tocsr()
 
         if "distributed_stiffness_2d" in self.sparse_matrix_data:
             sp_data = self.sparse_matrix_data.get("distributed_stiffness_2d")
-            self.distributed_stiffness_matrix += coo_matrix(
+            K_dist += coo_matrix(
                 (sp_data.data[index, :, :, :].ravel(), (sp_data.rows, sp_data.cols)), shape=self.model.gm_shape
             ).tocsr()
 
-        if not isinstance(self.distributed_stiffness_matrix, csr_matrix):
-            return
+        if not isinstance(K_dist, csr_matrix):
+            return 0.
 
         if self.model.drop_domain:
-            self.distributed_stiffness_matrix = self.distributed_stiffness_matrix[self.structural_dofs_indices, :][:, self.structural_dofs_indices]
+            idx = self.structural_dofs_indices
+            K_dist = K_dist[idx, :][:, idx]
+
+        return K_dist
 
 
     def assemble_distributed_damping_global_matrix(self, index: int = 0):
@@ -897,12 +918,13 @@ class StructuralAssembler:
             return 0.
  
         if self.model.drop_domain:
-            C_dist = C_dist[self.structural_dofs_indices, :][:, self.structural_dofs_indices]
+            idx = self.structural_dofs_indices
+            C_dist = C_dist[idx, :][:, idx]
 
         return C_dist
 
 
-    def assemble_global_matrices(self, reorder: bool = True, print_log: bool = False):
+    def process_global_matrices_data(self, reorder: bool = True, print_log: bool = False):
         """
         This method assembles the global matrices of the structural model.
         """
@@ -915,7 +937,7 @@ class StructuralAssembler:
         self.update_number_of_frequencies()
         self.model.process_surface_thickness()
 
-        logging.info("Gathering data to assemble global matrices... [20/100]")
+        logging.info("Gathering data to assemble global matrices... [25/100]")
         t0 = perf_counter()
         if self.compute_data_to_process_global_matrices(reorder=reorder, print_log=print_log):
             return
@@ -926,29 +948,25 @@ class StructuralAssembler:
         if self.model.stop_processing:
             return
 
-        logging.info("Assembling the global stiffness matrix... [50/100]")
-        t0 = perf_counter()
-        self.assemble_global_stiffness_matrix()
-        dt = perf_counter() - t0
-        if print_log:
-            print(f"Elapsed time to assemble the global stiffness matrix: {dt : .6f} [s]")
 
-        logging.info("Assembling the global mass matrix... [60/100]")
-        t0 = perf_counter()
-        self.assemble_global_mass_matrix()
-        self.assemble_distributed_mass_global_matrix()
-
-        dt = perf_counter() - t0
-        if print_log:
-            print(f"Elapsed time to assemble the global mass matrix: {dt : .6f} [s]")
-
-
-    def assemble_global_matrices_and_excitations(self, reorder: bool = True, print_log: bool = False):
+    def process_global_matrices_data_and_excitations(self, reorder: bool = True, print_log: bool = False):
         """
         This method assembles the global matrices and excitations of the structural model.
         """
-        self.assemble_global_matrices(reorder=reorder, print_log=print_log)
-        self.structural_load = self.excitations_assembler.assemble_model_excitations()
+        self.process_global_matrices_data(reorder=reorder, print_log=print_log)
+        self.excitations_assembler.assemble_model_excitations()
+
+
+    def process_reduced_global_matrices(self, C: csr_matrix, M: csr_matrix, K: csr_matrix):
+        """
+        """
+        # prescribed indexes
+        idx = self.prescribed_dof_indices
+
+        logging.info("Processing reduced global matrices... [90/100]")
+        self.damping_matrix_r = C[:, idx]
+        self.mass_matrix_r = M[:, idx]
+        self.stiffness_matrix_r = K[:, idx]
 
 
     def compute_load_vector(self, index: int) -> np.ndarray:
@@ -967,6 +985,7 @@ class StructuralAssembler:
 
         """
 
+        logging.info("Computing the load vector... [95/100]")
         f_eq = self.excitations_assembler.get_prescribed_dof_model_excitation(index=index)
         load_vector = self.excitations_assembler.structural_load[:, index] - f_eq
 
@@ -998,16 +1017,32 @@ class StructuralAssembler:
         analysis_setup = self.model.analysis_setup
         assert isinstance(analysis_setup, HarmonicAnalysisSetup)
 
-        # reassemble the global distributed matrices
-        self.assemble_distributed_stiffness_global_matrix(index=index)
+        logging.info("Processing global mass and stiffness matrices... [25/100]")
 
-        # assemble the global damping matrix
-        self.assemble_global_damping_matrix(freq, index)
+        # reassemble the global distributed mass and stiffness matrices
+        M_dist = self.assemble_distributed_mass_global_matrix(index=index)
+        K_dist = self.assemble_distributed_stiffness_global_matrix(index=index)
 
-        C = self.damping_matrix
-        M = self.mass_matrix + self.distributed_mass_matrix
-        K = self.stiffness_matrix + self.distributed_stiffness_matrix
+        if index == 0 or self.model.reduced_memory_mode:
+            M, K = self.assemble_global_mass_and_stiffness_matrices(index=index)
 
+        else:
+            M = self.mass_matrix
+            K = self.stiffness_matrix
+
+        logging.info("Processing global damping matrix... [80/100]")
+        C = self.assemble_global_damping_matrix(freq, index, M, K)
+
+        M += M_dist
+        K += K_dist
+
+        if self.prescribed_values.any():
+            self.process_reduced_global_matrices(C, M, K)
+
+        if self.model.reduced_memory_mode:
+            self.reset_global_matrices_attributes()
+
+        logging.info("Processing dynamic stiffness matrix... [85/100]")
         # compute the dynamic stiffness matrix Kd
         omega = 2 * np.pi * freq
         Kd = -(omega**2) * M + (1j * omega) * C + K
@@ -1020,8 +1055,14 @@ class StructuralAssembler:
 
     def build_eigenproblem_system(self):
 
-        K = self.stiffness_matrix + self.distributed_stiffness_matrix
-        M = self.mass_matrix + self.distributed_mass_matrix
+        # reassemble the global distributed mass and stiffness matrices
+        M_dist = self.assemble_distributed_mass_global_matrix()
+        K_dist = self.assemble_distributed_stiffness_global_matrix()
+
+        M, K = self.assemble_global_mass_and_stiffness_matrices()
+
+        M += M_dist
+        K += K_dist
 
         is_complex = np.any(np.iscomplex(K.data)) or np.any(np.iscomplex(M.data))
         if not is_complex:
@@ -1052,13 +1093,13 @@ class StructuralAssembler:
         rows = len(solution) + len(self.prescribed_dof_indices)
         cols = solution.shape[1]
 
-        full_solution = np.zeros((rows, cols), dtype=complex)
+        full_solution = np.zeros((rows, cols), dtype=np.complex128)
 
         if len(self.prescribed_dof_indices):
             if modal_analysis:
                 full_solution[self.prescribed_dof_indices, :] = np.zeros((len(self.prescribed_dof_indices), cols))
             else:
-                full_solution[self.prescribed_dof_indices, :] = self.array_prescribed_values[:, :cols]
+                full_solution[self.prescribed_dof_indices, :] = self.prescribed_values[:, :cols]
 
         full_solution[self.unprescribed_dof_indices, :] = solution
 
@@ -1069,11 +1110,11 @@ class StructuralAssembler:
 
         rows = len(solution) + len(self.prescribed_dof_indices)
 
-        full_solution = np.zeros(rows, dtype=complex)
+        full_solution = np.zeros(rows, dtype=np.complex128)
         full_solution[self.unprescribed_dof_indices] = solution
 
         if len(self.prescribed_dof_indices):
-            full_solution[self.prescribed_dof_indices] = self.array_prescribed_values[:, freq_index]
+            full_solution[self.prescribed_dof_indices] = self.prescribed_values[:, freq_index]
 
         return full_solution
 
@@ -1087,23 +1128,24 @@ class StructuralAssembler:
         print(f"rows I -> {self.get_size_in_GB(self.rows) : .4f} GB")
         print(f"cols J -> {self.get_size_in_GB(self.cols) : .4f} GB")
 
+        logging.info("Writing the global matrices data... [25/100]")
         self.model.array_writer("structural_rows_indices.npy", self.rows)
-        self.rows = None
 
+        logging.info("Writing the global matrices data... [50/100]")
         self.model.array_writer("structural_cols_indices.npy", self.cols)
-        self.cols = None
 
-        self.model.array_writer("structural_data_K.npy", self.data_K)
-        self.data_K = None
-
+        logging.info("Writing the global matrices data... [75/100]")
         self.model.array_writer("structural_data_M.npy", self.data_M)
-        self.data_M = None
+
+        logging.info("Writing the global matrices data... [98/100]")
+        self.model.array_writer("structural_data_K.npy", self.data_K)
 
 
-    def get_rows_and_cols_indices(self) -> list[np.ndarray, np.ndarray]:
-        rows = self.model.array_reader("structural_rows_indices.npy")
-        cols = self.model.array_reader("structural_cols_indices.npy")
-        return rows, cols
+    def load_global_matrices_data(self):
+        self.rows = self.model.array_reader("structural_rows_indices.npy")
+        self.cols = self.model.array_reader("structural_cols_indices.npy")
+        self.data_M = self.model.array_reader("structural_data_M.npy")
+        self.data_K = self.model.array_reader("structural_data_K.npy")
 
 
     def get_size_in_GB(self, data: np.ndarray):

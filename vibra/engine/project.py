@@ -360,7 +360,7 @@ class Project:
         self.solver = ModalSolver(self.assembler)
         self.structural_postprocessing = StructuralPostprocessing(self.model)
 
-        self.assembler.assemble_global_matrices(print_log=print_log)
+        self.assembler.process_global_matrices_data(print_log=print_log)
 
         t0 = perf_counter()
         self.model.solution = self.solver.solve(print_log=print_log)
@@ -392,7 +392,7 @@ class Project:
         self.solver = HarmonicSolver(self.assembler, self.project_paths)
         self.structural_postprocessing = StructuralPostprocessing(self.model)
 
-        self.assembler.assemble_global_matrices_and_excitations(print_log=print_log)
+        self.assembler.process_global_matrices_data_and_excitations(print_log=print_log)
 
         t0 = perf_counter()
 
@@ -435,7 +435,7 @@ class Project:
         self.solver = ModalSolver(self.assembler)
         self.acoustic_postprocessing = AcousticPostprocessing(self.model)
 
-        self.assembler.assemble_global_matrices(print_log=print_log)
+        self.assembler.process_global_matrices_data(print_log=print_log)
 
         t0 = perf_counter()
         self.model.solution = self.solver.solve(print_log=print_log)
@@ -470,7 +470,7 @@ class Project:
         self.model.process_porous_material_properties()
         self.model.process_viscous_thermal_model_properties()
         self.model.process_perforated_plate_impedance()
-        self.assembler.assemble_global_matrices_and_excitations(print_log=print_log)
+        self.assembler.process_global_matrices_data_and_excitations(print_log=print_log)
 
         t0 = perf_counter()
 

@@ -1,6 +1,6 @@
 import logging
 import sys
-from time import time
+from time import perf_counter
 
 import numpy as np
 from scipy.sparse import block_array, coo_matrix, csr_matrix
@@ -42,6 +42,7 @@ class AcousticAssembler:
 
         # global matrices and excitation vector
         self.reset_global_matrices_attributes()
+        self.reset_reduced_matrices_attributes()
 
 
     def reset_global_matrices_attributes(self):
@@ -51,11 +52,16 @@ class AcousticAssembler:
         self.int3d_BtB = None
         self.mass_matrix = None
         self.stiffness_matrix = None
-        self.mass_flow_vector = None
 
         self.damping_matrix_2d = None
         self.damping_matrix_3d: None
         self.visc_load_matrix: None
+
+
+    def reset_reduced_matrices_attributes(self):
+        self.mass_matrix_r = None
+        self.stiffness_matrix_r = None
+        self.damping_matrix_r = None
 
 
     @property
@@ -107,7 +113,7 @@ class AcousticAssembler:
 
         prescribed_dof_values = []
 
-        aux_ones = np.ones(self.number_frequencies, dtype=complex)
+        aux_ones = np.ones(self.number_frequencies, dtype=np.complex128)
 
         for key, data in self.properties.surface_properties.items():
             property, surface_id = key
@@ -176,7 +182,7 @@ class AcousticAssembler:
         """ 
         Returns the unprescribed dof indices.
         """
-        all_indices = np.arange(self.model.domains_processor.total_act_dofs, dtype=int)
+        all_indices = np.arange(self.model.domains_processor.total_act_dofs, dtype=np.int32)
         self.unprescribed_dof_indices = np.delete(all_indices, self.prescribed_dof_indices)
 
 
@@ -242,7 +248,7 @@ class AcousticAssembler:
             vector.
         """
 
-        aux_ones = np.ones((1, self.number_frequencies), dtype=complex)
+        aux_ones = np.ones((1, self.number_frequencies), dtype=np.complex128)
 
         if isinstance(value, complex | float):
             output_vector = value * aux_ones
@@ -307,8 +313,8 @@ class AcousticAssembler:
         """
 
         dof = self.element_3d.dof_per_element
-        self.int3d_BtB = np.zeros((self.number_3d_elements, dof, dof), dtype=complex)
-        self.int3d_NtN = np.zeros((self.number_3d_elements, dof, dof), dtype=complex)
+        self.int3d_BtB = np.zeros((self.number_3d_elements, dof, dof), dtype=np.complex128)
+        self.int3d_NtN = np.zeros((self.number_3d_elements, dof, dof), dtype=np.complex128)
 
         self.rows, self.cols, _ = self.element_3d.generate_ind_rows_cols(reorder=reorder)
 
@@ -406,17 +412,17 @@ class AcousticAssembler:
             An array containing all elementary mass factors in stacked form.
         """
 
-        if self.model.reduced_memory_mode:
-            data_M: np.ndarray = self.compute_NtN_factor_product(factor_M)
-            rows, cols = self.get_rows_and_cols_indices()
-            self.mass_matrix = coo_matrix((data_M.ravel(), (rows, cols)), shape=self.model.gm_shape).tocsr()
-
-        else:
-            data_M = self.int3d_NtN * factor_M
-            self.mass_matrix = coo_matrix((data_M.ravel(), (self.rows, self.cols)), shape=self.model.gm_shape).tocsr()
+        data_M = self.int3d_NtN * factor_M
+        M = coo_matrix((data_M.ravel(), (self.rows, self.cols)), shape=self.model.gm_shape).tocsr()
 
         if self.model.drop_domain:
-            self.mass_matrix = self.mass_matrix[self.acoustic_dofs_indices, :][:, self.acoustic_dofs_indices]
+            idx = self.acoustic_dofs_indices
+            M = M[idx, :][:, idx]
+
+        if not self.model.reduced_memory_mode:
+            self.mass_matrix = M
+
+        return M
 
 
     def assemble_global_stiffness_matrix(self, factor_K: np.ndarray):
@@ -428,20 +434,44 @@ class AcousticAssembler:
         factor_K: np.ndarray
             An array containing all elementary stiffness factors in stacked form.
         """
-        if self.model.reduced_memory_mode:
-            data_K: np.ndarray = self.compute_BtB_factor_product(factor_K)
-            rows, cols = self.get_rows_and_cols_indices()
-            self.stiffness_matrix = coo_matrix((data_K.ravel(), (rows, cols)), shape=self.model.gm_shape).tocsr()
 
-        else:
-            data_K = self.int3d_BtB * factor_K
-            self.stiffness_matrix = coo_matrix((data_K.ravel(), (self.rows, self.cols)), shape=self.model.gm_shape).tocsr()
+        data_K = self.int3d_BtB * factor_K
+        K = coo_matrix((data_K.ravel(), (self.rows, self.cols)), shape=self.model.gm_shape).tocsr()
 
         if self.model.drop_domain:
-            self.stiffness_matrix = self.stiffness_matrix[self.acoustic_dofs_indices, :][:, self.acoustic_dofs_indices]
+            idx = self.acoustic_dofs_indices
+            K = K[idx, :][:, idx]
+
+        if not self.model.reduced_memory_mode:
+            self.stiffness_matrix = K
+
+        return K
 
 
-    def assemble_global_matrices(self, reorder: bool = True, stacked_matrices: bool = True, print_log: bool = False):
+    def assemble_global_mass_and_stiffness_matrices(self, factor_M: np.ndarray, factor_K: np.ndarray):
+        """
+        This method assembles the global mass matrix.
+        """
+
+        data_M = self.int3d_NtN * factor_M
+        data_K = self.int3d_BtB * factor_K
+
+        M = coo_matrix((data_M.ravel(), (self.rows, self.cols)), shape=self.model.gm_shape).tocsr()
+        K = coo_matrix((data_K.ravel(), (self.rows, self.cols)), shape=self.model.gm_shape).tocsr()
+
+        if self.model.drop_domain:
+            idx = self.acoustic_dofs_indices
+            M = M[idx, :][:, idx]
+            K = K[idx, :][:, idx]
+
+        if not self.model.reduced_memory_mode:
+            self.mass_matrix = M
+            self.stiffness_matrix = K
+
+        return M, K
+
+
+    def process_global_matrices_data(self, reorder: bool = True, stacked_matrices: bool = True, print_log: bool = False):
         """
         This method assembles the global matrices of the acoustic model.
         """
@@ -454,12 +484,12 @@ class AcousticAssembler:
         self.update_number_of_frequencies()
 
         logging.info("Processing data to assemble global matrices... [20/100]")
-        t0 = time()
+        t0 = perf_counter()
         if stacked_matrices:
             self.compute_data_to_assemble_global_matrices(reorder=reorder)
         else:
             self.compute_data_to_assemble_global_matrices_using_loop(reorder=reorder, print_log=print_log)
-        dt = time() - t0
+        dt = perf_counter() - t0
         if print_log:
             print(f"Elapsed time to gather data to assemble global matrices: {dt : .6f} [s]")
 
@@ -467,51 +497,22 @@ class AcousticAssembler:
             return
 
         logging.info("Processing data to assemble damping matrix... [40/100]")
-        t0 = time()
+        t0 = perf_counter()
         self.impedances_assembler.compute_data_to_assemble_damping_matrix()
-        dt = time() - t0
+        dt = perf_counter() - t0
         if print_log:
             print(f"Elapsed time to gather data to assemble damping matrices: {dt : .6f} [s]")
 
-        logging.info("Computing the global matrices factors... [45/100]")
-        t0 = time()
-        factor_K, factor_M, factor_Cvisc, factor_fvisc = self.compute_global_matrices_factors()
-        dt = time() - t0
-        if print_log:
-            print(f"Elapsed time to compute global matrices factor: {dt : .6f} [s]")
 
-        logging.info("Assembling global stiffness matrix... [50/100]")
-        t0 = time()
-        self.assemble_global_stiffness_matrix(factor_K)
-        dt = time() - t0
-        if print_log:
-            print(f"Elapsed time to assemble the global stiffness matrix: {dt : .6f} [s]")
-
-        logging.info("Assembling global mass matrix... [60/100]")
-        t0 = time()
-        self.assemble_global_mass_matrix(factor_M)
-        dt = time() - t0
-        if print_log:
-            print(f"Elapsed time to assemble the global mass matrix: {dt : .6f} [s]")
-
-        logging.info("Assembling the damping matrices... [70/100]")
-        t0 = time()
-        self.damping_matrix_2d = self.impedances_assembler.assemble_global_damping_matrix_2d_elements()
-        self.damping_matrix_3d, self.visc_load_matrix = self.impedances_assembler.assemble_global_damping_matrix_3d_elements(factor_Cvisc, factor_fvisc)
-        dt = time() - t0
-        if print_log:
-            print(f"Elapsed time to assemble the damping matrices: {dt : .6f} [s]\n")
-
-
-    def assemble_global_matrices_and_excitations(self, reorder: bool = True, stacked_matrices: bool = True, print_log: bool = False):
+    def process_global_matrices_data_and_excitations(self, reorder: bool = True, stacked_matrices: bool = True, print_log: bool = False):
         """
         This method assembles the global matrices and excitations of the acoustic model.
         """
-        self.assemble_global_matrices(reorder = reorder, stacked_matrices = stacked_matrices, print_log = print_log)        
-        self.mass_flow_vector = self.excitations_assembler.assemble_model_excitations()
+        self.process_global_matrices_data(reorder = reorder, stacked_matrices = stacked_matrices, print_log = print_log)        
+        self.excitations_assembler.assemble_model_excitations()
 
 
-    def reassemble_global_matrices_for_solution_step(self, index: int):
+    def assemble_global_matrices_CMK(self, index: int=0):
         """
         Use this method to reassemble the global matrices for a specific solution step.
 
@@ -521,14 +522,36 @@ class AcousticAssembler:
             The solution step index of interest.
 
         """
+
+        if (self.rows, self.cols, self.int3d_NtN, self.int3d_BtB).count(None):
+            self.load_global_matrices_data()
+
+        t0 = perf_counter()
+        print(f"assemble_global_matrices_for_solution_step >>> {index}")
+        logging.info("Assembling global matrices... [55/100]")
         # process the global matrices factors
-        factor_K, factor_M, _, _ = self.compute_global_matrices_factors(index=index)
+        factor_K, factor_M, factor_Cvisc, factor_fvisc = self.compute_global_matrices_factors(index=index)
 
-        # assemble the global mass matrix
-        self.assemble_global_mass_matrix(factor_M)
+        logging.info("Assembling global matrices... [65/100]")
+        # assemble the global mass and stiffness matrices
+        M, K = self.assemble_global_mass_and_stiffness_matrices(factor_M, factor_K)
 
-        # assemble the global stiffness matrix
-        self.assemble_global_stiffness_matrix(factor_K)
+        # assemble global damping matrix
+        logging.info("Assembling global matrices... [75/100]")
+        self.damping_matrix_2d = self.impedances_assembler.assemble_global_damping_matrix_2d_elements()
+
+        t0_3d = perf_counter()
+        logging.info("Assembling global matrices... [95/100]")
+        self.damping_matrix_3d, self.visc_load_matrix = self.impedances_assembler.assemble_global_damping_matrix_3d_elements(factor_Cvisc, factor_fvisc)
+        dt_3d = perf_counter() - t0_3d
+        print(f"Time to process (3d): {dt_3d} s")
+
+        C = self.damping_matrix_2d + self.damping_matrix_3d
+        dt = perf_counter() - t0
+
+        print(f"Elapsed time (assemble_global_matrices_for_solution_step): {dt} s")
+
+        return C, M, K
 
 
     def exists_a_non_zero_prescribed_value(self, index: int):
@@ -539,6 +562,17 @@ class AcousticAssembler:
             return False
 
         return np.any(self.prescribed_values[:, index])
+
+
+    def process_reduced_global_matrices(self, C: csr_matrix, M: csr_matrix, K: csr_matrix):
+        """
+        """
+        # prescribed indexes
+        idx = self.prescribed_dof_indices
+
+        self.damping_matrix_r = C[:, idx]
+        self.mass_matrix_r = M[:, idx]
+        self.stiffness_matrix_r = K[:, idx]
 
 
     def compute_load_vector(self, index: int) -> np.ndarray:
@@ -560,19 +594,17 @@ class AcousticAssembler:
 
         """
 
-        # create the frequency vector
-        freq = self.frequencies[index]
-        omega = 2 * np.pi * freq
+        logging.info("Computing the load vector... [95/100]")
 
         if self.frequency_dependent:
-
-            # assemble the global matrices if there are non-zero prescribed_dofs
-            if self.exists_a_non_zero_prescribed_value(index):
-                self.reassemble_global_matrices_for_solution_step(index)
 
             # reassemble the mass source matrices
             self.excitations_assembler.assemble_mass_source_matrices_from_surfaces(index=index)
             self.excitations_assembler.assemble_mass_source_matrices_from_volumes(index=index)
+
+        # create the frequency vector
+        freq = self.frequencies[index]
+        omega = 2 * np.pi * freq
 
         # update the prescribed dof-related load vector for each frequency step
         f_eq = self.excitations_assembler.get_prescribed_pressure_model_excitation(index=index)
@@ -580,11 +612,14 @@ class AcousticAssembler:
         # mass source-related load vector
         f_ms = self.excitations_assembler.compute_mass_source_load_vector(omega, index=index)
 
+        # mass flow vector
+        mass_flow_vector = self.excitations_assembler.mass_flow_vector
+
         # viscous damping-related load vector
-        f_visc = self.visc_load_matrix @ self.mass_flow_vector[:, index]
+        f_visc = self.visc_load_matrix @ mass_flow_vector[:, index]
 
         # mass flow-related load vector
-        f_mf = 1j * omega * self.mass_flow_vector[:, index]
+        f_mf = 1j * omega * mass_flow_vector[:, index]
 
         # compute the load vector {f}
         load_vector = f_ms + f_visc - f_mf - f_eq
@@ -614,35 +649,24 @@ class AcousticAssembler:
 
         """
 
-        # create the frequency vector
-        omega = 2 * np.pi * freq
+        if index == 0 or self.frequency_dependent or self.model.reduced_memory_mode:
+            C, M, K = self.assemble_global_matrices_CMK(index)
 
-        # mass and stiffness matrices
-        M = self.mass_matrix
-        K = self.stiffness_matrix
-
-        # update the damping matrix for impendaces
-        if index > 0:
+        else:
             self.damping_matrix_2d = self.impedances_assembler.assemble_global_damping_matrix_2d_elements(index=index)
-
-        # sum damping matrices
-        C = self.damping_matrix_2d + self.damping_matrix_3d
-
-        if self.frequency_dependent:
-
-            # if there are prescribed_dofs, the global matrices have already been assembled 
-            if not self.exists_a_non_zero_prescribed_value(index):
-                self.reassemble_global_matrices_for_solution_step(index)
-
+            C = self.damping_matrix_2d + self.damping_matrix_3d
             M = self.mass_matrix
             K = self.stiffness_matrix
 
-        # compute the dynamic stiffness matrix Kd
-        Kd = K - (omega ** 2) * M + 1j * omega * C
+        if self.prescribed_values.any():
+            self.process_reduced_global_matrices(C, M, K)
 
-        self.mass_matrix = None
-        self.stiffness_matrix = None
-        self.damping_matrix_2d = None
+        if self.model.reduced_memory_mode:
+            self.reset_global_matrices_attributes()
+
+        # compute the dynamic stiffness matrix Kd
+        omega = 2 * np.pi * freq
+        Kd = -(omega**2) * M + (1j * omega) * C + K
 
         if self.prescribed_dof_indices:
             Kd = Kd[self.unprescribed_dof_indices, :][:, self.unprescribed_dof_indices]
@@ -651,8 +675,8 @@ class AcousticAssembler:
 
 
     def build_eigenproblem_system(self):
-        K = self.stiffness_matrix
-        M = self.mass_matrix
+
+        _, M, K = self.assemble_global_matrices_CMK()
 
         C_imp = self.damping_matrix_2d
 
@@ -689,7 +713,7 @@ class AcousticAssembler:
         rows = len(solution) + len(self.prescribed_dof_indices)
         cols = solution.shape[1]
 
-        full_solution = np.zeros((rows, cols), dtype=complex)
+        full_solution = np.zeros((rows, cols), dtype=np.complex128)
         full_solution[self.unprescribed_dof_indices, :] = solution
 
         if len(self.prescribed_dof_indices):
@@ -720,7 +744,7 @@ class AcousticAssembler:
 
         rows = len(solution) + len(self.prescribed_dof_indices)
 
-        full_solution = np.zeros(rows, dtype=complex)
+        full_solution = np.zeros(rows, dtype=np.complex128)
         full_solution[self.unprescribed_dof_indices] = solution
 
         if len(self.prescribed_dof_indices):
@@ -731,8 +755,6 @@ class AcousticAssembler:
 
     def write_global_matrices_array_data(self):
 
-        print("write_global_matrices_array_data")
-
         print()
         print("Allocated RAM for acoustic global matrices")
         print(f"data K -> {self.get_size_in_GB(self.int3d_BtB) : .4f} GB")
@@ -740,33 +762,24 @@ class AcousticAssembler:
         print(f"rows I -> {self.get_size_in_GB(self.rows) : .4f} GB")
         print(f"cols J -> {self.get_size_in_GB(self.cols) : .4f} GB")
 
+        logging.info("Writing the global matrices data... [25/100]")
         self.model.array_writer("acoustic_rows_indices.npy", self.rows)
-        self.rows = None
 
+        logging.info("Writing the global matrices data... [50/100]")
         self.model.array_writer("acoustic_cols_indices.npy", self.cols)
-        self.cols = None
 
+        logging.info("Writing the global matrices data... [75/100]")
         self.model.array_writer("acoustic_int3d_NtN.npy", self.int3d_NtN)
-        self.int3d_NtN = None
 
+        logging.info("Writing the global matrices data... [98/100]")
         self.model.array_writer("acoustic_int3d_BtB.npy", self.int3d_BtB)
-        self.int3d_BtB = None
 
 
-    def get_rows_and_cols_indices(self):
-        ind_rows = self.model.array_reader("acoustic_rows_indices.npy")
-        ind_cols = self.model.array_reader("acoustic_cols_indices.npy")
-        return ind_rows, ind_cols
-
-
-    def compute_NtN_factor_product(self, factor: np.ndarray):
-        int3d_NtN = self.model.array_reader("acoustic_int3d_NtN.npy")
-        return factor * int3d_NtN
-
-
-    def compute_BtB_factor_product(self, factor: np.ndarray):
-        int3d_BtB = self.model.array_reader("acoustic_int3d_BtB.npy")
-        return factor * int3d_BtB
+    def load_global_matrices_data(self):
+        self.rows = self.model.array_reader("acoustic_rows_indices.npy")
+        self.cols = self.model.array_reader("acoustic_cols_indices.npy")
+        self.int3d_NtN = self.model.array_reader("acoustic_int3d_NtN.npy")
+        self.int3d_BtB = self.model.array_reader("acoustic_int3d_BtB.npy")
 
 
     def get_size_in_GB(self, data: np.ndarray):

@@ -2,6 +2,7 @@
 import logging
 from dataclasses import dataclass
 from typing import TYPE_CHECKING
+from time import perf_counter
 
 import numpy as np
 from scipy.sparse import csr_matrix
@@ -54,36 +55,36 @@ class AcousticImpedancesAssembler:
         self.integration_data_ipw: IncidentPlaneWaveData | None = None
 
         self.data_Zsi = {}
-        self.rows_Zsi = np.array([], dtype=int)
-        self.cols_Zsi = np.array([], dtype=int)
+        self.rows_Zsi = np.array([], dtype=np.int32)
+        self.cols_Zsi = np.array([], dtype=np.int32)
 
         self.data_Zat = {}
-        self.rows_Zat = np.array([], dtype=int)
-        self.cols_Zat = np.array([], dtype=int)
+        self.rows_Zat = np.array([], dtype=np.int32)
+        self.cols_Zat = np.array([], dtype=np.int32)
 
         self.data_Zipw = {}
-        self.rows_Zipw = np.array([], dtype=int)
-        self.cols_Zipw = np.array([], dtype=int)
+        self.rows_Zipw = np.array([], dtype=np.int32)
+        self.cols_Zipw = np.array([], dtype=np.int32)
 
         self.data_Zas = {}
-        self.rows_Zas = np.array([], dtype=int)
-        self.cols_Zas = np.array([], dtype=int)
+        self.rows_Zas = np.array([], dtype=np.int32)
+        self.cols_Zas = np.array([], dtype=np.int32)
 
         self.data_Zti_A = {}
-        self.rows_Zti_A = np.array([], dtype=int)
-        self.cols_Zti_A = np.array([], dtype=int)
+        self.rows_Zti_A = np.array([], dtype=np.int32)
+        self.cols_Zti_A = np.array([], dtype=np.int32)
 
         self.data_Zti_B = {}
-        self.rows_Zti_B = np.array([], dtype=int)
-        self.cols_Zti_B = np.array([], dtype=int)
+        self.rows_Zti_B = np.array([], dtype=np.int32)
+        self.cols_Zti_B = np.array([], dtype=np.int32)
 
         self.data_Zpp_A = {}
-        self.rows_Zpp_A = np.array([], dtype=int)
-        self.cols_Zpp_A = np.array([], dtype=int)
+        self.rows_Zpp_A = np.array([], dtype=np.int32)
+        self.cols_Zpp_A = np.array([], dtype=np.int32)
 
         self.data_Zpp_B = {}
-        self.rows_Zpp_B = np.array([], dtype=int)
-        self.cols_Zpp_B = np.array([], dtype=int)
+        self.rows_Zpp_B = np.array([], dtype=np.int32)
+        self.cols_Zpp_B = np.array([], dtype=np.int32)
 
 
     @property
@@ -162,8 +163,8 @@ class AcousticImpedancesAssembler:
         if aux_connect:
 
             integration_data = {
-                "connectivities" : np.array(list(aux_connect.values()), dtype=int),
-                "surface_data" : np.array(list(aux_data.values()), dtype=complex),
+                "connectivities" : np.array(list(aux_connect.values()), dtype=np.int32),
+                "surface_data" : np.array(list(aux_data.values()), dtype=np.complex128),
                 }
 
             return ExternalImpedanceData(**integration_data)
@@ -241,7 +242,7 @@ class AcousticImpedancesAssembler:
                 "ipw_vector": ipw_vector,
                 "ipw_pressure": p_inc,
                 "ipw_impedance": Z_ipw,
-                "connectivities": np.array(list(connectivities.values()), dtype=int),
+                "connectivities": np.array(list(connectivities.values()), dtype=np.int32),
                 "element_face_normals": np.array(list(elements_normals.values()), dtype=float),
             }
 
@@ -266,7 +267,7 @@ class AcousticImpedancesAssembler:
         connectivity_surface_B = {}
         integration_data = {}
 
-        # aux_ones = np.ones(self.assembler.number_frequencies, dtype=complex)
+        # aux_ones = np.ones(self.assembler.number_frequencies, dtype=np.complex128)
 
         for (property_label, surface_ids), p_data in self.properties.surface_properties.items():
 
@@ -323,10 +324,10 @@ class AcousticImpedancesAssembler:
 
         if connectivity_surface_A and connectivity_surface_B:
             integration_data = {
-                "connectivities_A": np.array(list(connectivity_surface_A.values()), dtype=int),
-                "connectivities_B": np.array(list(connectivity_surface_B.values()), dtype=int),
-                "surface_data_A": np.array(list(surface_data_A.values()), dtype=complex),
-                "surface_data_B": np.array(list(surface_data_B.values()), dtype=complex),
+                "connectivities_A": np.array(list(connectivity_surface_A.values()), dtype=np.int32),
+                "connectivities_B": np.array(list(connectivity_surface_B.values()), dtype=np.int32),
+                "surface_data_A": np.array(list(surface_data_A.values()), dtype=np.complex128),
+                "surface_data_B": np.array(list(surface_data_B.values()), dtype=np.complex128),
             }
 
             return InternalImpedanceData(**integration_data)
@@ -417,10 +418,10 @@ class AcousticImpedancesAssembler:
 
         if connectivity_surface_A and connectivity_surface_B:
             integration_data = {
-                "connectivities_A": np.array(list(connectivity_surface_A.values()), dtype=int),
-                "connectivities_B": np.array(list(connectivity_surface_B.values()), dtype=int),
-                "surface_data_A": np.array(list(surface_data_A.values()), dtype=complex),
-                "surface_data_B": np.array(list(surface_data_B.values()), dtype=complex),
+                "connectivities_A": np.array(list(connectivity_surface_A.values()), dtype=np.int32),
+                "connectivities_B": np.array(list(connectivity_surface_B.values()), dtype=np.int32),
+                "surface_data_A": np.array(list(surface_data_A.values()), dtype=np.complex128),
+                "surface_data_B": np.array(list(surface_data_B.values()), dtype=np.complex128),
                 "non_linear": non_linear,
             }
 
@@ -446,7 +447,7 @@ class AcousticImpedancesAssembler:
         n_freq = self.assembler.number_frequencies
 
         for j in range(n_freq):
-            self.data_Zsi[j] = np.zeros((nel, dof, dof), dtype=complex)
+            self.data_Zsi[j] = np.zeros((nel, dof, dof), dtype=np.complex128)
 
         logging.info("Processing the impedance data to assemble damping matrix... [2/14]")
         self.rows_Zsi, self.cols_Zsi = self.element_2d.get_rows_and_cols_indices_2D(connectivities)
@@ -475,7 +476,7 @@ class AcousticImpedancesAssembler:
         n_freq = self.assembler.number_frequencies
 
         for j in range(n_freq):
-            self.data_Zat[j] = np.zeros((nel, dof, dof), dtype=complex)
+            self.data_Zat[j] = np.zeros((nel, dof, dof), dtype=np.complex128)
 
         logging.info("Processinng the impedance data to assemble damping matrix... [4/14]")
         self.rows_Zat, self.cols_Zat = self.element_2d.get_rows_and_cols_indices_2D(connectivities)
@@ -506,7 +507,7 @@ class AcousticImpedancesAssembler:
         n_freq = self.assembler.number_frequencies
 
         for j in range(n_freq):
-            self.data_Zipw[j] = np.zeros((nel, dof, dof), dtype=complex)
+            self.data_Zipw[j] = np.zeros((nel, dof, dof), dtype=np.complex128)
 
         logging.info("Processing the impedance data to assemble damping matrix... [6/14]")
         self.rows_Zipw, self.cols_Zipw = self.element_2d.get_rows_and_cols_indices_2D(connectivities)
@@ -542,7 +543,7 @@ class AcousticImpedancesAssembler:
         n_freq = self.assembler.number_frequencies
 
         for j in range(n_freq):
-            self.data_Zas[j] = np.zeros((nel, dof, dof), dtype=complex)
+            self.data_Zas[j] = np.zeros((nel, dof, dof), dtype=np.complex128)
 
         logging.info("Processing the impedance data to assemble damping matrix... [8/14]")
         self.rows_Zas, self.cols_Zas = self.element_2d.get_rows_and_cols_indices_2D(connectivities)
@@ -574,8 +575,8 @@ class AcousticImpedancesAssembler:
         n_freq = self.assembler.number_frequencies
 
         for j in range(n_freq):
-            self.data_Zti_A[j] = np.zeros((nel_A, dof, dof), dtype=complex)
-            self.data_Zti_B[j] = np.zeros((nel_B, dof, dof), dtype=complex)
+            self.data_Zti_A[j] = np.zeros((nel_A, dof, dof), dtype=np.complex128)
+            self.data_Zti_B[j] = np.zeros((nel_B, dof, dof), dtype=np.complex128)
 
         logging.info("Processing the impedance data to assemble damping matrix... [10/14]")
         self.rows_Zti_A, self.cols_Zti_A = self.element_2d.get_rows_and_cols_indices_2D(connectivities_A)
@@ -620,8 +621,8 @@ class AcousticImpedancesAssembler:
         n_freq = self.assembler.number_frequencies
 
         for j in range(n_freq):
-            self.data_Zpp_A[j] = np.zeros((nel_A, dof, dof), dtype=complex)
-            self.data_Zpp_B[j] = np.zeros((nel_B, dof, dof), dtype=complex)
+            self.data_Zpp_A[j] = np.zeros((nel_A, dof, dof), dtype=np.complex128)
+            self.data_Zpp_B[j] = np.zeros((nel_B, dof, dof), dtype=np.complex128)
 
         logging.info("Processing the impedance data to assemble damping matrix... [13/14]")
         self.rows_Zpp_A, self.cols_Zpp_A = self.element_2d.get_rows_and_cols_indices_2D(connectivities_A)
@@ -647,7 +648,7 @@ class AcousticImpedancesAssembler:
         self.process_perforated_plate_impedance_data_to_assemble_damping_matrix()
 
 
-    def assemble_global_damping_matrix_3d_elements(self, factor_Cvsic: np.ndarray, factor_fvsic: np.ndarray) -> [csr_matrix, csr_matrix]:
+    def assemble_global_damping_matrix_3d_elements(self, factor_Cvsic: np.ndarray, factor_fvsic: np.ndarray) -> list[csr_matrix, csr_matrix]:
         """
         This method assembles the global damping matrix to account
         the bulk damping effects.
@@ -655,16 +656,11 @@ class AcousticImpedancesAssembler:
         https://www.mm.bme.hu/~gyebro/files/ans_help_v182/ans_thry/thy_acou2.html#thyeqacous-75
         """
 
-        if self.model.reduced_memory_mode:
-            rows, cols = self.assembler.get_rows_and_cols_indices()
-            data_C: np.ndarray = self.assembler.compute_BtB_factor_product(factor_Cvsic)
-            data_f: np.ndarray = self.assembler.compute_BtB_factor_product(factor_fvsic)
+        rows = self.assembler.rows
+        cols = self.assembler.cols
 
-        else:
-            rows = self.assembler.rows
-            cols = self.assembler.cols
-            data_C = self.assembler.int3d_BtB * factor_Cvsic
-            data_f = self.assembler.int3d_BtB * factor_fvsic
+        data_C = factor_Cvsic * self.assembler.int3d_BtB
+        data_f = factor_fvsic * self.assembler.int3d_BtB
 
         visc_damping_matrix = csr_matrix((data_C.ravel(), (rows, cols)), shape=self.model.gm_shape)
         visc_load_matrix = csr_matrix((data_f.ravel(), (rows, cols)), shape=self.model.gm_shape)

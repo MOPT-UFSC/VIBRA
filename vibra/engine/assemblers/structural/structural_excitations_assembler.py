@@ -72,7 +72,7 @@ class StructuralExcitationsAssembler:
         i-th frequency index.
         """
 
-        if np.sum(self.assembler.array_prescribed_values) == 0:
+        if np.sum(self.assembler.prescribed_values) == 0:
             return 0.
 
         analysis_setup = self.model.analysis_setup
@@ -82,67 +82,17 @@ class StructuralExcitationsAssembler:
         omega = 2 * np.pi * frequencies[index]
 
         # prescribed values
-        values = self.assembler.array_prescribed_values[:, index]
+        values = self.assembler.prescribed_values[:, index]
 
-        # prescribed indexes
-        idx = self.assembler.prescribed_dof_indices
+        # reduced global matrices C, M, K
+        Cr = self.assembler.damping_matrix_r
+        Mr = self.assembler.mass_matrix_r
+        Kr = self.assembler.stiffness_matrix_r
 
-        Cr = self.assembler.damping_matrix[:, idx]
-        Mr = self.assembler.mass_matrix[:, idx] + self.assembler.distributed_mass_matrix[:, idx]
-        Kr = self.assembler.stiffness_matrix[:, idx] + self.assembler.distributed_stiffness_matrix[:, idx]
+        f_eq = (-(omega**2) * Mr + (1j * omega) * Cr + Kr) @ values
 
-        f_eq = (-(omega**2) * Mr + 1j * omega * Cr + Kr) @ values
-
-        return f_eq
-
-
-    def get_prescribed_dof_model_excitation_reference(self, freq_dependent: bool = False):
-        """
-        This method adds the effects of prescribed acoustic pressure into mass flow global vector.
-
-        Returns
-        ----------
-        array
-            F_eq. Each column corresponds to a frequency of analysis.
-        """
-
-        if np.sum(self.assembler.array_prescribed_values) == 0:
-            return 0.
-
-        analysis_setup = self.model.analysis_setup
-        assert isinstance(analysis_setup, HarmonicAnalysisSetup)
-
-        alpha, beta, eta = self.model.global_damping
-        frequencies = self.model.frequencies
-
-        Kr = (self.assembler.stiffness_matrix_r.toarray())[self.assembler.unprescribed_dof_indices, :]
-        Mr = (self.assembler.mass_matrix_r.toarray())[self.assembler.unprescribed_dof_indices, :]
-
-        logging.info(f"Processing prescribed dof model excitation... [10/{len(frequencies)}]")
-
-        rows = Kr.shape[0]
-        if freq_dependent:
-            cols = 1
-            f_eq = np.zeros(rows, dtype=complex)
-
-        else:
-            cols = len(frequencies)
-            f_eq = np.zeros((rows, cols), dtype=complex)
-
-        for i, freq in enumerate(frequencies):
-            #
-            logging.info(f"Processing prescribed dof model excitation... [{i + 10}/{len(frequencies) + 10}]")
-            #
-            Kr_add = np.sum((Kr * self.assembler.array_prescribed_values[:, i]), axis=1)
-            Mr_add = np.sum((Mr * self.assembler.array_prescribed_values[:, i]), axis=1)
-            #
-            omega = 2 * np.pi * freq
-            f_Kadd = Kr_add
-            f_Madd = -(omega**2) * Mr_add
-            f_Cadd = 1j * ((eta + omega * beta) * Kr_add + (omega * alpha) * Mr_add)
-            f_eq[:, i] = f_Madd + f_Cadd + f_Kadd
-
-        logging.info("Processing prescribed dof model excitation... [100/100]")
+        if self.model.reduced_memory_mode:
+            self.assembler.reset_reduced_matrices_attributes()
 
         return f_eq
 
@@ -163,7 +113,7 @@ class StructuralExcitationsAssembler:
 
         if nodal_loads:
             indices = list(nodal_loads.keys())
-            self.structural_load[indices, :] += np.array(list(nodal_loads.values()), dtype=complex)
+            self.structural_load[indices, :] += np.array(list(nodal_loads.values()), dtype=np.complex128)
 
 
     def get_excitation_data_for_1d_element_integration(self, property_label: str) -> StructuralExcitationData | None:
@@ -222,9 +172,9 @@ class StructuralExcitationsAssembler:
         if connectivities:
 
             integration_data = {
-                "element_ids" : np.array(list(connectivities.keys()), dtype=int),
-                "connectivities" : np.array(list(connectivities.values()), dtype=int),
-                "pdata_values" : np.array(list(pdata_values.values()), dtype=complex),
+                "element_ids" : np.array(list(connectivities.keys()), dtype=np.int32),
+                "connectivities" : np.array(list(connectivities.values()), dtype=np.int32),
+                "pdata_values" : np.array(list(pdata_values.values()), dtype=np.complex128),
                 }
 
             return StructuralExcitationData(**integration_data)
@@ -286,9 +236,9 @@ class StructuralExcitationsAssembler:
         if connectivities:
 
             integration_data = {
-                "element_ids" : np.array(list(connectivities.keys()), dtype=int),
-                "connectivities" : np.array(list(connectivities.values()), dtype=int),
-                "pdata_values" : np.array(list(pdata_values.values()), dtype=complex),
+                "element_ids" : np.array(list(connectivities.keys()), dtype=np.int32),
+                "connectivities" : np.array(list(connectivities.values()), dtype=np.int32),
+                "pdata_values" : np.array(list(pdata_values.values()), dtype=np.complex128),
                 }
 
             return StructuralExcitationData(**integration_data)
@@ -468,7 +418,7 @@ class StructuralExcitationsAssembler:
             return
 
         # initialize the structural load vector
-        self.structural_load = np.zeros((self.model.total_dofs, self.assembler.number_frequencies), dtype=complex)
+        self.structural_load = np.zeros((self.model.total_dofs, self.assembler.number_frequencies), dtype=np.complex128)
 
         self.process_structural_excitations_by_nodal_attribution()
         self.process_structural_excitations_by_1d_element_integration()
