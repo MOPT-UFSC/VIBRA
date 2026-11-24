@@ -662,7 +662,7 @@ class StructuralAssembler:
         This method assembles the global mass matrix.
         """
 
-        if (self.rows, self.cols, self.data_M, self.data_K).count(None):
+        if  any(item is None for item in [self.rows, self.cols, self.data_M, self.data_K]):
             self.load_global_matrices_data()
 
         logging.info("Processing global mass matrix... [35/100]")

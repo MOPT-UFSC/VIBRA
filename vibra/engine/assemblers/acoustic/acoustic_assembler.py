@@ -523,7 +523,7 @@ class AcousticAssembler:
 
         """
 
-        if (self.rows, self.cols, self.int3d_NtN, self.int3d_BtB).count(None):
+        if any(item is None for item in [self.rows, self.cols, self.int3d_NtN, self.int3d_BtB]):
             self.load_global_matrices_data()
 
         t0 = perf_counter()
