@@ -555,7 +555,7 @@ def get_specific_and_anechoic_impedance_text(surface: int, si_data: dict):
         if isinstance(fluid, Fluid):
             density = fluid.fluid_density
             speed_of_sound = fluid.speed_of_sound
-            values = np.array([density * speed_of_sound], dtype=complex)
+            values = np.array([density * speed_of_sound], dtype=np.complex128)
             text = acoustic_format(
                 "Specific impedance",
                 values[0],

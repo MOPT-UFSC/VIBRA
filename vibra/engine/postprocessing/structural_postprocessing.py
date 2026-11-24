@@ -334,7 +334,7 @@ class StructuralPostprocessing:
             mask = (np.round(freqs_ifft % f_step, 8) == 0) & (freqs_ifft < f_max + f_step / 100)
 
             # initialize the temporary solution array
-            nodal_solution_ifft = np.zeros((len(nodal_solution), freqs_ifft.size), dtype=complex)
+            nodal_solution_ifft = np.zeros((len(nodal_solution), freqs_ifft.size), dtype=np.complex128)
 
             # fill the temporary solution array with the solution data
             nodal_solution_ifft[:, mask] = nodal_solution

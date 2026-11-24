@@ -31,13 +31,13 @@ q = eta / rf                         # permeabilidade estática viscosa [m^2]
 qo = q * tor                         # permeabilidade estática térmica [m^2]
 
 # Inicialização dos arrays para armazenar os resultados
-peq = np.zeros(len(f), dtype=complex)
-keq = np.zeros(len(f), dtype=complex)
-Zcr = np.zeros(len(f), dtype=complex)
-kcr = np.zeros(len(f), dtype=complex)
-Cm = np.zeros(len(f), dtype=complex)
-Zsr = np.zeros(len(f), dtype=complex)
-Rr = np.zeros(len(f), dtype=complex)
+peq = np.zeros(len(f), dtype=np.complex128)
+keq = np.zeros(len(f), dtype=np.complex128)
+Zcr = np.zeros(len(f), dtype=np.complex128)
+kcr = np.zeros(len(f), dtype=np.complex128)
+Cm = np.zeros(len(f), dtype=np.complex128)
+Zsr = np.zeros(len(f), dtype=np.complex128)
+Rr = np.zeros(len(f), dtype=np.complex128)
 alphar = np.zeros(len(f))
 
 # Cálculos para cada frequência

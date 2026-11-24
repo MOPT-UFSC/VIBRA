@@ -53,14 +53,14 @@ class Mesh:
 
         ## mesh-related attributes
 
-        self.nodal_coordinates = np.zeros((0, 4), dtype=float)
-        self.nodes_from_volumes = np.zeros((0, 4), dtype=float)
-        self.nodes_from_surfaces = np.zeros((0, 4), dtype=float)
-        self.nodes_from_lines = np.zeros((0, 4), dtype=float)
+        self.nodal_coordinates = np.zeros((0, 4), dtype=np.float64)
+        self.nodes_from_volumes = np.zeros((0, 4), dtype=np.float64)
+        self.nodes_from_surfaces = np.zeros((0, 4), dtype=np.float64)
+        self.nodes_from_lines = np.zeros((0, 4), dtype=np.float64)
 
-        self.lines_connectivity = np.zeros((0, 4), dtype=int)
-        self.faces_connectivity = np.zeros((0, 4), dtype=int)
-        self.solids_connectivity = np.zeros((0, 4), dtype=int)
+        self.lines_connectivity = np.zeros((0, 4), dtype=np.int32)
+        self.faces_connectivity = np.zeros((0, 4), dtype=np.int32)
+        self.solids_connectivity = np.zeros((0, 4), dtype=np.int32)
 
         self.geometry_information = defaultdict(list)
 
@@ -663,7 +663,7 @@ class Mesh:
 
         last_index = 0
         first_index = 0
-        self.lines_connectivity = np.empty((0, 4 + n_nodes_1d), dtype=int)
+        self.lines_connectivity = np.empty((0, 4 + n_nodes_1d), dtype=np.int32)
 
         for line_id, node_ids in self.external_nodes_from_lines.items():
             connectivity_from_line = []
@@ -681,15 +681,15 @@ class Mesh:
             if not connectivity_from_line:
                 continue
 
-            connectivity_array = np.array(connectivity_from_line, dtype=int)
+            connectivity_array = np.array(connectivity_from_line, dtype=np.int32)
 
             rows = connectivity_array.shape[0]
-            aux_ones = np.ones(rows, dtype=int)
+            aux_ones = np.ones(rows, dtype=np.int32)
 
             last_index += rows
-            indices = np.arange(first_index, last_index, dtype=int)
+            indices = np.arange(first_index, last_index, dtype=np.int32)
 
-            connectivity = np.zeros((rows, 4 + n_nodes_1d), dtype=int)
+            connectivity = np.zeros((rows, 4 + n_nodes_1d), dtype=np.int32)
             connectivity[:, 0] = indices
             connectivity[:, 1] = aux_ones * line_id
             connectivity[:, 2] = aux_ones * e_type
@@ -721,7 +721,7 @@ class Mesh:
             corner nodes and middle node, whenever applicable).
         """
 
-        perm_nodes = np.array(list(permutations(el_connect, 2)), dtype=int)
+        perm_nodes = np.array(list(permutations(el_connect, 2)), dtype=np.int32)
 
         P1 = self.nodal_coordinates[perm_nodes[:, 0], 1:]
         P2 = self.nodal_coordinates[perm_nodes[:, 1], 1:]
@@ -731,7 +731,7 @@ class Mesh:
 
         if len(el_connect) == 3:
             mask = np.isin(el_connect, reordered_connect, invert=True)
-            middle_node = np.array(el_connect, dtype=int)[mask]
+            middle_node = np.array(el_connect, dtype=np.int32)[mask]
             reordered_connect = np.append(reordered_connect, middle_node, axis=0)
 
         return list(reordered_connect)
@@ -834,7 +834,7 @@ class Mesh:
             self.elements_from_volume[key[0]] = connect_data[:, 0] - 1
             aux.extend(connect_data)
 
-        data = np.array(aux, dtype=int)
+        data = np.array(aux, dtype=np.int32)
         rows, cols = data.shape
 
         indices = data[:, 0]
@@ -847,7 +847,7 @@ class Mesh:
             indices -= 1
 
         aux = np.ones(rows)
-        self.solids_connectivity = np.zeros((rows, cols + 1), dtype=int)
+        self.solids_connectivity = np.zeros((rows, cols + 1), dtype=np.int32)
         self.solids_connectivity[:, 0] = indices
         self.solids_connectivity[:, 1] = volumes
         self.solids_connectivity[:, 2] = aux * etype_tag
@@ -873,7 +873,7 @@ class Mesh:
             self.elements_from_surface[key[0]] = connect_data[:, 0] - 1
             aux.extend(connect_data)
 
-        data = np.array(aux, dtype=int)
+        data = np.array(aux, dtype=np.int32)
         rows, cols = data.shape
 
         indices = data[:, 0]
@@ -886,7 +886,7 @@ class Mesh:
             indices -= 1
 
         aux = np.ones(rows)
-        self.faces_connectivity = np.zeros((rows, cols + 1), dtype=int)
+        self.faces_connectivity = np.zeros((rows, cols + 1), dtype=np.int32)
         self.faces_connectivity[:, 0] = indices
         self.faces_connectivity[:, 1] = surfaces
         self.faces_connectivity[:, 2] = aux * etype_tag
@@ -954,7 +954,7 @@ class Mesh:
         for id, connect in enumerate(self.solids_connectivity[:, 4:]):
             vtk_dataset.InsertNextCell(vtk_cell, nodes_per_element, list(connect))
 
-        # unod1 = np.zeros((nnode), dtype=complex)
+        # unod1 = np.zeros((nnode), dtype=np.complex128)
         # for i in range(nnode):
         #     unod1[i] = P[i, modo1]
 
@@ -1224,9 +1224,9 @@ class Mesh:
         self.nodes_from_surfaces = np.zeros((0, 4), dtype=float)
         self.nodes_from_lines = np.zeros((0, 4), dtype=float)
 
-        self.lines_connectivity = np.zeros((0, 4), dtype=int)
-        self.faces_connectivity = np.zeros((0, 4), dtype=int)
-        self.solids_connectivity = np.zeros((0, 4), dtype=int)
+        self.lines_connectivity = np.zeros((0, 4), dtype=np.int32)
+        self.faces_connectivity = np.zeros((0, 4), dtype=np.int32)
+        self.solids_connectivity = np.zeros((0, 4), dtype=np.int32)
 
         self.collapsed_elements_data.clear()
 
@@ -1833,7 +1833,7 @@ class Mesh:
             return
 
         nodes_per_face_element = len(self.faces_connectivity[0, 4:])
-        node_ids = np.array([*set(self.faces_connectivity[:, 4:].flatten())], dtype=int)
+        node_ids = np.array([*set(self.faces_connectivity[:, 4:].flatten())], dtype=np.int32)
 
         mask_0 = np.sum(np.isin(self.solids_connectivity[:, 4:], node_ids), axis=1) >= nodes_per_face_element
         filtered_data = self.solids_connectivity[mask_0, :]
@@ -2637,10 +2637,10 @@ class Mesh:
                         max_cols = array_nodes.shape[1]
 
         n = int(np.sum(n_list))
-        output_data = np.zeros((n, max_cols + 4), dtype=int)
-        gmsh_elements = np.zeros(n, dtype=int)
+        output_data = np.zeros((n, max_cols + 4), dtype=np.int32)
+        gmsh_elements = np.zeros(n, dtype=np.int32)
 
-        internal_indices = np.arange(n, dtype=int)
+        internal_indices = np.arange(n, dtype=np.int32)
         output_data[:, 0] = internal_indices
 
         start, end, ind = 0, 0, 0
@@ -2652,7 +2652,7 @@ class Mesh:
 
                 rows = len(indices)
                 cols = connectivity.shape[1]
-                aux = np.ones(rows, dtype=int)
+                aux = np.ones(rows, dtype=np.int32)
 
                 output_data[start:end, 1] = aux * entity_tag
                 output_data[start:end, 2] = aux * etype_tag
@@ -2684,7 +2684,7 @@ class Mesh:
         else:
             return None
 
-        return np.array([keys, values], dtype=int).T
+        return np.array([keys, values], dtype=np.int32).T
 
     def process_element_average_coordinates(self, element_ids: list[int]) -> dict:
         """
@@ -2935,7 +2935,7 @@ class Mesh:
 
                 if filtered_elements:
                     filtered_solid_elements = self.process_element_average_coordinates(filtered_elements)
-                    element_indices = np.array(list(filtered_solid_elements.keys()), dtype=int)
+                    element_indices = np.array(list(filtered_solid_elements.keys()), dtype=np.int32)
                     elements_center_coordinates = np.array(list(filtered_solid_elements.values()), dtype=float)
                 else:
                     return
@@ -2972,14 +2972,14 @@ class Mesh:
         self.selected_elements = selected_elements
 
         if export_data:
-            # list_nodes = np.array(nodes_inside_sphere, dtype=int).reshape(-1,1)
-            # list_elements = np.array(selected_elements, dtype=int).reshape(-1,1)
+            # list_nodes = np.array(nodes_inside_sphere, dtype=np.int32).reshape(-1,1)
+            # list_elements = np.array(selected_elements, dtype=np.int32).reshape(-1,1)
             list_nodes = np.array(nodes_inside_sphere).reshape(-1, 1)
             list_elements = np.array(selected_elements).reshape(-1, 1)
             connectivity = self.solids_connectivity[:, 4:]
             rows = len(list_elements)
             cols = connectivity.shape[1]
-            data_elem = np.zeros((rows, cols + 1), dtype=int)
+            data_elem = np.zeros((rows, cols + 1), dtype=np.int32)
             data_elem[:, 0] = selected_elements
             data_elem[:, 1:] = connectivity[selected_elements, :]
 
@@ -3005,7 +3005,7 @@ class Mesh:
         for _node, element_ids in selection_data.items():
             _selected_elements.extend(element_ids)
 
-        selected_elements = np.array([*set(_selected_elements)], dtype=int)
+        selected_elements = np.array([*set(_selected_elements)], dtype=np.int32)
 
         return nodes_inside_sphere, list(selected_elements)
 

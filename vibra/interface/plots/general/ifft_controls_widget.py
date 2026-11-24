@@ -166,11 +166,11 @@ class IfftControlsWidget(IfftControlsWidget_UI):
 
             # initialize the temporary solution array
             if multiple_iffts:
-                nodal_solution_ifft = np.zeros((len(Xf), freqs_ifft.size), dtype=complex)
+                nodal_solution_ifft = np.zeros((len(Xf), freqs_ifft.size), dtype=np.complex128)
                 nodal_solution_ifft[:, mask] = Xf
 
             else:
-                nodal_solution_ifft = np.zeros(freqs_ifft.size, dtype=complex)
+                nodal_solution_ifft = np.zeros(freqs_ifft.size, dtype=np.complex128)
                 nodal_solution_ifft[mask] = Xf
 
             time_vector, pressure_time = ifft_function(freqs_ifft.max(), nodal_solution_ifft)

@@ -262,7 +262,7 @@ class Model:
             dof_per_node = self.structural_element_3d.dof_per_node
 
         _nodes = self.get_mapped_nodes(nodes, domain)
-        global_dof_indices = dof_per_node * _nodes.reshape(-1, 1) + np.arange(dof_per_node, dtype=int)
+        global_dof_indices = dof_per_node * _nodes.reshape(-1, 1) + np.arange(dof_per_node, dtype=np.int32)
 
         return global_dof_indices
 
@@ -742,7 +742,7 @@ class Model:
         _dof_per_node = self.acoustic_element_3d.dof_per_node
 
         global_dofs = _dof_per_node * _nodes + np.arange(_dof_per_node)
-        global_dofs = np.array(global_dofs.flatten(), dtype=int)
+        global_dofs = np.array(global_dofs.flatten(), dtype=np.int32)
 
         return [int(g_dof) for g_dof in global_dofs]
 
@@ -761,7 +761,7 @@ class Model:
 
             dof_per_node = element_3d.dof_per_node
 
-        local_dof = np.arange(dof_per_node, dtype=int)
+        local_dof = np.arange(dof_per_node, dtype=np.int32)
         global_dof = dof_per_node * nodes.reshape(-1, 1) + local_dof
 
         n_int = 0
@@ -1097,7 +1097,7 @@ class Model:
             s_vector = np.array(pw_data.get("ipw_vector"), dtype=float)
 
             if isinstance(values, complex | float):
-                P_inc = values * np.ones_like(frequencies, dtype=complex)
+                P_inc = values * np.ones_like(frequencies, dtype=np.complex128)
             else:
                 P_inc = values
 

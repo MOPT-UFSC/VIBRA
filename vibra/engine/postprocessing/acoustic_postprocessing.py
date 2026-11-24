@@ -229,7 +229,7 @@ class AcousticPostprocessing:
             mask = (np.round(freqs_ifft % f_step, 8) == 0) & (freqs_ifft < f_max + f_step / 100)
 
             # initialize the temporary solution array
-            nodal_solution_ifft = np.zeros((len(nodal_solution), freqs_ifft.size), dtype=complex)
+            nodal_solution_ifft = np.zeros((len(nodal_solution), freqs_ifft.size), dtype=np.complex128)
 
             # fill the temporary solution array with the solution data
             nodal_solution_ifft[:, mask] = nodal_solution
@@ -353,7 +353,7 @@ class AcousticPostprocessing:
             return particle_velocities_Vj.get(node_id)
 
         else:
-            array_particle_velocities_Vj = np.array(list(particle_velocities_Vj.values()), dtype=complex)
+            array_particle_velocities_Vj = np.array(list(particle_velocities_Vj.values()), dtype=np.complex128)
             return np.average(array_particle_velocities_Vj, axis=0)
 
 
@@ -362,7 +362,7 @@ class AcousticPostprocessing:
         assert self.solution.acoustic_solution is not None
 
         frequencies = self.model.frequencies
-        zeros = np.zeros_like(frequencies, dtype=complex)
+        zeros = np.zeros_like(frequencies, dtype=np.complex128)
 
         if isinstance(node_id, int):
             surface_ids = self.mesh.get_surfaces_from_node(node_id)
@@ -390,7 +390,7 @@ class AcousticPostprocessing:
             normal_pvelocity = particle_velocities_data.Vn_array()
             mask = pressures != 0
 
-            surface_impedance = np.zeros_like(pressures, dtype=complex)
+            surface_impedance = np.zeros_like(pressures, dtype=np.complex128)
             surface_impedance[mask] = pressures[mask] / normal_pvelocity[mask]
 
             return np.average(surface_impedance, axis=0)
@@ -399,7 +399,7 @@ class AcousticPostprocessing:
     def compute_surface_absorption_coefficient(self, surface_id: int | None = None, volume_id: int | None = None):
 
         frequencies = self.model.frequencies
-        aux_zeros = np.zeros_like(frequencies, dtype=complex)
+        aux_zeros = np.zeros_like(frequencies, dtype=np.complex128)
 
         rho, speed_of_sound = self.model.get_fluid_properties_from_surface(surface_id)
         Z0 = rho * speed_of_sound
@@ -445,7 +445,7 @@ class AcousticPostprocessing:
         assert self.solution.acoustic_solution is not None
 
         frequencies = self.model.frequencies
-        zeros = np.zeros_like(frequencies, dtype=complex)
+        zeros = np.zeros_like(frequencies, dtype=np.complex128)
 
         rho, _ = self.model.get_fluid_properties_from_volume(volume_id)
         if rho is None:

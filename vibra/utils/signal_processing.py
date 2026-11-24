@@ -17,7 +17,7 @@ def process_ifft_from_one_sided_spectrum_signal(f_max: float, Xf_data: np.ndarra
         N_f += 1
 
     # create the auxilar vector Xf
-    Xf = np.zeros(N_f, dtype=complex)
+    Xf = np.zeros(N_f, dtype=np.complex128)
 
     # adjust the one-sided spectrum scale
     Xf[1:] = Xf_data / 2
@@ -51,7 +51,7 @@ def process_multiple_iffts_from_one_sided_spectrum_signals(f_max: np.ndarray, Xf
         N_f += 1
 
     # create the auxilar vector Xf
-    Xf = np.zeros((rows, N_f), dtype=complex)
+    Xf = np.zeros((rows, N_f), dtype=np.complex128)
 
     # adjust the one-sided spectrum scale
     Xf[:, 1:] = Xf_data / 2

@@ -344,7 +344,7 @@ def get_shape_functions_and_derivatives(rrx: np.ndarray, ssx: np.ndarray):
 #                         [con1, con2]])
 
 #     ######################## Inicio da integração na face
-#     Fe = np.zeros((3,1),dtype=complex)
+#     Fe = np.zeros((3,1),dtype=np.complex128)
 #     N = np.zeros((1,3))
 #     # integration
 #     for i in range(nint):
@@ -409,7 +409,7 @@ def get_shape_functions_and_derivatives(rrx: np.ndarray, ssx: np.ndarray):
 #                         [con1, con2]])
 
 #     ######################## Inicio da integração na face
-#     Ze = np.zeros((3,3),dtype=complex)
+#     Ze = np.zeros((3,3),dtype=np.complex128)
 #     N = np.zeros((1,3))
 
 #     # integration
@@ -513,7 +513,7 @@ def get_shape_functions_and_derivatives(rrx: np.ndarray, ssx: np.ndarray):
 #     # pint = np.array([[con, con]])
 
 #     ######################## Inicio da integração na face
-#     Fe = np.zeros((6,1),dtype=complex)
+#     Fe = np.zeros((6,1),dtype=np.complex128)
 #     N = np.zeros((1,6))
 #     # integration
 #     for i in range(nint):

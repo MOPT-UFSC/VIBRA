@@ -554,8 +554,8 @@ def process_external_TL(model: "Model", ext_data: LoadExternalData):
         P_downstream = V_in * Zo_in / 2
         V_downstream = P_downstream / Zo_in
 
-        # P_in = np.array(list(pressures_input.values()), dtype=complex)
-        # Vx_in = -np.array(list(particle_velocity_input.values()), dtype=complex)
+        # P_in = np.array(list(pressures_input.values()), dtype=np.complex128)
+        # Vx_in = -np.array(list(particle_velocity_input.values()), dtype=np.complex128)
 
         # P_downstream = (P_in + Zo_in * Vx_in) / 2
         # V_downstream = P_downstream / Zo_in
@@ -563,8 +563,8 @@ def process_external_TL(model: "Model", ext_data: LoadExternalData):
         I_in = np.real(P_downstream * np.conjugate(V_downstream)) / 2
         NA_in = np.array(list(nodal_area_input.values()), dtype=float).reshape(-1, 1)
 
-        P_out = np.array(list(pressures_output.values()), dtype=complex)
-        Vx_out = -np.array(list(particle_velocity_output.values()), dtype=complex)
+        P_out = np.array(list(pressures_output.values()), dtype=np.complex128)
+        Vx_out = -np.array(list(particle_velocity_output.values()), dtype=np.complex128)
 
         I_out = np.real(P_out * np.conjugate(Vx_out)) / 2
         NA_out = np.array(list(nodal_area_output.values()), dtype=float).reshape(-1, 1)

@@ -25,7 +25,7 @@ def generate_table_of_constant_values(filename: str, value: float | complex, f_s
     """
 
     freq = np.arange(f_min, f_max+f_step, f_step, dtype=int)
-    values = np.ones_like(freq, dtype=complex) * value
+    values = np.ones_like(freq, dtype=np.complex128) * value
 
     data = np.array([freq, np.real(values), np.imag(values)]).T
     # data = np.round(data, 8)

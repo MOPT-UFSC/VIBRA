@@ -19,16 +19,16 @@ class NodalParticleVelocities:
 
     def Vx_array(self) -> np.ndarray:
         order_indices = np.argsort(list(self.Vx.keys()))
-        return np.array(list(self.Vx.values()), dtype=complex)[order_indices, :]
+        return np.array(list(self.Vx.values()), dtype=np.complex128)[order_indices, :]
 
     def Vy_array(self) -> np.ndarray:
         order_indices = np.argsort(list(self.Vy.keys()))
-        return np.array(list(self.Vy.values()), dtype=complex)[order_indices, :]
+        return np.array(list(self.Vy.values()), dtype=np.complex128)[order_indices, :]
 
     def Vz_array(self) -> np.ndarray:
         order_indices = np.argsort(list(self.Vz.keys()))
-        return np.array(list(self.Vz.values()), dtype=complex)[order_indices, :]
+        return np.array(list(self.Vz.values()), dtype=np.complex128)[order_indices, :]
 
     def Vn_array(self) -> np.ndarray:
         order_indices = np.argsort(list(self.Vn.keys()))
-        return np.array(list(self.Vn.values()), dtype=complex)[order_indices, :]
+        return np.array(list(self.Vn.values()), dtype=np.complex128)[order_indices, :]

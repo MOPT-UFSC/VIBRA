@@ -46,9 +46,9 @@ class LoadExternalData:
             data = np.loadtxt(path)
             rows, cols = data.shape
 
-            array_Ux = np.zeros((rows, len(frequencies) + 1), dtype=complex)
-            array_Uy = np.zeros((rows, len(frequencies) + 1), dtype=complex)
-            array_Uz = np.zeros((rows, len(frequencies) + 1), dtype=complex)
+            array_Ux = np.zeros((rows, len(frequencies) + 1), dtype=np.complex128)
+            array_Uy = np.zeros((rows, len(frequencies) + 1), dtype=np.complex128)
+            array_Uz = np.zeros((rows, len(frequencies) + 1), dtype=np.complex128)
 
             node_ids = data[:, 0].astype(int)
             array_Ux[:, 0] = node_ids
@@ -94,9 +94,9 @@ class LoadExternalData:
             data = np.loadtxt(path)
             rows, cols = data.shape
 
-            array_Sx = np.zeros((rows, len(frequencies) + 1), dtype=complex)
-            array_Sy = np.zeros((rows, len(frequencies) + 1), dtype=complex)
-            array_Sz = np.zeros((rows, len(frequencies) + 1), dtype=complex)
+            array_Sx = np.zeros((rows, len(frequencies) + 1), dtype=np.complex128)
+            array_Sy = np.zeros((rows, len(frequencies) + 1), dtype=np.complex128)
+            array_Sz = np.zeros((rows, len(frequencies) + 1), dtype=np.complex128)
 
             node_ids = data[:, 0].astype(int)
             array_Sx[:, 0] = node_ids
@@ -134,7 +134,7 @@ class LoadExternalData:
             data = np.loadtxt(path)
             rows, cols = data.shape
             
-            array_pressures = np.zeros((rows, len(frequencies) + 1), dtype=complex)
+            array_pressures = np.zeros((rows, len(frequencies) + 1), dtype=np.complex128)
 
             node_ids = data[:, 0]
             array_pressures[:, 0] = node_ids
@@ -164,9 +164,9 @@ class LoadExternalData:
             data = np.loadtxt(path)
             rows, cols = data.shape
 
-            array_Vx = np.zeros((rows, len(frequencies) + 1), dtype=complex)
-            array_Vy = np.zeros((rows, len(frequencies) + 1), dtype=complex)
-            array_Vz = np.zeros((rows, len(frequencies) + 1), dtype=complex)
+            array_Vx = np.zeros((rows, len(frequencies) + 1), dtype=np.complex128)
+            array_Vy = np.zeros((rows, len(frequencies) + 1), dtype=np.complex128)
+            array_Vz = np.zeros((rows, len(frequencies) + 1), dtype=np.complex128)
 
             node_ids = data[:, 0]
             array_Vx[:, 0] = node_ids

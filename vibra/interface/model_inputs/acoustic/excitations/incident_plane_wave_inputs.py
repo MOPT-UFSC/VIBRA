@@ -330,7 +330,7 @@ class IncidentPlaneWaveInputs(IncidentPlaneWaveInputs_UI):
     def check_incident_plane_wave_vector(self, surface_ids: list[int], P_inc: complex | np.ndarray):
         
         if isinstance(P_inc, complex):
-            P_inc = np.array([P_inc], dtype=complex)
+            P_inc = np.array([P_inc], dtype=np.complex128)
 
         for surface_id in surface_ids:
 

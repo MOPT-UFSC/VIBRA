@@ -696,7 +696,7 @@ class StructuralTriangle3(Element2D):
         force_indices = [0, 1, 2, 6, 7, 8, 12, 13, 14]
 
         number_of_frequencies = distributed_load.shape[1]
-        F_elem = np.zeros((self.dof_per_element, number_of_frequencies), dtype=complex)
+        F_elem = np.zeros((self.dof_per_element, number_of_frequencies), dtype=np.complex128)
         F_elem[force_indices, :] = loads
 
         g_dof = self.dof_per_node * connect.reshape(-1, 1) + self.local_dof
@@ -731,7 +731,7 @@ class StructuralTriangle3(Element2D):
         force_indices = [0, 1, 2, 6, 7, 8, 12, 13, 14]
 
         number_of_frequencies = distributed_load.shape[1]
-        F_elem = np.zeros((self.dof_per_element, number_of_frequencies), dtype=complex)
+        F_elem = np.zeros((self.dof_per_element, number_of_frequencies), dtype=np.complex128)
         F_elem[force_indices, :] = loads
 
         g_dof = self.dof_per_node * connect.reshape(-1, 1) + self.local_dof
@@ -745,7 +745,7 @@ class StructuralTriangle3(Element2D):
         normal_unit_vector = self.model.mesh.get_element_face_normal(connect)
 
         number_of_frequencies = normal_pressure_load.shape[1]
-        F_elem = np.zeros((self.dof_per_element, number_of_frequencies), dtype=complex)
+        F_elem = np.zeros((self.dof_per_element, number_of_frequencies), dtype=np.complex128)
 
         if normal_unit_vector is None:
             return F_elem

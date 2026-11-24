@@ -122,14 +122,14 @@ class ViscousThermalLossModels:
         a_n = (n + 0.5)*(np.pi / a)
         b_m = (m + 0.5)*(np.pi / b)
 
-        aux_rho = np.zeros(len(omega), dtype=complex)
-        aux_comp = np.zeros(len(omega), dtype=complex)
+        aux_rho = np.zeros(len(omega), dtype=np.complex128)
+        aux_comp = np.zeros(len(omega), dtype=np.complex128)
 
         if fast_integration:
 
             # define the common terms for the double integration
-            an_bn = np.zeros((number_of_terms, number_of_terms), dtype=complex)
-            an2_bn2 = np.zeros((number_of_terms, number_of_terms), dtype=complex)
+            an_bn = np.zeros((number_of_terms, number_of_terms), dtype=np.complex128)
+            an2_bn2 = np.zeros((number_of_terms, number_of_terms), dtype=np.complex128)
             for n, an in enumerate(a_n):
                 an_bn[:, n] = (an*b_m)**2
                 an2_bn2[:, n] = an**2 + b_m**2

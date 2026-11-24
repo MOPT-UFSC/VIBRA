@@ -14,7 +14,7 @@ class DOFIndexesProcessor:
         self.dof_per_node = dof_per_node
         self.nodes_per_element = nodes_per_element
         self.dof_per_element = dof_per_node * nodes_per_element
-        self.local_dof = np.arange(dof_per_node, dtype=int)
+        self.local_dof = np.arange(dof_per_node, dtype=np.int32)
 
 
     @property
@@ -60,7 +60,7 @@ class DOFIndexesProcessor:
         edof = self.dof_per_element
 
         n_el = len(connectivities)
-        ind_dof = np.zeros((n_el, edof), dtype=int)
+        ind_dof = np.zeros((n_el, edof), dtype=np.int32)
 
         for j in range(self.nodes_per_element):
             start = j * dof
@@ -94,7 +94,7 @@ class DOFIndexesProcessor:
         edof = self.dof_per_element
 
         n_el = len(element_ids)
-        ind_dof = np.zeros((n_el, edof), dtype=int)
+        ind_dof = np.zeros((n_el, edof), dtype=np.int32)
 
         for j in range(self.nodes_per_element):
             start = j * dof
