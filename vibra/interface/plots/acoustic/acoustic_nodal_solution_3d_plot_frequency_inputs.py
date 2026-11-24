@@ -28,11 +28,7 @@ class AcousticNodalSolution3dPlotFrequencyInputs(AcousticNodalSolution3dPlotFreq
 
     def showEvent(self, event):
         super().showEvent(event)
-
-        render_widget = app().main_window.results_widget
-        app().main_window.render_widgets_stack.setCurrentWidget(render_widget)
-        app().main_window.render_widget_changed.emit()
-        app().main_window.view_toolbar.disable_selection_tool()
+        app().main_window.show_results_render_widget()
 
     def _initialize(self):
         self.selected_frequency_index = None

@@ -37,8 +37,7 @@ class AllowablePulsations3DPlotForScrewCompressorInputs(AllowablePulsations3dPlo
         app().main_window.view_toolbar.disable_selection_tool()
 
         if self.is_data_cached:
-            render_widget = app().main_window.results_widget
-            app().main_window.render_widgets_stack.setCurrentWidget(render_widget)
+            app().main_window.show_results_render_widget()
 
     @property
     def model(self):

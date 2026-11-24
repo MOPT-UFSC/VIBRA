@@ -401,7 +401,7 @@ class MainWindow(MainWindow_UI):
         self.visualization_changed.emit()
 
     def get_renderer_widgets(self) -> list[CommonRenderWidget]:
-        return [self.geometry_widget, self.mesh_widget, self.results_widget]
+        return [self.geometry_render_widget, self.mesh_render_widget, self.results_render_widget]
 
     def action_user_preferences_callback(self):
         self.close_dialogs()
@@ -463,12 +463,20 @@ class MainWindow(MainWindow_UI):
 
     def show_geometry_render_widget(self):
         self.render_widgets_stack.setCurrentWidget(self.geometry_render_widget)
-        # self.render_widgets_stack.setCurrentWidget(self.geometry_widget)
         self.view_toolbar.enable_selection_tool()
 
     def show_mesh_render_widget(self):
         self.render_widgets_stack.setCurrentWidget(self.mesh_widget)
         self.view_toolbar.enable_selection_tool()
+
+    def show_results_render_widget(self):
+        current = self.render_widgets_stack.currentWidget()
+        if current == self.results_render_widget:
+            return
+
+        self.render_widgets_stack.setCurrentWidget(self.results_render_widget)
+        self.render_widget_changed.emit()
+        self.view_toolbar.disable_selection_tool()
 
     def clear_render_widgets_stack(self):
         for _ in range(self.render_widgets_stack.count()):
@@ -481,26 +489,26 @@ class MainWindow(MainWindow_UI):
         self.entity_visibility.set_model(model)
         self.geometry_render_widget.set_model(model)
         self.mesh_render_widget.set_model(model)
-        # self.results_render_widget.set_model(model)
+        self.results_render_widget.set_model(model)
 
         self.geometry_render_widget.set_selection_handler(self.selection)
         self.mesh_render_widget.set_selection_handler(self.selection)
-        # self.results_render_widget.set_selection_handler(self.selection)
+        self.results_render_widget.set_selection_handler(self.selection)
 
         self.geometry_render_widget.set_entity_visibility_handler(self.entity_visibility)
         self.mesh_render_widget.set_entity_visibility_handler(self.entity_visibility)
-        # self.results_render_widget.set_entity_visibility_handler(self.entity_visibility)
+        self.results_render_widget.set_entity_visibility_handler(self.entity_visibility)
 
         self.geometry_render_widget.set_user_preferences(app().config.user_preferences)
         self.mesh_render_widget.set_user_preferences(app().config.user_preferences)
-        # self.results_render_widget.set_user_preferences(app().config.user_preferences)
+        self.results_render_widget.set_user_preferences(app().config.user_preferences)
 
     def update_plots(self, reset_camera=False):
         self.model_setup_widget.model_setup_items.update_items_appearance()
 
         self.geometry_render_widget.update_plot(reset_camera)
         self.mesh_render_widget.update_plot(reset_camera)
-        # self.results_render_widget.update_plot(reset_camera)
+        self.results_render_widget.update_plot(reset_camera)
 
         # renders_number = self.render_widgets_stack.count()
         # for i in range(renders_number):
@@ -605,7 +613,7 @@ class MainWindow(MainWindow_UI):
         self.action_model_workspace.setChecked(False)
         self.action_mesh_workspace.setChecked(False)
 
-        self.render_widgets_stack.setCurrentWidget(self.geometry_widget)
+        self.render_widgets_stack.setCurrentWidget(self.geometry_render_widget)
         self.stacked_setup.setCurrentWidget(self.results_viewer_widget)
         self.results_viewer_widget.results_viewer_items.update_items()
         self.analysis_toolbar.update_analysis_combo_boxes()

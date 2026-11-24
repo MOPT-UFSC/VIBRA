@@ -35,8 +35,7 @@ class StructuralStress3dPlotFrequencyInputs(StructuralStress3dPlotFrequencyInput
         app().main_window.view_toolbar.disable_selection_tool()
 
         if self.is_stress_data_computed:
-            render_widget = app().main_window.results_widget
-            app().main_window.render_widgets_stack.setCurrentWidget(render_widget)
+            app().main_window.show_results_render_widget()
 
     @property
     def model(self):
@@ -133,7 +132,7 @@ class StructuralStress3dPlotFrequencyInputs(StructuralStress3dPlotFrequencyInput
     def process_stress_field(self):
 
         # recover the averaged structural stresses
-        if not self.is_stress_data_computed:    
+        if not self.is_stress_data_computed:
             def recover_stresses():
                 t0 = perf_counter()
                 self.structural_post.recover_nodal_averaged_structural_stresses()
