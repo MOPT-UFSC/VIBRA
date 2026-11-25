@@ -32,7 +32,7 @@ class ProjectPaths:
         self.modal_solution_filepath = self.working_directory / "modal_solution.hdf5"
         self.hashes_filepath = self.working_directory / "hashes.json"
         self.geometry_folder = self.working_directory / "geometry_file"
-        self.temporary_arrays_folder = self.working_directory / "temporary_arrays_folder"
+        self.temporary_arrays_folder = self.working_directory / "temporary_arrays"
 
     def clear_data(self):
         shutil.rmtree(self.working_directory, ignore_errors=True)
