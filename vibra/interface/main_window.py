@@ -506,8 +506,13 @@ class MainWindow(MainWindow_UI):
     def update_plots(self, reset_camera=False):
         self.model_setup_widget.model_setup_items.update_items_appearance()
 
+        logging.info("Updating geometry renderer [1/3]")
         self.geometry_render_widget.update_plot(reset_camera)
+
+        logging.info("Updating mesh renderer [2/3]")
         self.mesh_render_widget.update_plot(reset_camera)
+
+        logging.info("Updating results renderer [3/3]")
         self.results_render_widget.update_plot(reset_camera)
 
         # renders_number = self.render_widgets_stack.count()
