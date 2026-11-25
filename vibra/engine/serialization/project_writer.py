@@ -1,16 +1,17 @@
 from __future__ import annotations
 
+import gc
 import logging
 import shutil
 import zipfile
 from dataclasses import asdict
 from pathlib import Path
+from time import perf_counter
 from typing import Optional
 
 import h5py
 import numpy as np
 from PIL import Image
-from time import perf_counter
 
 from vibra.engine.analysis_info import AnalysisID, AnalysisSetup
 from vibra.engine.mesher.mesh import Mesh
@@ -293,7 +294,14 @@ class ProjectWriter:
         # np.memmap(filename, dtype=data.dtype, mode="w+", shape=data.shape)
         array = np.lib.format.open_memmap(path, mode="w+", dtype=data.dtype, shape=data.shape)
         array[:] = data
+
         array.flush()
+        if hasattr(array, '_mmap') and array._mmap is not None:
+            array._mmap.close()
+
+        del array
+        gc.collect()
+
         dt = perf_counter() - t0
         print(f"Elapsed time to write array data in disc: {dt} s")
 
