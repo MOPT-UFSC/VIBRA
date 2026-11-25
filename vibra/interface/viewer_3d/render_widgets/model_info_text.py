@@ -219,6 +219,32 @@ def material_info_text():
     return text
 
 
+def material_dampings_info_text():
+    volumes = list(app().main_window.selection.geometry_volumes)
+    text = ""
+
+    if len(volumes) != 1:
+        return text
+
+    pd_data = app().project.model.properties._get_property(
+        "material_dampings", volume=volumes[0]
+    )
+    if not isinstance(pd_data, dict):
+        return text
+
+    tree = TreeInfo("Material dampings")
+
+    tree.add_item("alpha", pd_data.get("alpha", 0.))
+    tree.add_item("beta", pd_data.get("beta", 0.))
+    tree.add_item("eta", pd_data.get("eta", 0.))
+
+    # tree.add_item("α", pd_data.get("alpha", 0.))
+    # tree.add_item("β", pd_data.get("beta", 0.))
+    # tree.add_item("η", pd_data.get("eta", 0.))
+
+    return str(tree)
+
+
 def fluid_info_text():
     volumes = list(app().main_window.selection.geometry_volumes)
     surfaces = list(app().main_window.selection.geometry_surfaces)
