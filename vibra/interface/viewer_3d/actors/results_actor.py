@@ -140,7 +140,7 @@ class ResultsActor(MeshActor):
         min_value=None,
         max_value=None,
         colormap="viridis",
-    ):
+    ) -> ColorTable:
         color_table = ColorTable(values, min_value, max_value, colormap)
         color_table.Build()
 
@@ -148,6 +148,8 @@ class ResultsActor(MeshActor):
         results_color = vtk_to_numpy(self.result_colors)
         if len(results_color) == len(values):
             results_color[:, :3] = vtk_to_numpy(mapped)[:, :3]
+
+        return color_table
 
     def reset_color_scalars(self):
         self.result_colors.Fill(255)

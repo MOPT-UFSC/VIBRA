@@ -231,7 +231,7 @@ class AnimationWidget(AnimationWidget_UI):
             self.current_render_widget.update_deformations()
 
     def update_color_and_deformation(self, clear_cache: bool = True):
-        plot_setup = app().main_window.results_widget.plot_setup
+        plot_setup = app().main_window.results_render_widget.plot_setup
 
         match plot_setup:
             case PressureFieldPlotSetupFrequency():
@@ -249,7 +249,8 @@ class AnimationWidget(AnimationWidget_UI):
             case _:
                 return
 
-        app().main_window.results_widget.update_color_and_deformation(clear_cache=clear_cache)
+        app().main_window.results_render_widget.update_plot(plot_setup=plot_setup)
+        # app().main_window.results_widget.update_color_and_deformation(clear_cache=clear_cache)
 
     def reset_sliders(self, plot_setup: None | PlotSetup = None):
         # block the slider signal to avoid multiple render updates

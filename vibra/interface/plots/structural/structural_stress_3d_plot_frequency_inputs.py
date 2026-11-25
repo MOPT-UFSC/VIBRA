@@ -186,7 +186,7 @@ class StructuralStress3dPlotFrequencyInputs(StructuralStress3dPlotFrequencyInput
         )
 
         self.animation_widget.reset_sliders()
-        LoadingWindow(app().main_window.results_widget.update_plot).run(
+        LoadingWindow(app().main_window.results_render_widget.update_plot).run(
             reset_camera=False,
             plot_setup=plot_setup,
         )

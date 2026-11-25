@@ -1,19 +1,51 @@
+from vtkmodules.vtkRenderingAnnotation import vtkScalarBarActor
+from dataclasses import dataclass
+
+import numpy as np
+
 from vibra.engine.model import Model
+from vibra.engine.postprocessing.acoustic_postprocessing import AcousticPostprocessing
+from vibra.engine.postprocessing.structural_postprocessing import StructuralPostprocessing
 from vibra.interface.viewer_3d.actors.results_actor import ResultsActor
+from vibra.interface.viewer_3d.plot_setup import (
+    AllowablePulsationForScrewCompressorsPlotSetup,
+    DisplacementFieldPlotSetupFrequency,
+    DisplacementFieldPlotSetupTime,
+    NoPlotSetup,
+    PlotSetup,
+    PressureFieldPlotSetupFrequency,
+    PressureFieldPlotSetupTime,
+    StressFieldPlotSetupFrequency,
+    StressFieldPlotSetupTime,
+    StressType,
+)
 from vibra.interface.viewer_3d.render_widgets.vibra_render_widget import VibraRenderWidget
 from vibra.utils.interface_utils import SectionPlane
 from vibra.utils.time_utils import function_timer
+
+
+@dataclass(kw_only=True, frozen=True)
+class PostprocessedData:
+    deformed_coordinates: np.ndarray | None = None
+    color_scalars: np.ndarray | None = None
+    domain_nodes: np.ndarray | None = None
+    min_color: float = 0
+    max_color: float = 0
 
 
 class NewResultsRenderWidget(VibraRenderWidget):
     def __init__(self):
         super().__init__()
 
+        self.postprocessed_data = PostprocessedData()
+        self.plot_setup: PlotSetup = NoPlotSetup()
+
         self.create_actors()
 
     def create_actors(self):
         self.create_axes()
         self.create_scale_bar()
+        self.create_color_bar()
 
         self.results_actor = ResultsActor(self.model)
         self.add_actors(self.results_actor)
@@ -27,7 +59,10 @@ class NewResultsRenderWidget(VibraRenderWidget):
         self.results_actor.section_plane = section_plane
 
     @function_timer
-    def update_plot(self, reset_camera: bool = False):
+    def update_plot(self, reset_camera: bool = False, plot_setup: PlotSetup | None = None):
+        if plot_setup is not None:
+            self.set_plot_setup(plot_setup)
+
         if self.isVisible() or reset_camera:
             self._must_update = False
         else:
@@ -59,8 +94,363 @@ class NewResultsRenderWidget(VibraRenderWidget):
             self.results_actor.hide_volumes(self.entity_visibility_handler.get_hidden_volumes())
             self.results_actor.hide_surfaces(self.entity_visibility_handler.get_hidden_surfaces())
 
+        pp = self.postprocessed_data
+        self.results_actor.show_results_mode()
+
+        if pp.deformed_coordinates is None:
+            self.results_actor.reset_coordinates()
+        else:
+            self.results_actor.set_coordinates(pp.deformed_coordinates)
+
+        if pp.color_scalars is None:
+            self.results_actor.reset_color_scalars()
+            self.colorbar_actor.VisibilityOff()
+        else:
+            color_table = self.results_actor.set_color_scalars(
+                pp.color_scalars,
+                pp.min_color,
+                pp.max_color,
+                colormap=self.user_preferences.color_map,
+            )
+            self.colorbar_actor.SetLookupTable(color_table)
+            self.colorbar_actor.VisibilityOn()
+
         self.results_actor.update_caches()
         self.render()
+
+    def set_plot_setup(self, plot_setup: PlotSetup | None):
+        if (plot_setup is None) or isinstance(plot_setup, NoPlotSetup):
+            self.plot_setup = NoPlotSetup()
+        else:
+            assert isinstance(plot_setup, PlotSetup)
+            self.plot_setup = plot_setup
+
+        match self.plot_setup:
+            case NoPlotSetup():
+                self.postprocessed_data = PostprocessedData()
+
+            case PressureFieldPlotSetupFrequency():
+                self._plot_pressure_field_frequency_domain()
+
+            case PressureFieldPlotSetupTime():
+                self._plot_pressure_field_time_domain()
+
+            case AllowablePulsationForScrewCompressorsPlotSetup():
+                self._plot_allowable_pulsation_for_screw_compressor()
+
+            case DisplacementFieldPlotSetupFrequency():
+                self._plot_displacement_field_frequency_domain()
+
+            case DisplacementFieldPlotSetupTime():
+                self._plot_displacement_field_time_domain()
+
+            case StressFieldPlotSetupFrequency():
+                self._plot_stress_field_frequency_domain()
+
+            case StressFieldPlotSetupTime():
+                self._plot_stress_field_time_domain()
+
+            case _:
+                raise NotImplementedError(f'Plot setup "{self.plot_setup}" not implemented.')
+
+    def _plot_pressure_field_frequency_domain(self):
+        assert isinstance(self.plot_setup, PressureFieldPlotSetupFrequency)
+        assert self.model is not None
+
+        postprocessor = AcousticPostprocessing(self.model)
+        analysis_id = self.model.analysis_id
+        data = postprocessor.compute_acoustic_pressures_for_3d_plot_frequency(
+            self.plot_setup.index,
+            self.plot_setup.phase,
+            self.plot_setup.plot_type,
+            unit_factor=self.plot_setup.unit_factor,
+            is_modal=analysis_id.is_modal(),
+        )
+
+        if data is None:
+            self.postprocessed_data = None
+            return
+
+        color_scalars, min_value, max_value, _ = data
+        acoustic_nodes = self.model.domains_processor.nodes_of_domain.get("acoustic")
+
+        _color_scalars = np.zeros(len(self.model.mesh.nodal_coordinates), dtype=float)
+        _color_scalars[acoustic_nodes] = color_scalars
+        self.postprocessed_data = PostprocessedData(
+            color_scalars=_color_scalars,
+            domain_nodes=acoustic_nodes,
+            min_color=min_value,
+            max_color=max_value,
+        )
+
+    def _plot_pressure_field_time_domain(self):
+        assert isinstance(self.plot_setup, PressureFieldPlotSetupTime)
+        assert self.model is not None
+
+        postprocessor = AcousticPostprocessing(self.model)
+
+        data = postprocessor.compute_acoustic_pressures_for_3d_plot_time(
+            self.plot_setup.time_index,
+            self.plot_setup.plot_type,
+            unit_factor=self.plot_setup.unit_factor,
+            n_div=self.plot_setup.n_div,
+            spectral_lines=self.plot_setup.spectral_lines,
+            reduced_loop_time=self.plot_setup.reduced_loop_time,
+        )
+
+        if data is None:
+            self.postprocessed_data = None
+            return
+
+        _, color_scalars, min_value, max_value = data
+        acoustic_nodes = self.model.domains_processor.nodes_of_domain.get("acoustic")
+
+        _color_scalars = np.zeros(len(self.model.mesh.nodal_coordinates), dtype=float)
+        _color_scalars[acoustic_nodes] = color_scalars
+        self.postprocessed_data = PostprocessedData(
+            color_scalars=_color_scalars,
+            domain_nodes=acoustic_nodes,
+            min_color=min_value,
+            max_color=max_value,
+        )
+
+    def _plot_allowable_pulsation_for_screw_compressor(self):
+        assert isinstance(self.plot_setup, AllowablePulsationForScrewCompressorsPlotSetup)
+        assert self.model is not None
+
+        postprocessor = AcousticPostprocessing(self.model)
+
+        data = postprocessor.compute_allowable_pulsation_field_for_screw_compressor(
+            n_div=self.plot_setup.n_div,
+            spectral_lines=self.plot_setup.spectral_lines,
+        )
+
+        if data is None:
+            self.postprocessed_data = None
+            return
+
+        color_scalars, min_value, max_value = data
+
+        # apply the penalization factor, if necessary
+        penalization_factor = self.plot_setup.penalization_factor / 100
+        max_value *= 1 - penalization_factor
+
+        acoustic_nodes = self.model.domains_processor.nodes_of_domain.get("acoustic")
+
+        _color_scalars = np.zeros(len(self.model.mesh.nodal_coordinates), dtype=float)
+        _color_scalars[acoustic_nodes] = color_scalars
+        self.postprocessed_data = PostprocessedData(
+            color_scalars=_color_scalars,
+            domain_nodes=acoustic_nodes,
+            min_color=min_value,
+            max_color=max_value,
+        )
+
+    def _plot_displacement_field_frequency_domain(self):
+        assert isinstance(self.plot_setup, DisplacementFieldPlotSetupFrequency)
+        assert self.model is not None
+
+        postprocessor = StructuralPostprocessing(self.model)
+        analysis_id = self.model.analysis_id
+
+        data = postprocessor.compute_displacements_for_3d_plot_frequency(
+            self.plot_setup.index,
+            self.plot_setup.phase,
+            self.plot_setup.plot_type,
+            n_diff=self.plot_setup.n_diff,
+            unit_factor=self.plot_setup.unit_factor,
+            is_modal=analysis_id.is_modal(),
+        )
+
+        if data is None:
+            self.postprocessed_data = None
+            return
+
+        displacements, color_scalars, min_value, max_value, _ = data
+        structural_nodes = self.model.domains_processor.nodes_of_domain.get("structural")
+
+        deformed_coords = self.model.mesh.nodal_coordinates[:, 1:].copy()
+        max_value = max_value if max_value != 0 else 1.0
+        magnification_factor = self.plot_setup.magnification_factor
+        mult_factor = 1.0 if magnification_factor is None else magnification_factor / (10 * max_value)
+        deformed_coords[structural_nodes, :] += mult_factor * displacements
+
+        _color_scalars = np.zeros(len(self.model.mesh.nodal_coordinates), dtype=float)
+        _color_scalars[structural_nodes] = color_scalars
+        self.postprocessed_data = PostprocessedData(
+            deformed_coordinates=deformed_coords,
+            color_scalars=_color_scalars,
+            domain_nodes=structural_nodes,
+            min_color=min_value,
+            max_color=max_value,
+        )
+
+    def _plot_displacement_field_time_domain(self):
+        assert isinstance(self.plot_setup, DisplacementFieldPlotSetupTime)
+        assert self.model is not None
+
+        postprocessor = StructuralPostprocessing(self.model)
+
+        data = postprocessor.compute_displacements_for_3d_plot_time(
+            self.plot_setup.time_index,
+            self.plot_setup.plot_type,
+            unit_factor=self.plot_setup.unit_factor,
+            n_diff=self.plot_setup.n_diff,
+            n_div=self.plot_setup.n_div,
+            spectral_lines=self.plot_setup.spectral_lines,
+            reduced_loop_time=self.plot_setup.reduced_loop_time,
+        )
+
+        if data is None:
+            self.postprocessed_data = None
+            return
+
+        _, displacements, color_scalars, min_value, max_value = data
+        structural_nodes = self.model.domains_processor.nodes_of_domain.get("structural")
+
+        deformed_coords = self.model.mesh.nodal_coordinates[:, 1:].copy()
+        max_value = max_value if max_value != 0 else 1.0
+        magnification_factor = self.plot_setup.magnification_factor
+        mult_factor = 1.0 if magnification_factor is None else magnification_factor / (10 * max_value)
+        deformed_coords[structural_nodes, :] += mult_factor * displacements
+
+        _color_scalars = np.zeros(len(self.model.mesh.nodal_coordinates), dtype=float)
+        _color_scalars[structural_nodes] = color_scalars
+        self.postprocessed_data = PostprocessedData(
+            deformed_coordinates=deformed_coords,
+            color_scalars=_color_scalars,
+            domain_nodes=structural_nodes,
+            min_color=min_value,
+            max_color=max_value,
+        )
+
+    def _plot_stress_field_frequency_domain(self):
+        assert isinstance(self.plot_setup, StressFieldPlotSetupFrequency)
+        assert self.model is not None
+
+        postprocessor = StructuralPostprocessing(self.model)
+        analysis_id = self.model.analysis_id
+
+        displacement_data = postprocessor.compute_displacements_for_3d_plot_frequency(
+            self.plot_setup.index,
+            self.plot_setup.phase,
+            self.plot_setup.plot_type,
+            n_diff=self.plot_setup.n_diff,
+            is_modal=analysis_id.is_modal(),
+            stress_plot=True,
+        )
+
+        if displacement_data is None:
+            self.postprocessed_data = None
+            return
+
+        displacements, max_disp = displacement_data
+
+        if StressType(self.plot_setup.stress_type).is_normal_or_shear_stress():
+            stress_data = postprocessor.compute_structural_stresses_for_3d_plot_frequency(
+                self.plot_setup.index,
+                self.plot_setup.phase,
+                self.plot_setup.stress_type,
+                self.plot_setup.plot_type,
+                unit_factor=self.plot_setup.unit_factor,
+            )
+        else:
+            stress_data = postprocessor.compute_advanced_structural_stresses_for_3d_plot_frequency(
+                self.plot_setup.index,
+                self.plot_setup.phase,
+                self.plot_setup.stress_type,
+                self.plot_setup.plot_type,
+                unit_factor=self.plot_setup.unit_factor,
+            )
+
+        if stress_data is None:
+            self.postprocessed_data = None
+            return
+
+        color_scalars, min_value, max_value, _ = stress_data
+        structural_nodes = self.model.domains_processor.nodes_of_domain.get("structural")
+
+        deformed_coords = self.model.mesh.nodal_coordinates[:, 1:].copy()
+        max_disp = max_disp if max_disp != 0 else 1.0
+        magnification_factor = self.plot_setup.magnification_factor
+        mult_factor = 1.0 if magnification_factor is None else magnification_factor / (10 * max_disp)
+        deformed_coords[structural_nodes, :] += mult_factor * displacements
+
+        _color_scalars = np.zeros(len(self.model.mesh.nodal_coordinates), dtype=float)
+        _color_scalars[structural_nodes] = color_scalars
+        self.postprocessed_data = PostprocessedData(
+            deformed_coordinates=deformed_coords,
+            color_scalars=_color_scalars,
+            domain_nodes=structural_nodes,
+            min_color=min_value,
+            max_color=max_value,
+        )
+
+    def _plot_stress_field_time_domain(self):
+        assert isinstance(self.plot_setup, StressFieldPlotSetupTime)
+        assert self.model is not None
+
+        postprocessor = StructuralPostprocessing(self.model)
+
+        displacement_data = postprocessor.compute_displacements_for_3d_plot_time(
+            self.plot_setup.time_index,
+            self.plot_setup.plot_type,
+            unit_factor=self.plot_setup.unit_factor,
+            n_diff=self.plot_setup.n_diff,
+            n_div=self.plot_setup.n_div,
+            spectral_lines=self.plot_setup.spectral_lines,
+            reduced_loop_time=self.plot_setup.reduced_loop_time,
+            stress_plot=True,
+        )
+
+        if displacement_data is None:
+            self.postprocessed_data = None
+            return
+
+        time_vector, displacements, max_disp = displacement_data
+
+        if StressType(self.plot_setup.stress_type).is_normal_or_shear_stress():
+            stress_data = postprocessor.compute_structural_stresses_for_3d_plot_time(
+                self.plot_setup.time_index,
+                time_vector,
+                self.plot_setup.stress_type,
+                self.plot_setup.plot_type,
+                unit_factor=self.plot_setup.unit_factor,
+                n_div=self.plot_setup.n_div,
+                spectral_lines=self.plot_setup.spectral_lines,
+            )
+        else:
+            stress_data = postprocessor.compute_advanced_structural_stresses_for_3d_plot_time(
+                self.plot_setup.time_index,
+                self.plot_setup.stress_type,
+                self.plot_setup.plot_type,
+                unit_factor=self.plot_setup.unit_factor,
+                n_div=self.plot_setup.n_div,
+                spectral_lines=self.plot_setup.spectral_lines,
+            )
+
+        if stress_data is None:
+            self.postprocessed_data = None
+            return
+
+        color_scalars, min_value, max_value, _ = stress_data
+        structural_nodes = self.model.domains_processor.nodes_of_domain.get("structural")
+
+        deformed_coords = self.model.mesh.nodal_coordinates[:, 1:].copy()
+        max_disp = max_disp if max_disp != 0 else 1.0
+        magnification_factor = self.plot_setup.magnification_factor
+        mult_factor = 1.0 if magnification_factor is None else magnification_factor / (10 * max_disp)
+        deformed_coords[structural_nodes, :] += mult_factor * displacements
+
+        _color_scalars = np.zeros(len(self.model.mesh.nodal_coordinates), dtype=float)
+        _color_scalars[structural_nodes] = color_scalars
+        self.postprocessed_data = PostprocessedData(
+            deformed_coordinates=deformed_coords,
+            color_scalars=_color_scalars,
+            domain_nodes=structural_nodes,
+            min_color=min_value,
+            max_color=max_value,
+        )
 
     def _update_nodes_appearance(self):
         self.results_actor.set_nodes_visibility(visible=self.visualization_filter.points)
