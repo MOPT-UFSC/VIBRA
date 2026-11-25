@@ -56,7 +56,6 @@ class AcousticAssembler:
         self.damping_matrix_2d = None
         self.damping_matrix_3d: None
         self.visc_load_matrix: None
-        self.f_eq = None
 
 
     def reset_reduced_matrices_attributes(self):
@@ -616,6 +615,10 @@ class AcousticAssembler:
 
         # compute the load vector {f}
         load_vector = f_ms + f_visc - f_mf - self.f_eq
+
+        if self.model.reduced_memory_mode:
+            del f_ms, f_visc, f_mf
+            self.f_eq = None
 
         if self.prescribed_dof_indices:
             return load_vector[self.unprescribed_dof_indices]

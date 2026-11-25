@@ -72,7 +72,6 @@ class StructuralAssembler:
         self.mass_matrix = None
         self.stiffness_matrix = None
         self.material_dampings = None
-        self.f_eq = None
 
         self.sparse_matrix_data: dict[str, SparseMatrixData] = {}
 
@@ -993,6 +992,9 @@ class StructuralAssembler:
         logging.info("Computing the load vector... [95/100]")
         # self.f_eq = self.excitations_assembler.get_prescribed_dof_model_excitation(index=index)
         load_vector = self.excitations_assembler.structural_load[:, index] - self.f_eq
+
+        if self.model.reduced_memory_mode:
+            self.f_eq = None
 
         if self.prescribed_dof_indices:
             return load_vector[self.unprescribed_dof_indices]
