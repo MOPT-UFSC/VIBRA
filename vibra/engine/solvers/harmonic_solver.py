@@ -280,8 +280,8 @@ class HarmonicSolver:
                 if is_resume and i != 0 and isinstance(self._file_writer, LazyHDF5MatrixWriter) and self._file_writer.has_column(i):
                     continue
 
-                # if print_log:
-                # print(f"Solution step {i} -> frequency {freq} Hz")
+                # compute the equivalent load for prescribed dofs
+                self.assembler.compute_dynamic_stiffness_matrix(freq, i)
 
                 f = self.assembler.compute_load_vector(i)
 

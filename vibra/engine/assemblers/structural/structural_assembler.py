@@ -72,6 +72,7 @@ class StructuralAssembler:
         self.mass_matrix = None
         self.stiffness_matrix = None
         self.structural_local_dampings = None
+        self.f_eq = None
 
         self.sparse_matrix_data: dict[str, SparseMatrixData] = {}
 
@@ -701,7 +702,7 @@ class StructuralAssembler:
             alpha, beta, eta = self.model.global_damping
             C = alpha * M + (beta + eta / omega) * K + C_dist
         else:
-            C = csr_matrix(shape=self.model.gm_shape)
+            C = csr_matrix(self.model.gm_shape, dtype=np.float64)
 
         # process the contribution for structural local dampings
         if not self.dampings_from_volume:
@@ -986,8 +987,8 @@ class StructuralAssembler:
         """
 
         logging.info("Computing the load vector... [95/100]")
-        f_eq = self.excitations_assembler.get_prescribed_dof_model_excitation(index=index)
-        load_vector = self.excitations_assembler.structural_load[:, index] - f_eq
+        # self.f_eq = self.excitations_assembler.get_prescribed_dof_model_excitation(index=index)
+        load_vector = self.excitations_assembler.structural_load[:, index] - self.f_eq
 
         if self.prescribed_dof_indices:
             return load_vector[self.unprescribed_dof_indices]
@@ -1036,16 +1037,17 @@ class StructuralAssembler:
         M += M_dist
         K += K_dist
 
+        logging.info("Processing dynamic stiffness matrix... [85/100]")
+        omega = 2 * np.pi * freq
+        Kd = -(omega**2) * M + (1j * omega) * C + K
+
         if self.prescribed_values.any():
-            self.process_reduced_global_matrices(C, M, K)
+            self.f_eq = Kd[:, self.prescribed_dof_indices] @ self.prescribed_values[:, index]
+        else:
+            self.f_eq = 0.
 
         if self.model.reduced_memory_mode:
             self.reset_global_matrices_attributes()
-
-        logging.info("Processing dynamic stiffness matrix... [85/100]")
-        # compute the dynamic stiffness matrix Kd
-        omega = 2 * np.pi * freq
-        Kd = -(omega**2) * M + (1j * omega) * C + K
 
         if self.prescribed_dof_indices:
             Kd = Kd[self.unprescribed_dof_indices, :][:, self.unprescribed_dof_indices]
@@ -1055,14 +1057,20 @@ class StructuralAssembler:
 
     def build_eigenproblem_system(self):
 
+        # process the global mass and stiffness matrices
+        M, K = self.assemble_global_mass_and_stiffness_matrices()
+
         # reassemble the global distributed mass and stiffness matrices
         M_dist = self.assemble_distributed_mass_global_matrix()
         K_dist = self.assemble_distributed_stiffness_global_matrix()
 
-        M, K = self.assemble_global_mass_and_stiffness_matrices()
-
         M += M_dist
         K += K_dist
+
+        if self.prescribed_dof_indices:
+            idx = self.unprescribed_dof_indices
+            M = M[idx, :][:, idx]
+            K = K[idx, :][:, idx]
 
         is_complex = np.any(np.iscomplex(K.data)) or np.any(np.iscomplex(M.data))
         if not is_complex:
@@ -1094,6 +1102,8 @@ class StructuralAssembler:
         cols = solution.shape[1]
 
         full_solution = np.zeros((rows, cols), dtype=np.complex128)
+        print(len(self.unprescribed_dof_indices), len(self.prescribed_dof_indices))
+        print(full_solution.shape, solution.shape)
 
         if len(self.prescribed_dof_indices):
             if modal_analysis:

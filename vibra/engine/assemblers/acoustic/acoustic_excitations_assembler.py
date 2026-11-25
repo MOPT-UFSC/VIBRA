@@ -46,11 +46,11 @@ class AcousticExcitationsAssembler:
         self.integration_data_Qms_1d: MassSourceData | None = None
         self.integration_data_Qms_2d: MassSourceData | None = None
 
-        self.ind_rows_Qmsf_1d = np.array([], dtype=np.int32)
-        self.ind_cols_Qmsf_1d = np.array([], dtype=np.int32)
+        self.rows_Qmsf_1d = np.array([], dtype=np.int32)
+        self.cols_Qmsf_1d = np.array([], dtype=np.int32)
 
-        self.ind_rows_Qmsf_2d = np.array([], dtype=np.int32)
-        self.ind_cols_Qmsf_2d = np.array([], dtype=np.int32)
+        self.rows_Qmsf_2d = np.array([], dtype=np.int32)
+        self.cols_Qmsf_2d = np.array([], dtype=np.int32)
 
 
     @property
@@ -558,7 +558,7 @@ class AcousticExcitationsAssembler:
                 connectivities = self.integration_data_Qms_1d.connectivities
 
                 logging.info("Processing the mass source data to assemble matrices (1d elements)... [2/2]")
-                self.ind_rows_Qmsf_1d, self.ind_cols_Qmsf_1d = self.element_1d.get_rows_and_cols_indices_2D(connectivities)
+                self.rows_Qmsf_1d, self.cols_Qmsf_1d = self.element_1d.get_rows_and_cols_indices_2D(connectivities)
                 self.int1d_NtN, self.int1d_BtB = self.element_1d.stacked_matrices_NtN_and_BtB()
 
         if isinstance(self.mass_source_vector_surfaces, np.ndarray):
@@ -570,7 +570,7 @@ class AcousticExcitationsAssembler:
                 connectivities = self.integration_data_Qms_2d.connectivities
 
                 logging.info("Processing the mass source data to assemble matrices (2d elements)... [2/2]")
-                self.ind_rows_Qmsf_2d, self.ind_cols_Qmsf_2d = self.element_2d.get_rows_and_cols_indices_2D(connectivities)
+                self.rows_Qmsf_2d, self.cols_Qmsf_2d = self.element_2d.get_rows_and_cols_indices_2D(connectivities)
                 self.int2d_NtN, self.int2d_BtB = self.element_2d.stacked_matrices_NtN_and_BtB()
 
 
@@ -634,10 +634,10 @@ class AcousticExcitationsAssembler:
         factor_Qms2 = self.integration_data_Qms_1d.factor_Qms2
 
         data_Qms1: np.ndarray = factor_Qms1[:, index].reshape(-1, 1, 1) * self.int1d_NtN
-        self.Qms1_1d = csr_matrix((data_Qms1.ravel(), (self.ind_rows_Qmsf_1d, self.ind_cols_Qmsf_1d)), shape=self.model.gm_shape)
+        self.Qms1_1d = csr_matrix((data_Qms1.ravel(), (self.rows_Qmsf_1d, self.cols_Qmsf_1d)), shape=self.model.gm_shape)
 
         data_Qms2: np.ndarray = factor_Qms2[:, index].reshape(-1, 1, 1) * self.int1d_BtB
-        self.Qms2_1d = csr_matrix((data_Qms2.ravel(), (self.ind_rows_Qmsf_1d, self.ind_cols_Qmsf_1d)), shape=self.model.gm_shape)
+        self.Qms2_1d = csr_matrix((data_Qms2.ravel(), (self.rows_Qmsf_1d, self.cols_Qmsf_1d)), shape=self.model.gm_shape)
 
         if self.model.drop_domain:
             acoustic_dofs_indices = self.assembler.acoustic_dofs_indices
@@ -668,10 +668,10 @@ class AcousticExcitationsAssembler:
         factor_Qms2 = self.integration_data_Qms_2d.factor_Qms2
 
         data_Qms1: np.ndarray = factor_Qms1[:, index].reshape(-1, 1, 1) * self.int2d_NtN
-        self.Qms1_2d = csr_matrix((data_Qms1.ravel(), (self.ind_rows_Qmsf_2d, self.ind_cols_Qmsf_2d)), shape=self.model.gm_shape)
+        self.Qms1_2d = csr_matrix((data_Qms1.ravel(), (self.rows_Qmsf_2d, self.cols_Qmsf_2d)), shape=self.model.gm_shape)
 
         data_Qms2: np.ndarray = factor_Qms2[:, index].reshape(-1, 1, 1) * self.int2d_BtB
-        self.Qms2_2d = csr_matrix((data_Qms2.ravel(), (self.ind_rows_Qmsf_2d, self.ind_cols_Qmsf_2d)), shape=self.model.gm_shape)
+        self.Qms2_2d = csr_matrix((data_Qms2.ravel(), (self.rows_Qmsf_2d, self.cols_Qmsf_2d)), shape=self.model.gm_shape)
 
         if self.model.drop_domain:
             acoustic_dofs_indices = self.assembler.acoustic_dofs_indices
