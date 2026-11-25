@@ -787,7 +787,7 @@ class MainWindow(MainWindow_UI):
 
     def save_project_as(self, path: str):
 
-        app().project.project_paths.remove_temporary_arrays_folder
+        app().project.project_paths.remove_temporary_arrays_folder()
 
         def save_data(path):
             logging.info("Saving project data... [10/100]")
