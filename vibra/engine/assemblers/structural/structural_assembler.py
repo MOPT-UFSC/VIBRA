@@ -55,7 +55,7 @@ class StructuralAssembler:
         self.prescribed_dof_indices = None
         self.unprescribed_dof_indices = None
 
-        self.dampings_from_volume = {}
+        self.material_dampings_of_volume = {}
         self.material_from_volume = {}
         self.surface_data_for_shell_elements = {}
 
@@ -71,7 +71,7 @@ class StructuralAssembler:
         self.rows = None
         self.mass_matrix = None
         self.stiffness_matrix = None
-        self.structural_local_dampings = None
+        self.material_dampings = None
         self.f_eq = None
 
         self.sparse_matrix_data: dict[str, SparseMatrixData] = {}
@@ -332,23 +332,23 @@ class StructuralAssembler:
         return array_of_values
 
 
-    def process_material_from_volumes(self):
+    def process_material_and_dampings_of_volumes(self):
         """
         This method maps the materials against each volume.
         """
         self.material_from_volume.clear()
-        self.dampings_from_volume.clear()
+        self.material_dampings_of_volume.clear()
 
         for vol_id in self.model.mesh.elements_from_volume:
             material = self.properties._get_property("material", volume=vol_id)
             if isinstance(material, Material):
                 self.material_from_volume[vol_id] = material
 
-            dampings = self.properties._get_property("structural_local_dampings", volume=vol_id)
-            if dampings is None:
+            dampings = self.properties._get_property("material_dampings", volume=vol_id)
+            if not isinstance(dampings, dict):
                 continue
 
-            self.dampings_from_volume[vol_id] = dampings
+            self.material_dampings_of_volume[vol_id] = [dampings.get("alpha"), dampings.get("beta"), dampings.get("eta")]
 
 
     def get_distributed_data_for_1d_element_integration(self, property_label: str) -> DistributedPropertyData | None:
@@ -554,11 +554,11 @@ class StructuralAssembler:
 
         self.displacement_dof = self.get_displacement_dof()
 
-        self.data_K = np.zeros((self.number_3d_elements, self.dof, self.dof), dtype=float)
-        self.data_M = np.zeros((self.number_3d_elements, self.dof, self.dof), dtype=float)
+        self.data_K = np.zeros((self.number_3d_elements, self.dof, self.dof), dtype=np.float64)
+        self.data_M = np.zeros((self.number_3d_elements, self.dof, self.dof), dtype=np.float64)
 
-        if self.dampings_from_volume:
-            self.structural_local_dampings = np.zeros((self.number_3d_elements, 3), dtype=float)
+        if self.material_dampings_of_volume:
+            self.material_dampings = np.zeros((self.number_3d_elements, 3), dtype=np.float64)
 
         for index, element_id in enumerate(self.model.domains_processor.elements_of_domain.get("structural", [])):
             vol_id = self.model.mesh.solids_connectivity[element_id, 1]
@@ -589,7 +589,7 @@ class StructuralAssembler:
             # get the volume of the 3D element
             vol_id = self.model.mesh.solids_connectivity[element_id, 1]
 
-            # material from volume
+            # volume material
             material = self.material_from_volume.get(vol_id)
             if material is None:
                 print(f"-> Element without material: {element_id}")
@@ -599,12 +599,12 @@ class StructuralAssembler:
             self.data_K[index, :, :] = Ke
             self.data_M[index, :, :] = Me
 
-            # dampings from volume
-            structural_local_dampings = self.dampings_from_volume.get(vol_id)
-            if structural_local_dampings is None:
+            # material dampings
+            material_dampings = self.material_dampings_of_volume.get(vol_id)
+            if material_dampings is None:
                 continue
 
-            self.structural_local_dampings[index, :] = structural_local_dampings
+            self.material_dampings[index, :] = material_dampings
 
         if self.model.reduced_memory_mode:
             self.write_global_matrices_arrays()
@@ -615,7 +615,7 @@ class StructuralAssembler:
         This method preprocesses all the required data to assemble the global matrices.
         """
         if self.model.mesh.solids_connectivity.size:
-            self.process_material_from_volumes()
+            self.process_material_and_dampings_of_volumes()
             self.compute_data_to_process_global_matrices_for_solid_elements(reorder=reorder, print_log=print_log)
             self.process_data_to_assemble_distributed_global_matrices()
 
@@ -705,25 +705,29 @@ class StructuralAssembler:
             C = csr_matrix(self.model.gm_shape, dtype=np.float64)
 
         # process the contribution for structural local dampings
-        if not self.dampings_from_volume:
+        if not self.material_dampings_of_volume:
+            if self.model.drop_domain:
+                idx = self.structural_dofs_indices
+                C = C[idx, :][:, idx]
+
             return C
 
         # proportional damping constants
-        alpha = self.structural_local_dampings[:, 0].reshape(-1, 1, 1)
-        beta = self.structural_local_dampings[:, 1].reshape(-1, 1, 1)
+        alpha = self.material_dampings[:, 0].reshape(-1, 1, 1)
+        beta = self.material_dampings[:, 1].reshape(-1, 1, 1)
 
         # hysteretic structural damping constant
-        eta = self.structural_local_dampings[:, 2].reshape(-1, 1, 1)
+        eta = self.material_dampings[:, 2].reshape(-1, 1, 1)
 
         # compute the global damping matrix
         data = alpha * self.data_M + (beta + eta / omega) * self.data_K 
-        C_mat = coo_matrix((data.ravel(), (self.rows, self.cols)), shape=self.model.gm_shape).tocsr()
+        C += coo_matrix((data.ravel(), (self.rows, self.cols)), shape=self.model.gm_shape).tocsr()
 
         if self.model.drop_domain:
             idx = self.structural_dofs_indices
-            C_mat = C_mat[idx, :][:, idx]
+            C = C[idx, :][:, idx]
 
-        return C + C_mat
+        return C
 
 
     def process_data_to_assemble_distributed_global_matrices(self):

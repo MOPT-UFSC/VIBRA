@@ -25,6 +25,7 @@ from vibra.interface.model_inputs.general.grouping_assistant_inputs import Group
 from vibra.interface.model_inputs.general.mesher_setup_inputs import MesherSetupInputs
 from vibra.interface.model_inputs.general.volume_suppression_inputs import VolumeSuppressionInputs
 from vibra.interface.model_inputs.material.set_material_inputs import MaterialInputs
+from vibra.interface.model_inputs.structural.dissipation_models.material_dampings_inputs import MaterialDampingsInputs
 from vibra.interface.model_inputs.structural.distributed_properties.distributed_dampings_inputs import DistributedDampingsInputs
 from vibra.interface.model_inputs.structural.distributed_properties.distributed_mass_inputs import DistributedMassInputs
 from vibra.interface.model_inputs.structural.distributed_properties.distributed_stiffness_inputs import DistributedStiffnessInputs
@@ -92,6 +93,9 @@ class InputUi:
 
     def set_normal_pressure_load(self):
         self.process_input(NormalPressureLoadInputs)
+
+    def set_material_dampings(self):
+        self.process_input(MaterialDampingsInputs)
 
     def set_acoustic_pressure(self):
         self.process_input(AcousticPressureInputs)

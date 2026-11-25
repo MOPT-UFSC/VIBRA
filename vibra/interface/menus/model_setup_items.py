@@ -49,6 +49,9 @@ class ModelSetupItems(CommonMenuItems):
         self.item_child_distributed_stiffness = self.add_item("Distributed Stiffness")
         self.item_child_distributed_dampings = self.add_item("Distributed Dampings")
 
+        # structural dissipation models
+        self.item_child_material_dampings = self.add_item("Material Dampings")
+
         # acoustic model excitations
         self.item_top_acoustic_model_setup = self.add_top_item('Acoustic Model Setup')
         self.item_child_acoustic_pressure = self.add_item('Acoustic Pressure')
@@ -104,6 +107,7 @@ class ModelSetupItems(CommonMenuItems):
             "item_child_distributed_mass": "distributed_mass",
             "item_child_distributed_stiffness": "distributed_stiffness",
             "item_child_distributed_dampings": "distributed_damping",
+            "item_child_material_dampings": "material_dampings",
             "item_child_acoustic_pressure": "acoustic_pressure",
             "item_child_mass_source": "mass_source",
             "item_child_surface_velocity": "surface_velocity",
@@ -526,6 +530,9 @@ class ModelSetupItems(CommonMenuItems):
 
     def item_child_normal_pressure_load_callback(self):
         app().main_window.input_ui.set_normal_pressure_load()
+
+    def item_child_material_dampings_callback(self):
+        app().main_window.input_ui.set_material_dampings()
 
     def item_child_acoustic_pressure_callback(self):
         app().main_window.input_ui.set_acoustic_pressure()

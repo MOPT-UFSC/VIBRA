@@ -29,6 +29,7 @@ from .model_info_text import (
     lines_info_text,
     mass_source_info_text,
     material_info_text,
+    material_dampings_info_text,
     perforated_plate_info_text,
     points_info_text,
     porous_material_info_text,
@@ -505,6 +506,7 @@ class GeometryRenderWidget(CommonRenderWidget):
 
         if physical_domain in ["structural", "coupled"]:
             text += material_info_text()
+            text += material_dampings_info_text()
             text += structural_boundary_conditions_info_text()
             text += structural_additional_info_text()
 

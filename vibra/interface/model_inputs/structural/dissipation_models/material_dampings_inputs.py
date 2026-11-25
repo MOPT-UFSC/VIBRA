@@ -1,0 +1,319 @@
+from PySide6.QtCore import Qt
+from PySide6.QtGui import QCloseEvent
+from PySide6.QtWidgets import QAbstractItemView, QDialog, QTreeWidgetItem
+
+from vibra import app
+from vibra.interface import error_title
+from vibra.interface.common.common_interface import update_entities_selection
+from vibra.interface.general.get_user_confirmation_input import GetUserConfirmationInput
+from vibra.interface.general.print_message_input import PrintMessageInput
+from vibra.interface.model_inputs.general.grouping_assistant_inputs import GroupingAssistantInputs
+from vibra.interface.model_inputs.structural.definitions.enums import AttributionBodiesType, SetupTabType
+from vibra.interface.numeric_checks.double_validator import StrictDoubleValidator
+from vibra.interface.ui_generated.model.structural.dissipation_models.material_dampings_inputs_ui import MaterialDampingsInputs_UI
+
+
+class MaterialDampingsInputs(MaterialDampingsInputs_UI):
+    def __init__(self, *args, **kwargs):
+        super().__init__(*args, **kwargs)
+
+        app().main_window.set_input_widget(self)
+        app().main_window.workspace_updating_for_model_setup()
+        app().main_window.selection.volume_selection_mode = True
+
+        self._config_window()
+        self._configure_validators()
+        self._initialize()
+        self._create_connections()
+        self.load_model_info()
+
+        while self.keep_window_open:
+            self.exec()
+
+    @property
+    def model(self):
+        return app().project.model
+
+    @property
+    def mesh(self):
+        return app().project.model.mesh
+
+    @property
+    def properties(self):
+        return app().project.model.properties
+
+    def _config_window(self):
+        self.setWindowFlags(Qt.WindowStaysOnTopHint)
+        self.setWindowModality(Qt.WindowModal)
+        self.setWindowIcon(app().main_window.vibra_icon)
+        self.setWindowTitle("Vibra")
+
+    def _config_widgets(self):
+
+        self.treeWidget_material_dampings.setSelectionMode(QAbstractItemView.SelectionMode.ExtendedSelection)
+
+        for i, w in enumerate([70, 180]):
+            self.treeWidget_material_dampings.setColumnWidth(i, w)
+            self.treeWidget_material_dampings.headerItem().setTextAlignment(i, Qt.AlignCenter)
+
+    def _initialize(self):
+        self.group_assistant = None
+        self.keep_window_open = True
+
+    def _configure_validators(self):
+        self.lineEdit_mass_multiplier.setValidator(StrictDoubleValidator(0, 1, 8))
+        self.lineEdit_stiffness_multiplier.setValidator(StrictDoubleValidator(0, 1, 8))
+        self.lineEdit_constant_structural_coefficient.setValidator(StrictDoubleValidator(0, 1, 8))
+
+    def _create_connections(self):
+
+        # QComboBox connection
+        self.comboBox_attribution_type.currentIndexChanged.connect(self.attribution_type_callback)
+
+        # QPushButton connection
+        self.pushButton_apply.clicked.connect(self.apply_callback)
+        self.pushButton_apply_and_close.clicked.connect(lambda: self.apply_callback(True))
+        self.pushButton_cancel.clicked.connect(self.close)
+        self.pushButton_remove.clicked.connect(self.remove_callback)
+        self.pushButton_reset.clicked.connect(self.reset_callback)
+        self.pushButton_select_group.clicked.connect(self.group_assistant_callback)
+
+        # QTabWidget connection
+        self.tabWidget_main.currentChanged.connect(self.tab_event_callback)
+
+        # QTreeWidget connection
+        self.treeWidget_material_dampings.itemClicked.connect(self.on_click_item)
+        self.treeWidget_material_dampings.itemDoubleClicked.connect(self.on_doubleclick_item)
+
+        app().main_window.selection.selection_changed.connect(self.geometry_selection_callback)
+
+        self.geometry_selection_callback()
+
+    def attribution_type_callback(self):
+        index = self.comboBox_attribution_type.currentIndex()
+        all_bodies = index == AttributionBodiesType.ALL_BODIES
+        self.lineEdit_selection_id.setDisabled(all_bodies)
+
+        if all_bodies:
+            self.lineEdit_selection_id.setText("All bodies")
+            return
+
+        self.clear_line_edit_selection_id()
+
+    def geometry_selection_callback(self):
+        volumes = app().main_window.selection.geometry_volumes
+        if not volumes:
+            return
+
+        volume_ids = [int(vol_id) for vol_id in volumes]
+
+        if self.comboBox_attribution_type.currentIndex() == AttributionBodiesType.ALL_BODIES:
+            self.comboBox_attribution_type.setCurrentIndex(AttributionBodiesType.SELECTED_BODIES)
+
+        text = ", ".join([str(i) for i in volume_ids])
+        self.lineEdit_selection_id.setText(text)
+
+        if len(volume_ids) == 1:
+            p_data = self.properties._get_property("material_dampings", volume=volume_ids[0])
+            if p_data is None:
+                return
+            
+            self.load_dissipation_model_data(p_data)
+
+    def load_dissipation_model_data(self, data: dict):
+
+        self.lineEdit_mass_multiplier.clear()
+        self.lineEdit_stiffness_multiplier.clear()
+        self.lineEdit_constant_structural_coefficient.clear()
+
+        if not isinstance(data, dict):
+            return
+
+        alpha = data.get("alpha", 0.)
+        self.lineEdit_mass_multiplier.setText(f"{alpha : .4f}")
+
+        beta = data.get("beta", 0.)
+        self.lineEdit_stiffness_multiplier.setText(f"{beta : .4f}")
+
+        eta = data.get("eta", 0.)
+        self.lineEdit_constant_structural_coefficient.setText(f"{eta : .4f}")
+
+    def apply_callback(self, close_window: bool = False):
+
+        attribute_type = self.comboBox_attribution_type.currentIndex()
+            
+        volume_ids = []
+        if attribute_type == AttributionBodiesType.ALL_BODIES:
+            if "volumes" in self.mesh.geometry_information:
+                volume_ids = self.mesh.geometry_information["volumes"]
+
+        elif attribute_type == AttributionBodiesType.SELECTED_BODIES:
+            input_ids = self.lineEdit_selection_id.text()
+            volume_ids, error_data = self.model.check_selected_ids(
+                input_ids,
+                "volumes",
+                domain="structural",
+            )
+
+            if error_data is not None:
+                self.lineEdit_selection_id.setFocus()
+                PrintMessageInput(error_data)
+                return True
+
+            app().main_window.selection.selection_changed.disconnect(self.geometry_selection_callback)
+            update_entities_selection(self.lineEdit_selection_id, "volumes", volume_ids)
+            app().main_window.selection.selection_changed.connect(self.geometry_selection_callback)
+
+        _alpha = self.lineEdit_mass_multiplier.text()
+        alpha = 0 if _alpha == "" else float(_alpha)
+
+        _beta = self.lineEdit_stiffness_multiplier.text()
+        beta = 0 if _beta == "" else float(_beta)
+
+        _eta = self.lineEdit_constant_structural_coefficient.text()
+        eta = 0 if _eta == "" else float(_eta)
+
+        if not any((alpha, beta, eta)):
+            title = "Invalid inputs detected"
+            message = "Enter a non-zero positive value to proceed with the local damping configuration."
+            PrintMessageInput([error_title, title, message])
+            return
+
+        data = {
+            "alpha": alpha,
+            "beta": beta,
+            "eta": eta,
+        }
+
+        for volume_id in volume_ids:
+            self.properties._set_property("material_dampings", data, volume=volume_id)
+
+        self.actions_to_finalize(close_window)
+
+    def remove_callback(self):
+        selected_items = self.treeWidget_material_dampings.selectedItems()
+        if not selected_items:
+            return
+
+        for item in selected_items:
+            volume_id = int(item.text(0))
+            self.properties._remove_volume_property("material_dampings", volume_id)
+
+        self.clear_line_edit_selection_id()
+        self.treeWidget_material_dampings.clearSelection()
+
+        app().main_window.selection.clear_selection()
+        self.actions_to_finalize()
+
+    def reset_callback(self):
+
+        title = "Local damping reset"
+        message = "Would you like to remove the local damping effects?"
+
+        buttons_config = {"left_button_label": "Cancel", "right_button_label": "Continue"}
+        read = GetUserConfirmationInput(title, message, buttons_config=buttons_config)
+
+        if read._cancel:
+            return
+
+        if read._continue:
+            self.properties._reset_property("material_dampings")
+            self.actions_to_finalize()
+
+    def tab_event_callback(self):
+        list_tab = self.tabWidget_main.currentIndex() == SetupTabType.LIST
+        self.pushButton_apply.setDisabled(list_tab)
+        self.pushButton_apply_and_close.setDisabled(list_tab)
+        self.lineEdit_selection_id.setDisabled(list_tab)
+        self.comboBox_attribution_type.setDisabled(list_tab)
+
+    def on_click_item(self, item):
+        selected_items = self.treeWidget_material_dampings.selectedItems()
+        if not selected_items:
+            return
+
+        volume_ids = []
+        for _item in selected_items:
+            volume_ids.append(int(_item.text(0)))
+
+        if not volume_ids:
+            return
+
+        app().main_window.selection.set_geometry_selection(volumes=volume_ids)
+
+    def on_doubleclick_item(self, item):
+        self.on_click_item(item)
+          
+    def clear_line_edit_selection_id(self):
+        self.lineEdit_selection_id.clear()
+        self.lineEdit_selection_id.setToolTip("")
+
+    def load_model_info(self):
+        self.treeWidget_material_dampings.clear()
+
+        for (property, volume_id), data in self.properties.volume_properties.items():
+            if property != "material_dampings":
+                continue
+
+            data: dict
+            alpha = data.get("alpha")
+            beta = data.get("beta")
+            eta = data.get("eta")
+
+            local_dampings = (alpha, beta, eta)
+
+            item = QTreeWidgetItem([str(volume_id), f"{local_dampings}"])
+            for i in range(2):
+                item.setTextAlignment(i, Qt.AlignCenter)
+
+            self.treeWidget_material_dampings.addTopLevelItem(item)
+
+        self.update_tabs_visibility()
+
+    def update_tabs_visibility(self):
+        for (property, _) in self.properties.volume_properties:
+            if property != "material_dampings":
+                continue
+
+            self.tabWidget_main.setTabVisible(SetupTabType.LIST, True)
+            return
+
+        self.tabWidget_main.setTabVisible(SetupTabType.LIST, False)
+        self.tabWidget_main.setCurrentIndex(SetupTabType.SETUP)
+
+    def group_assistant_callback(self):
+        if self.group_assistant is None:
+            self.group_assistant = GroupingAssistantInputs(selector_mode=True)
+            self.group_assistant.exec()
+            self.group_assistant = None
+            return
+
+        self.group_assistant.raise_()
+        self.group_assistant.activateWindow()
+
+    def actions_to_finalize(self, close_window: bool = False):
+
+        self.load_model_info()
+        app().main_window.update_info_text()
+        app().project.update_model_properties_file()
+        app().main_window.update_symbols()
+
+        if close_window:
+            self.close()
+
+    def keyPressEvent(self, event):
+        if event.key() == Qt.Key_Enter or event.key() == Qt.Key_Return:
+            self.apply_callback()
+        elif event.key() == Qt.Key_Delete:
+            self.remove_callback()
+        elif event.key() == Qt.Key_Escape:
+            self.close()
+
+    def closeEvent(self, a0: QCloseEvent | None) -> None:
+        if isinstance(self.group_assistant, QDialog):
+            self.group_assistant.close()
+
+        self.keep_window_open = False
+        app().main_window.selection.selection_changed.disconnect(self.geometry_selection_callback)
+        app().main_window.selection.volume_selection_mode = False
+        return super().closeEvent(a0)

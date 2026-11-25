@@ -1,16 +1,16 @@
 from PySide6.QtCore import Qt
 from PySide6.QtGui import QCloseEvent
-from PySide6.QtWidgets import QAbstractItemView, QDialog, QLineEdit, QTreeWidgetItem
+from PySide6.QtWidgets import QAbstractItemView, QDialog, QTreeWidgetItem
 
 from vibra import app
 from vibra.interface import error_title
 from vibra.interface.common.common_interface import update_entities_selection
 from vibra.interface.general.get_user_confirmation_input import GetUserConfirmationInput
 from vibra.interface.general.print_message_input import PrintMessageInput
-from vibra.interface.numeric_checks.double_validator import StrictDoubleValidator
 from vibra.interface.model_inputs.acoustic.definitions.enums import AttributionBodiesType, SetupTabType
-from vibra.interface.ui_generated.model.acoustic.dissipation_models.proportional_damping_inputs_ui import ProportionalDampingInputs_UI
 from vibra.interface.model_inputs.general.grouping_assistant_inputs import GroupingAssistantInputs
+from vibra.interface.numeric_checks.double_validator import StrictDoubleValidator
+from vibra.interface.ui_generated.model.acoustic.dissipation_models.proportional_damping_inputs_ui import ProportionalDampingInputs_UI
 
 
 class ProportionalDampingInput(ProportionalDampingInputs_UI):
@@ -133,52 +133,12 @@ class ProportionalDampingInput(ProportionalDampingInputs_UI):
 
         density_factor = data.get("density_factor", 0.)
         self.lineEdit_fluid_density_complex_factor.setText(f"{density_factor : .4f}")
-        self.actions_to_finalize()
-    
-    def check_inputs(self, lineEdit: QLineEdit, label: str, only_positive=False, zero_included=True, _float=True):
-
-        message = ""
-        title = "Invalid input at dissipation model"
-
-        if lineEdit.text() != "":
-            try:
-                if _float:
-                    out = float(lineEdit.text())
-                else:
-                    out = int(lineEdit.text())
-
-                if only_positive:
-                    if zero_included:
-                        if out < 0:
-                            message = f"Insert a positive value to the {label}."
-                            message += "\n\nNote: zero value is allowed."
-                    else:
-                        if out <= 0:
-                            message = f"Insert a positive value to the {label}."
-                            message += "\n\nNote: zero value is not allowed."
-
-            except Exception as _err:
-                message = "Dear user, you have typed an invalid value at the \n"
-                message += f"{label} input field.\n\n"
-                message += str(_err)
-
-        else:
-            if zero_included:
-                return float(0)
-            else:
-                message = f"Insert some value at the {label} input field."
-
-        if message != "":
-            PrintMessageInput([error_title, title, message])
-            return None
-
-        return out
 
     def apply_callback(self, close_window: bool = False):
 
         attribute_type = self.comboBox_attribution_type.currentIndex()
             
-        volume_ids = list()
+        volume_ids = []
         if attribute_type == AttributionBodiesType.ALL_BODIES:
             if "volumes" in self.mesh.geometry_information:
                 volume_ids = self.mesh.geometry_information["volumes"]
