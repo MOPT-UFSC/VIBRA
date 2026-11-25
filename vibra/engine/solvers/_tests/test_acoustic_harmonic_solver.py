@@ -18,7 +18,7 @@ from vibra.engine.solvers import HarmonicSolver
 @pytest.mark.skip
 def test_regression_acoustic_harmonic_solver_solution(datadir, viscous_thermal_acoustic_model: "Model"):
     assembler = AcousticAssembler(viscous_thermal_acoustic_model)
-    assembler.assemble_global_matrices_and_excitations()
+    assembler.process_global_matrices_data_and_excitations()
 
     project_paths = ProjectPaths(datadir)
     harmonic_solver = HarmonicSolver(assembler, project_paths)
@@ -51,13 +51,13 @@ def test_acoustic_harmonic_modal_solver_solution(acoustic_model: "Model"):
 
     # Direct solver setup and solve
     assembler = AcousticAssembler(acoustic_model)
-    assembler.assemble_global_matrices_and_excitations()
+    assembler.process_global_matrices_data_and_excitations()
     harmonic_solver = HarmonicSolver(assembler)
     direct_solutions = harmonic_solver.solve_direct()
 
     # Modal solver setup and solve
     assembler = AcousticAssembler(acoustic_model)
-    assembler.assemble_global_matrices_and_excitations()
+    assembler.process_global_matrices_data_and_excitations()
     modal_harmonic_solver = HarmonicSolver(assembler)
     modal_solutions = modal_harmonic_solver.solve_mode_superposition()
 

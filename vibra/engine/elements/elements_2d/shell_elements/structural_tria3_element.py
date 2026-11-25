@@ -483,8 +483,8 @@ class StructuralTriangle3(Element2D):
             ind_dof[:, j*dof : (1 + j)*dof] = dof * self.connectivity[:, j+1].reshape(-1, 1) + local_dof
 
         vect_indices = ind_dof.flatten()
-        self.ind_rows = ((np.tile(vect_indices, (edof, 1))).T).flatten()
-        self.ind_cols = (np.tile(ind_dof, edof)).flatten()
+        self.rows = ((np.tile(vect_indices, (edof, 1))).T).flatten()
+        self.cols = (np.tile(ind_dof, edof)).flatten()
 
         # ind_dof = (
         #     np.array([  dof * self.connectivity[:, 1] + 0,
@@ -507,8 +507,8 @@ class StructuralTriangle3(Element2D):
         #                 dof * self.connectivity[:, 3] + 5  ], dtype=int)).T
 
         # vect_indices = ind_dof.flatten()
-        # self.ind_rows = ((np.tile(vect_indices, (edof, 1))).T).flatten()
-        # self.ind_cols = (np.tile(ind_dof, (1, edof))).flatten()
+        # self.rows = ((np.tile(vect_indices, (edof, 1))).T).flatten()
+        # self.cols = (np.tile(ind_dof, (1, edof))).flatten()
 
         # linhas = np.tile(vect_indices, (edof, 1)).T
         # colunas = (np.tile(ind_dof, (1, edof))).reshape(-1, self.dof_per_element)
@@ -516,7 +516,7 @@ class StructuralTriangle3(Element2D):
         # np.savetxt("linhas.dat", linhas, delimiter=",", fmt="%i")
         # np.savetxt("colunas.dat", colunas, delimiter=",", fmt="%i")
 
-        return self.ind_rows, self.ind_cols
+        return self.rows, self.cols
 
 
     def force_vector(self, element_id: int, **kwargs):#, line_pressure, pressure, normpress, e_nodes_load, e_nodes_pressure, e_elems_normpress, n_unit_elem, **kwargs):

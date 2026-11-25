@@ -15,7 +15,7 @@ if TYPE_CHECKING:
 @pytest.mark.skip
 def test_regression_structural_harmonic_solver_solution(datadir, structural_harmonic_analysis: Model):
     assembler = StructuralAssembler(structural_harmonic_analysis)
-    assembler.assemble_global_matrices_and_excitations()
+    assembler.process_global_matrices_data_and_excitations()
 
     project_paths = ProjectPaths(datadir)
     harmonic_solver = HarmonicSolver(assembler, project_paths)
@@ -36,13 +36,13 @@ def test_regression_structural_harmonic_solver_solution(datadir, structural_harm
 def test_structural_harmonic_modal_solver_solution(structural_harmonic_analysis: Model):
     # Direct solver setup and solve
     assembler = StructuralAssembler(structural_harmonic_analysis)
-    assembler.assemble_global_matrices_and_excitations()
+    assembler.process_global_matrices_data_and_excitations()
     harmonic_solver = HarmonicSolver(assembler)
     direct_solutions = harmonic_solver.solve_direct()
 
     # Modal solver setup and solve
     assembler = StructuralAssembler(structural_harmonic_analysis)
-    assembler.assemble_global_matrices_and_excitations()
+    assembler.process_global_matrices_data_and_excitations()
     modal_harmonic_solver = HarmonicSolver(assembler)
     modal_solutions = modal_harmonic_solver.solve_mode_superposition()
 

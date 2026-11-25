@@ -187,7 +187,7 @@ def load_external_mesh_and_solve():
     struct_assembler = StructuralAssembler(model)
 
     # process the acoustic assembly
-    act_assembler.assemble_global_matrices_and_excitations(reorder=False)
+    act_assembler.process_global_matrices_data_and_excitations(reorder=False)
     act_harmonic_solver = HarmonicSolver(act_assembler)
 
     t0 = time()
@@ -197,7 +197,7 @@ def load_external_mesh_and_solve():
     print(f"Elapsed time to solve acoustic harmonic analysis: {round(dt, 4)}s")
 
     # process the structural assembly
-    struct_assembler.assemble_global_matrices_and_excitations(reorder=False)
+    struct_assembler.process_global_matrices_data_and_excitations(reorder=False)
     struct_harmonic_solver = HarmonicSolver(struct_assembler)
 
     t0 = time()

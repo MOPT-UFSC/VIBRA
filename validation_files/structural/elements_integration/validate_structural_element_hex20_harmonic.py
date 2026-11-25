@@ -196,7 +196,7 @@ def load_external_mesh_and_solve(support_type: str, load_type: str, distributed_
     assembler = StructuralAssembler(model)
 
     # Set the analysis frequency setup
-    assembler.assemble_global_matrices_and_excitations(reorder=False)
+    assembler.process_global_matrices_data_and_excitations(reorder=False)
 
     t0 = time()
     # Run modal analysis
