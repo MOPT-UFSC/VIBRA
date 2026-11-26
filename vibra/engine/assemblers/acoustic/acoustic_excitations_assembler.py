@@ -78,7 +78,7 @@ class AcousticExcitationsAssembler:
         return self.assembler.element_2d
 
 
-    def get_prescribed_pressure_model_excitation(self, index: int = 0):
+    def get_prescribed_pressure_model_excitation(self, C: csr_matrix, M: csr_matrix, K: csr_matrix, index: int = 0):
         """
         This method computes the equivalent loads resulting from the degrees of freedom
         prescription to compound the acoustic model excitation vector.
@@ -107,15 +107,15 @@ class AcousticExcitationsAssembler:
         # prescribed values
         values = self.assembler.prescribed_values[:, index]
 
-        # reduced global matrices C, M, K
-        Cr = self.assembler.damping_matrix_r
-        Mr = self.assembler.mass_matrix_r
-        Kr = self.assembler.stiffness_matrix_r
+        # prescribed indices
+        idx = self.assembler.prescribed_dof_indices
+
+        # reduced global matrices Cr, Mr, Kr
+        Cr = C[:, idx]
+        Mr = M[:, idx]
+        Kr = K[:, idx]
 
         F_eq = (-(omega**2) * Mr + (1j * omega) * Cr + Kr) @ values
-
-        if self.model.reduced_memory_mode:
-            self.assembler.reset_reduced_matrices_attributes()
 
         return F_eq
 

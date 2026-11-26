@@ -56,7 +56,7 @@ class StructuralExcitationsAssembler:
         return self.assembler.element_2d
 
 
-    def get_prescribed_dof_model_excitation(self, index: int = 0):
+    def get_prescribed_dof_model_excitation(self, C: csr_matrix, M: csr_matrix, K: csr_matrix, index: int = 0):
         """
         This method adds the effects of prescribed acoustic pressure into mass flow global vector.
 
@@ -84,25 +84,17 @@ class StructuralExcitationsAssembler:
         # prescribed values
         values = self.assembler.prescribed_values[:, index]
 
-        # reduced global matrices C, M, K
-        Cr = self.assembler.damping_matrix_r
-        Mr = self.assembler.mass_matrix_r
-        Kr = self.assembler.stiffness_matrix_r
+        # prescribed indices
+        idx = self.assembler.prescribed_dof_indices
+
+        # reduced global matrices Cr, Mr, Kr
+        Cr = C[:, idx]
+        Mr = M[:, idx]
+        Kr = K[:, idx]
 
         f_eq = (-(omega**2) * Mr + (1j * omega) * Cr + Kr) @ values
 
-        if self.model.reduced_memory_mode:
-            self.assembler.reset_reduced_matrices_attributes()
-
         return f_eq
-
-
-    def get_combined_nodal_loads_vector(self, index: int):
-
-        f_eq = self.get_prescribed_dof_model_excitation(index=index)
-        f = self.structural_load[:, index] - f_eq
-
-        return f
 
 
     def process_structural_excitations_by_nodal_attribution(self):
@@ -348,7 +340,7 @@ class StructuralExcitationsAssembler:
             progress = int((100 * (i / n_el) // 5) * 5)
             if progress != last_progress:
                 logging.info(f"Processing the structural loading for weak coupling... [{progress}/100]")
-                
+
             _nodes = self.model.get_mapped_nodes(connect, "acoustic")
             element_pressures = nodal_solution[_nodes, :]
             indices = self.element_2d.get_rows_and_cols_indices_1D(i)

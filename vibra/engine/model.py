@@ -150,7 +150,7 @@ class Model:
         if isinstance(self.analysis_setup, HarmonicAnalysisSetup):
             return self.analysis_setup.global_damping
 
-        return (None, None, None)
+        return (0., 0., 0.)
 
     @property
     def outdated_solution(self):

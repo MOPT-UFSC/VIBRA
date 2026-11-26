@@ -63,5 +63,5 @@ def test_modal_structural():
     reference_project = Project().load_project(reference_project)
     reference_project.run_analysis()
 
-    assert np.allclose(reference_project.assembler.stiffness_matrix.data, project.assembler.stiffness_matrix.data)
-    assert np.allclose(reference_project.assembler.mass_matrix.data, project.assembler.mass_matrix.data)
+    assert np.allclose(reference_project.assembler.data_K, project.assembler.data_K)
+    assert np.allclose(reference_project.assembler.data_M, project.assembler.data_M)

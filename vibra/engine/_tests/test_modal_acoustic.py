@@ -66,5 +66,5 @@ def test_modal_acoustic():
     reference_project = Project().load_project(reference_project)
     reference_project.run_analysis()
 
-    assert np.allclose(reference_project.assembler.stiffness_matrix.data, project.assembler.stiffness_matrix.data)
-    assert np.allclose(reference_project.assembler.mass_matrix.data, project.assembler.mass_matrix.data)
+    assert np.allclose(reference_project.assembler.int3d_BtB, project.assembler.int3d_BtB)
+    assert np.allclose(reference_project.assembler.int3d_NtN, project.assembler.int3d_NtN)
