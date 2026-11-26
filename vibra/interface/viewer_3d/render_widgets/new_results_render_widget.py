@@ -42,6 +42,8 @@ class NewResultsRenderWidget(VibraRenderWidget):
 
         self.postprocessed_data = PostprocessedData()
         self.plot_setup: PlotSetup = NoPlotSetup()
+        self.user_min_color = None
+        self.user_max_color = None
 
         self.create_actors()
 
@@ -111,10 +113,18 @@ class NewResultsRenderWidget(VibraRenderWidget):
             self.results_actor.reset_color_scalars()
             self.colorbar_actor.VisibilityOff()
         else:
+            min_color = pp.min_color
+            if self.user_min_color:
+                min_color = self.user_min_color
+
+            max_color = pp.max_color
+            if self.user_max_color is not None:
+                max_color = self.user_max_color
+
             color_table = self.results_actor.set_color_scalars(
                 pp.color_scalars,
-                pp.min_color,
-                pp.max_color,
+                min_color,
+                max_color,
                 colormap=self.user_preferences.color_map,
             )
             self.colorbar_actor.SetLookupTable(color_table)
