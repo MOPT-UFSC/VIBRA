@@ -152,7 +152,7 @@ class HarmonicSolver:
                 if self.model.reduced_memory_mode:
                     self.assembler.reset_global_matrices_attributes()
 
-                logging.info(f"Solving the {analysis_label} for step {i + 1} and frequency {freq} Hz [{i + 1}/{len(frequencies)}]")
+                logging.info(f"Solving the {analysis_label} for frequency {freq} Hz [{i + 1}/{len(frequencies)}]")
 
                 if np.any(f):
 

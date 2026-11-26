@@ -928,10 +928,7 @@ class StructuralAssembler:
         This method assembles the global matrices and excitations of the structural model.
         """
         self.process_global_matrices_data(reorder=reorder, print_log=print_log)
-        t0 = perf_counter()
         self.excitations_assembler.assemble_model_excitations()
-        dt = perf_counter() - t0
-        print(f"Time to compute excitations: {dt} s")
 
 
     def compute_load_vector(self, index: int) -> np.ndarray:
