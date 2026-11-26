@@ -74,7 +74,7 @@ class ResultsActor(MeshActor):
         self.surface_actor.GetShaderProperty().AddFragmentShaderReplacement(
             "//VTK::Light::Impl",
             True,
-            "if (opacity < 1) { discard; }\n//VTK::Light::Impl",
+            "if (vertexColorVSOutput.a < 1) { discard; }\n//VTK::Light::Impl",
             False,
         )
 
