@@ -1,7 +1,7 @@
+import gc
 import logging
 import sys
 from time import perf_counter
-import gc
 
 import numpy as np
 from scipy.sparse import block_array, coo_matrix, csr_matrix
@@ -606,8 +606,8 @@ class AcousticAssembler:
         # compute the dynamic stiffness matrix Kd
         omega = 2 * np.pi * freq
         Kd = -(omega**2) * M
-        Kd =+ (1j * omega) * C
-        Kd =+ K
+        Kd += (1j * omega) * C
+        Kd += K
 
         del C, M, K
         gc.collect()
