@@ -135,25 +135,25 @@ class NewResultsRenderWidget(VibraRenderWidget):
                 self.postprocessed_data = PostprocessedData()
 
             case PressureFieldPlotSetupFrequency():
-                self._plot_pressure_field_frequency_domain()
+                self._postprocess_pressure_field_frequency_domain()
 
             case PressureFieldPlotSetupTime():
-                self._plot_pressure_field_time_domain()
+                self._postprocess_pressure_field_time_domain()
 
             case AllowablePulsationForScrewCompressorsPlotSetup():
-                self._plot_allowable_pulsation_for_screw_compressor()
+                self._postprocess_allowable_pulsation_for_screw_compressor()
 
             case DisplacementFieldPlotSetupFrequency():
-                self._plot_displacement_field_frequency_domain()
+                self._postprocess_displacement_field_frequency_domain()
 
             case DisplacementFieldPlotSetupTime():
-                self._plot_displacement_field_time_domain()
+                self._postprocess_displacement_field_time_domain()
 
             case StressFieldPlotSetupFrequency():
-                self._plot_stress_field_frequency_domain()
+                self._postprocess_stress_field_frequency_domain()
 
             case StressFieldPlotSetupTime():
-                self._plot_stress_field_time_domain()
+                self._postprocess_stress_field_time_domain()
 
             case _:
                 raise NotImplementedError(f'Plot setup "{self.plot_setup}" not implemented.')
