@@ -129,7 +129,7 @@ class NewGeometryRenderWidget(VibraRenderWidget):
 
         if self.entity_visibility_handler is not None:
             self.geometry_actor.hide_surfaces()
-            self.geometry_actor.show_surfaces(self.entity_visibility_handler.get_visible_surfaces())
+            self.geometry_actor.show_surfaces(list(self.entity_visibility_handler.get_visible_surfaces()))
 
     def _paint_surfaces_with_composition(self):
         if self.model is None:
@@ -183,8 +183,11 @@ class NewGeometryRenderWidget(VibraRenderWidget):
 
     def click_end_callback(self, x1: int, y1: int):
         # TODO: move this method to the tools
-        mouse_moved = self.mouse_moved(x1, y1)
 
+        if self.selection_handler is None:
+            return
+
+        mouse_moved = self.mouse_moved(x1, y1)
         if mouse_moved:
             selection = self.area_pick(self._last_click_position[0], self._last_click_position[1], x1, y1)
         else:
@@ -214,6 +217,9 @@ class NewGeometryRenderWidget(VibraRenderWidget):
         return self.geometry_actor.area_pick(x0, y0, x1, y1, self.renderer)
 
     def _first_visible_volume(self, volumes: Sequence[int]) -> int | None:
+        if self.entity_visibility_handler is None:
+            return None
+
         for volume in volumes:
             if volume not in self.entity_visibility_handler._volumes_to_hide:
                 return volume
@@ -227,7 +233,7 @@ class NewGeometryRenderWidget(VibraRenderWidget):
         properties = self.model.properties
 
         surfaces_with_perforated_plates = set()
-        for surface, _ in mesh.volumes_from_surface.items():
+        for surface in mesh.all_surface_ids():
             perforated = properties._get_property("perforated_plate_model", surface=surface)
             decoupling = properties._get_property("degrees_of_freedom_decoupling", surface=surface)
             if (perforated is not None) and (decoupling is not None):
