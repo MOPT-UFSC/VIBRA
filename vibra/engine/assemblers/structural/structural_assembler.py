@@ -64,13 +64,14 @@ class StructuralAssembler:
         # global matrices and excitation vector
         self.reset_global_matrices_attributes()
 
+        self.sparse_matrix_data: dict[str, SparseMatrixData] = {}
+
 
     def reset_global_matrices_attributes(self):
         self.data_K = None
         self.data_M = None
         self.cols = None
         self.rows = None
-        self.sparse_matrix_data: dict[str, SparseMatrixData] = {}
 
 
     @property
