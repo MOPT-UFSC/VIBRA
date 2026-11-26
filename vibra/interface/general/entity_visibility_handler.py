@@ -19,6 +19,37 @@ class EntityVisibilityHandler(QObject):
     def set_model(self, model: Model):
         self.model = model
 
+    def get_visible_nodes(self) -> set[int]:
+        # This is terribly slow. Use numpy instead.
+
+        mesh = self.model.mesh
+        if mesh is None:
+            return set()
+
+        visible_nodes = set()
+        for volume_id in self.get_visible_volumes():
+            nodes = mesh.get_nodes_from_volume(volume_id)
+            if nodes is not None:
+                visible_nodes |= set(nodes.tolist())
+
+        if mesh.faces_connectivity is not None:
+            visible_nodes -= set(mesh.faces_connectivity[:, 4:].ravel().tolist())
+
+        for surface_id in self.get_visible_surfaces():
+            nodes = mesh.get_nodes_from_surface(surface_id)
+            if nodes is not None:
+                visible_nodes |= set(nodes.tolist())
+
+        return visible_nodes
+
+    def get_hidden_nodes(self) -> set[int]:
+        mesh = self.model.mesh
+        if mesh is None:
+            return set()
+
+        all_nodes = mesh.all_node_ids()
+        return all_nodes - self.get_visible_nodes()
+
     def get_visible_surfaces(self) -> set[int]:
         mesh = self.model.mesh
         if mesh is None:
