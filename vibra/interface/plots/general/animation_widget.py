@@ -142,7 +142,7 @@ class AnimationWidget(AnimationWidget_UI):
 
         # QSlider connections
         self.phase_slider.sliderPressed.connect(self.pause_animation)
-        self.phase_slider.valueChanged.connect(self.phase_slider_callback)
+        self.phase_slider.sliderReleased.connect(self.phase_slider_callback)
 
         # QSpinBox connection
         self.spinBox_frames.valueChanged.connect(self.frames_value_changed)
@@ -199,7 +199,7 @@ class AnimationWidget(AnimationWidget_UI):
         app().main_window.results_widget.stop_animation()
         app().main_window.results_widget.clear_cache()
 
-    def phase_slider_callback(self, value: int):
+    def phase_slider_callback(self):
         self.update_degree_label()
         self.update_color_and_deformation(clear_cache=False)
 
