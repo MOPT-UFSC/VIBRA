@@ -60,7 +60,7 @@ def load_external_mesh_and_solve(**kwargs):
     t0 = time()
     external_mesh = ExternalMeshData()
     external_mesh.read_file(mesh_path)
-    external_mesh.set_named_selections(list(named_selecion_to_tag.keys()))
+    external_mesh.set_named_selections(named_selecion_to_tag)
     external_mesh.decode_mesh_data_from_file()
 
     # nodes_from_named_selection = external_mesh.nodes_from_named_selection
