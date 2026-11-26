@@ -103,7 +103,7 @@ class ExportModelResults(QFileDialog):
                 header = [x_label, f"{data_type.capitalize()} [{unit}]"]
                 data_to_export = np.array([x_data, y_data]).T
 
-            df = DataFrame(data_to_export, schema=header)
+            df = DataFrame(data_to_export, schema=header, orient="row")
             FileHandler.save_spreadsheet_file(export_path, sheet_name, df, append=append)
             append = True
 

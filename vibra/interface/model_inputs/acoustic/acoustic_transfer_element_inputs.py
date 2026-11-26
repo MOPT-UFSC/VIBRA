@@ -18,6 +18,7 @@ from vibra.interface.loading_window import LoadingWindow
 from vibra.interface.numeric_checks.double_validator import StrictDoubleValidator
 from vibra.interface.ui_generated.model.acoustic.element_transfer.acoustic_transfer_element_inputs_ui import AcousticTransferElementInputs_UI
 from vibra.interface.user_input.data_handler.file_dialog_service import FileDialogService
+from vibra.interface.user_input.data_handler.file_handlers.file_handler import FileHandler
 
 
 class AcousticTransferElementInputs(AcousticTransferElementInputs_UI):
@@ -450,35 +451,34 @@ class AcousticTransferElementInputs(AcousticTransferElementInputs_UI):
             }
 
     def export_data_in_spreadsheet_format(self, export_path: str):
-
-        from pandas import ExcelWriter
         from polars import DataFrame
 
-        with ExcelWriter(export_path) as writer:
-            for key, data in self.element_transfer_data.items():
-                if not isinstance(data, dict):
-                    continue
+        append = False
+        for key, data in self.element_transfer_data.items():
+            if not isinstance(data, dict):
+                continue
 
-                selection_type, selection_id = key
-                sheet_name = f"{selection_type}_{selection_id}"
+            selection_type, selection_id = key
+            sheet_name = f"{selection_type}_{selection_id}"
 
-                unit = data["units"]
-                x_data = data["x_data"]
-                y_data = data["y_data"]
-                x_label = data.get("x_label")
-                y_label = data.get("y_label")
+            unit = data["units"]
+            x_data = data["x_data"]
+            y_data = data["y_data"]
+            x_label = data.get("x_label")
+            y_label = data.get("y_label")
 
-                if isinstance(y_data[0], complex):
-                    header = [x_label, f"{y_label} - real [{unit}]", f"{y_label} - imaginary [{unit}]", f"Absolute [{unit}]"]
-                    data_to_export = np.array([x_data, np.real(y_data), np.imag(y_data), np.abs(y_data)]).T
+            if isinstance(y_data[0], complex):
+                header = [x_label, f"{y_label} - real [{unit}]", f"{y_label} - imaginary [{unit}]", f"Absolute [{unit}]"]
+                data_to_export = np.array([x_data, np.real(y_data), np.imag(y_data), np.abs(y_data)]).T
 
-                else:
-                    data_type: str = data.get("data_type")
-                    header = [x_label, f"{data_type.capitalize()} [{unit}]"]
-                    data_to_export = np.array([x_data, y_data]).T
+            else:
+                data_type: str = data.get("data_type")
+                header = [x_label, f"{data_type.capitalize()} [{unit}]"]
+                data_to_export = np.array([x_data, y_data]).T
 
-                df = DataFrame(data_to_export, schema=header)
-                df.to_pandas().to_excel(writer, sheet_name=sheet_name, index=False)
+            df = DataFrame(data_to_export, schema=header, orient="row")
+            FileHandler.save_spreadsheet_file(export_path, sheetname=sheet_name, data=df, append=append)
+            append = True
 
     def export_data_callback(self):
         if not self.element_transfer_data:
