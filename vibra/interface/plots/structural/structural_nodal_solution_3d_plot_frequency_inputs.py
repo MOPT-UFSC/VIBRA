@@ -140,10 +140,9 @@ class StructuralNodalSolution3dPlotFrequencyInputs(StructuralNodalSolution3dPlot
             unit_factor=self.get_unit_factor()
         )
 
-        LoadingWindow(app().main_window.results_render_widget.update_plot, delayed=False).run(
-            reset_camera=False,
-            plot_setup=plot_setup,
-        )
+        rrw = app().main_window.results_render_widget
+        LoadingWindow(rrw.set_plot_setup, delayed=False).run(plot_setup)
+        LoadingWindow(rrw.update_plot, delayed=False).run()
 
     def get_selected_frequency_index(self):
         if self.selected_frequency_index is not None:

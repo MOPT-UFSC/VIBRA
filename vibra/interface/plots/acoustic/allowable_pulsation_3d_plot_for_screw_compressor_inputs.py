@@ -154,10 +154,9 @@ class AllowablePulsations3DPlotForScrewCompressorInputs(AllowablePulsations3dPlo
         self.plot_setup = plot_setup
 
         def plot_callback():
-            app().main_window.results_render_widget.update_plot(
-                reset_camera=False,
-                plot_setup=self.plot_setup,
-            )
+            rrw = app().main_window.results_render_widget
+            LoadingWindow(rrw.set_plot_setup, delayed=False).run(plot_setup)
+            LoadingWindow(rrw.update_plot, delayed=False).run()
 
         LoadingWindow(plot_callback, delayed=False).run()
 

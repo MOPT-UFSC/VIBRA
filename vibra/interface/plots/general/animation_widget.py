@@ -249,7 +249,9 @@ class AnimationWidget(AnimationWidget_UI):
             case _:
                 return
 
-        app().main_window.results_render_widget.update_plot(plot_setup=plot_setup)
+        rrw = app().main_window.results_render_widget
+        LoadingWindow(rrw.set_plot_setup).run(plot_setup)
+        LoadingWindow(rrw.update_plot).run()
         # app().main_window.results_widget.update_color_and_deformation(clear_cache=clear_cache)
 
     def reset_sliders(self, plot_setup: None | PlotSetup = None):

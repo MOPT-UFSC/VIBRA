@@ -126,10 +126,9 @@ class AcousticModeShapeInputs(AcousticModeShapeInputs_UI):
             plot_type=self.get_plot_type(),
         )
 
-        LoadingWindow(app().main_window.results_render_widget.update_plot, delayed=False).run(
-            reset_camera=False,
-            plot_setup=plot_setup,
-        )
+        rrw = app().main_window.results_render_widget
+        LoadingWindow(rrw.set_plot_setup).run(plot_setup)
+        LoadingWindow(rrw.update_plot).run()
 
     def update_transparency_callback(self):
         transparency = self.slider_transparency.value() / 100

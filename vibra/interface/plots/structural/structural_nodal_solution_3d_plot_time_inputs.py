@@ -214,10 +214,9 @@ class StructuralNodalSolution3dPlotTimeInputs(StructuralNodalSolution3dPlotTimeI
 
         def plot_callback():
             self.animation_widget.reset_sliders(plot_setup=plot_setup)
-            app().main_window.results_render_widget.update_plot(
-                reset_camera=False,
-                plot_setup=self.plot_setup,
-            )
+            rrw = app().main_window.results_render_widget
+            LoadingWindow(rrw.set_plot_setup, delayed=False).run(plot_setup)
+            LoadingWindow(rrw.update_plot, delayed=False).run()
 
         LoadingWindow(plot_callback, delayed=False).run()
 

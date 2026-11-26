@@ -1,7 +1,8 @@
-from vtkmodules.vtkRenderingAnnotation import vtkScalarBarActor
+import logging
 from dataclasses import dataclass
 
 import numpy as np
+from vtkmodules.vtkRenderingAnnotation import vtkScalarBarActor
 
 from vibra.engine.model import Model
 from vibra.engine.postprocessing.acoustic_postprocessing import AcousticPostprocessing
@@ -22,6 +23,8 @@ from vibra.interface.viewer_3d.plot_setup import (
 from vibra.interface.viewer_3d.render_widgets.vibra_render_widget import VibraRenderWidget
 from vibra.utils.interface_utils import SectionPlane
 from vibra.utils.time_utils import function_timer
+
+logger = logging.getLogger(__name__)
 
 
 @dataclass(kw_only=True, frozen=True)
@@ -59,22 +62,24 @@ class NewResultsRenderWidget(VibraRenderWidget):
         self.results_actor.section_plane = section_plane
 
     @function_timer
-    def update_plot(self, reset_camera: bool = False, plot_setup: PlotSetup | None = None):
-        if plot_setup is not None:
-            self.set_plot_setup(plot_setup)
-
+    def update_plot(self, reset_camera: bool = False):
+        logger.info("Updating the results render... [50/100]")
         if self.isVisible() or reset_camera:
             self._must_update = False
         else:
             self._must_update = True
             return
 
+        logger.info("Updating the results render... [55/100]")
         self.results_actor.update()
 
+        logger.info("Updating the results render... [70/100]")
         self.update_visualization()
 
+        logger.info("Updating the results render... [80/100]")
         if reset_camera:
             self.renderer.ResetCamera()
+        logger.info("Updating the results render... [85/100]")
 
         self.render()
 
@@ -154,6 +159,7 @@ class NewResultsRenderWidget(VibraRenderWidget):
                 raise NotImplementedError(f'Plot setup "{self.plot_setup}" not implemented.')
 
     def _plot_pressure_field_frequency_domain(self):
+        logger.info("Plotting the pressure field (frequency domain)... [0/100]")
         assert isinstance(self.plot_setup, PressureFieldPlotSetupFrequency)
         assert self.model is not None
 
@@ -167,15 +173,20 @@ class NewResultsRenderWidget(VibraRenderWidget):
             is_modal=analysis_id.is_modal(),
         )
 
+        logger.info("Plotting the pressure field (frequency domain)... [20/100]")
         if data is None:
             self.postprocessed_data = None
             return
 
+        logger.info("Plotting the pressure field (frequency domain)... [40/100]")
         color_scalars, min_value, max_value, _ = data
         acoustic_nodes = self.model.domains_processor.nodes_of_domain.get("acoustic")
 
+        logger.info("Plotting the pressure field (frequency domain)... [60/100]")
         _color_scalars = np.zeros(len(self.model.mesh.nodal_coordinates), dtype=float)
         _color_scalars[acoustic_nodes] = color_scalars
+
+        logger.info("Plotting the pressure field (frequency domain)... [80/100]")
         self.postprocessed_data = PostprocessedData(
             color_scalars=_color_scalars,
             domain_nodes=acoustic_nodes,
@@ -183,7 +194,10 @@ class NewResultsRenderWidget(VibraRenderWidget):
             max_color=max_value,
         )
 
+        logger.info("Plotting the pressure field (frequency domain)... [100/100]")
+
     def _plot_pressure_field_time_domain(self):
+        logger.info("Plotting the pressure field (time domain)... [0/100]")
         assert isinstance(self.plot_setup, PressureFieldPlotSetupTime)
         assert self.model is not None
 
@@ -198,15 +212,20 @@ class NewResultsRenderWidget(VibraRenderWidget):
             reduced_loop_time=self.plot_setup.reduced_loop_time,
         )
 
+        logger.info("Plotting the pressure field (time domain)... [20/100]")
         if data is None:
             self.postprocessed_data = None
             return
 
+        logger.info("Plotting the pressure field (time domain)... [40/100]")
         _, color_scalars, min_value, max_value = data
         acoustic_nodes = self.model.domains_processor.nodes_of_domain.get("acoustic")
 
+        logger.info("Plotting the pressure field (time domain)... [60/100]")
         _color_scalars = np.zeros(len(self.model.mesh.nodal_coordinates), dtype=float)
         _color_scalars[acoustic_nodes] = color_scalars
+
+        logger.info("Plotting the pressure field (time domain)... [80/100]")
         self.postprocessed_data = PostprocessedData(
             color_scalars=_color_scalars,
             domain_nodes=acoustic_nodes,
@@ -214,7 +233,10 @@ class NewResultsRenderWidget(VibraRenderWidget):
             max_color=max_value,
         )
 
+        logger.info("Plotting the pressure field (time domain)... [100/100]")
+
     def _plot_allowable_pulsation_for_screw_compressor(self):
+        logger.info("Plotting the allowable pulsation for screw compressors... [0/100]")
         assert isinstance(self.plot_setup, AllowablePulsationForScrewCompressorsPlotSetup)
         assert self.model is not None
 
@@ -225,20 +247,25 @@ class NewResultsRenderWidget(VibraRenderWidget):
             spectral_lines=self.plot_setup.spectral_lines,
         )
 
+        logger.info("Plotting the allowable pulsation for screw compressors... [20/100]")
         if data is None:
             self.postprocessed_data = None
             return
 
+        logger.info("Plotting the allowable pulsation for screw compressors... [40/100]")
         color_scalars, min_value, max_value = data
 
         # apply the penalization factor, if necessary
         penalization_factor = self.plot_setup.penalization_factor / 100
         max_value *= 1 - penalization_factor
 
+        logger.info("Plotting the allowable pulsation for screw compressors... [60/100]")
         acoustic_nodes = self.model.domains_processor.nodes_of_domain.get("acoustic")
 
         _color_scalars = np.zeros(len(self.model.mesh.nodal_coordinates), dtype=float)
         _color_scalars[acoustic_nodes] = color_scalars
+
+        logger.info("Plotting the allowable pulsation for screw compressors... [80/100]")
         self.postprocessed_data = PostprocessedData(
             color_scalars=_color_scalars,
             domain_nodes=acoustic_nodes,
@@ -246,7 +273,10 @@ class NewResultsRenderWidget(VibraRenderWidget):
             max_color=max_value,
         )
 
+        logger.info("Plotting the allowable pulsation for screw compressors... [100/100]")
+
     def _plot_displacement_field_frequency_domain(self):
+        logger.info("Plotting the displacement field (frequency domain)... [0/100]")
         assert isinstance(self.plot_setup, DisplacementFieldPlotSetupFrequency)
         assert self.model is not None
 
@@ -262,10 +292,12 @@ class NewResultsRenderWidget(VibraRenderWidget):
             is_modal=analysis_id.is_modal(),
         )
 
+        logger.info("Plotting the displacement field (frequency domain)... [20/100]")
         if data is None:
             self.postprocessed_data = None
             return
 
+        logger.info("Plotting the displacement field (frequency domain)... [40/100]")
         displacements, color_scalars, min_value, max_value, _ = data
         structural_nodes = self.model.domains_processor.nodes_of_domain.get("structural")
 
@@ -275,8 +307,11 @@ class NewResultsRenderWidget(VibraRenderWidget):
         mult_factor = 1.0 if magnification_factor is None else magnification_factor / (10 * max_value)
         deformed_coords[structural_nodes, :] += mult_factor * displacements
 
+        logger.info("Plotting the displacement field (frequency domain)... [60/100]")
         _color_scalars = np.zeros(len(self.model.mesh.nodal_coordinates), dtype=float)
         _color_scalars[structural_nodes] = color_scalars
+
+        logger.info("Plotting the displacement field (frequency domain)... [80/100]")
         self.postprocessed_data = PostprocessedData(
             deformed_coordinates=deformed_coords,
             color_scalars=_color_scalars,
@@ -285,7 +320,10 @@ class NewResultsRenderWidget(VibraRenderWidget):
             max_color=max_value,
         )
 
+        logger.info("Plotting the displacement field (frequency domain)... [100/100]")
+
     def _plot_displacement_field_time_domain(self):
+        logger.info("Plotting the displacement field (time domain)... [0/100]")
         assert isinstance(self.plot_setup, DisplacementFieldPlotSetupTime)
         assert self.model is not None
 
@@ -301,10 +339,12 @@ class NewResultsRenderWidget(VibraRenderWidget):
             reduced_loop_time=self.plot_setup.reduced_loop_time,
         )
 
+        logger.info("Plotting the displacement field (time domain)... [20/100]")
         if data is None:
             self.postprocessed_data = None
             return
 
+        logger.info("Plotting the displacement field (time domain)... [40/100]")
         _, displacements, color_scalars, min_value, max_value = data
         structural_nodes = self.model.domains_processor.nodes_of_domain.get("structural")
 
@@ -314,8 +354,11 @@ class NewResultsRenderWidget(VibraRenderWidget):
         mult_factor = 1.0 if magnification_factor is None else magnification_factor / (10 * max_value)
         deformed_coords[structural_nodes, :] += mult_factor * displacements
 
+        logger.info("Plotting the displacement field (time domain)... [60/100]")
         _color_scalars = np.zeros(len(self.model.mesh.nodal_coordinates), dtype=float)
         _color_scalars[structural_nodes] = color_scalars
+
+        logger.info("Plotting the displacement field (time domain)... [80/100]")
         self.postprocessed_data = PostprocessedData(
             deformed_coordinates=deformed_coords,
             color_scalars=_color_scalars,
@@ -324,7 +367,10 @@ class NewResultsRenderWidget(VibraRenderWidget):
             max_color=max_value,
         )
 
+        logger.info("Plotting the displacement field (time domain)... [100/100]")
+
     def _plot_stress_field_frequency_domain(self):
+        logger.info("Plotting the stress field (frequency domain)... [0/100]")
         assert isinstance(self.plot_setup, StressFieldPlotSetupFrequency)
         assert self.model is not None
 
@@ -340,10 +386,12 @@ class NewResultsRenderWidget(VibraRenderWidget):
             stress_plot=True,
         )
 
+        logger.info("Plotting the stress field (frequency domain)... [20/100]")
         if displacement_data is None:
             self.postprocessed_data = None
             return
 
+        logger.info("Plotting the stress field (frequency domain)... [40/100]")
         displacements, max_disp = displacement_data
 
         if StressType(self.plot_setup.stress_type).is_normal_or_shear_stress():
@@ -363,10 +411,12 @@ class NewResultsRenderWidget(VibraRenderWidget):
                 unit_factor=self.plot_setup.unit_factor,
             )
 
+        logger.info("Plotting the stress field (frequency domain)... [60/100]")
         if stress_data is None:
             self.postprocessed_data = None
             return
 
+        logger.info("Plotting the stress field (frequency domain)... [80/100]")
         color_scalars, min_value, max_value, _ = stress_data
         structural_nodes = self.model.domains_processor.nodes_of_domain.get("structural")
 
@@ -378,6 +428,8 @@ class NewResultsRenderWidget(VibraRenderWidget):
 
         _color_scalars = np.zeros(len(self.model.mesh.nodal_coordinates), dtype=float)
         _color_scalars[structural_nodes] = color_scalars
+
+        logger.info("Plotting the stress field (frequency domain)... [90/100]")
         self.postprocessed_data = PostprocessedData(
             deformed_coordinates=deformed_coords,
             color_scalars=_color_scalars,
@@ -386,7 +438,10 @@ class NewResultsRenderWidget(VibraRenderWidget):
             max_color=max_value,
         )
 
+        logger.info("Plotting the stress field (frequency domain)... [100/100]")
+
     def _plot_stress_field_time_domain(self):
+        logger.info("Plotting the stress field (time domain)... [0/100]")
         assert isinstance(self.plot_setup, StressFieldPlotSetupTime)
         assert self.model is not None
 
@@ -403,10 +458,12 @@ class NewResultsRenderWidget(VibraRenderWidget):
             stress_plot=True,
         )
 
+        logger.info("Plotting the stress field (time domain)... [20/100]")
         if displacement_data is None:
             self.postprocessed_data = None
             return
 
+        logger.info("Plotting the stress field (time domain)... [40/100]")
         time_vector, displacements, max_disp = displacement_data
 
         if StressType(self.plot_setup.stress_type).is_normal_or_shear_stress():
@@ -429,10 +486,12 @@ class NewResultsRenderWidget(VibraRenderWidget):
                 spectral_lines=self.plot_setup.spectral_lines,
             )
 
+        logger.info("Plotting the stress field (time domain)... [60/100]")
         if stress_data is None:
             self.postprocessed_data = None
             return
 
+        logger.info("Plotting the stress field (time domain)... [80/100]")
         color_scalars, min_value, max_value, _ = stress_data
         structural_nodes = self.model.domains_processor.nodes_of_domain.get("structural")
 
@@ -444,6 +503,8 @@ class NewResultsRenderWidget(VibraRenderWidget):
 
         _color_scalars = np.zeros(len(self.model.mesh.nodal_coordinates), dtype=float)
         _color_scalars[structural_nodes] = color_scalars
+
+        logger.info("Plotting the stress field (time domain)... [90/100]")
         self.postprocessed_data = PostprocessedData(
             deformed_coordinates=deformed_coords,
             color_scalars=_color_scalars,
@@ -451,6 +512,8 @@ class NewResultsRenderWidget(VibraRenderWidget):
             min_color=min_value,
             max_color=max_value,
         )
+
+        logger.info("Plotting the stress field (time domain)... [100/100]")
 
     def _update_nodes_appearance(self):
         self.results_actor.set_nodes_visibility(visible=self.visualization_filter.points)
