@@ -142,7 +142,8 @@ class AnimationWidget(AnimationWidget_UI):
 
         # QSlider connections
         self.phase_slider.sliderPressed.connect(self.pause_animation)
-        self.phase_slider.sliderReleased.connect(self.phase_slider_callback)
+        self.phase_slider.sliderMoved.connect(self.phase_slider_moved_callback)
+        self.phase_slider.sliderReleased.connect(self.phase_slider_released_callback)
 
         # QSpinBox connection
         self.spinBox_frames.valueChanged.connect(self.frames_value_changed)
@@ -199,7 +200,10 @@ class AnimationWidget(AnimationWidget_UI):
         app().main_window.results_widget.stop_animation()
         app().main_window.results_widget.clear_cache()
 
-    def phase_slider_callback(self):
+    def phase_slider_moved_callback(self):
+        self.update_degree_label()
+
+    def phase_slider_released_callback(self):
         self.update_degree_label()
         self.update_color_and_deformation(clear_cache=False)
 
@@ -208,7 +212,7 @@ class AnimationWidget(AnimationWidget_UI):
         self.update_color_and_deformation(clear_cache=False)
 
     def configure_animation_widget_for_transient_plot(self, sampling_time: float, frames_number: int):
-        self.phase_slider.valueChanged.disconnect(self.phase_slider_callback)
+        self.phase_slider.valueChanged.disconnect(self.phase_slider_released_callback)
         self.update_animation_parameters(sampling_time, frames_number)
         self.phase_slider.valueChanged.connect(self.time_frame_slider_callback)
 
@@ -250,8 +254,8 @@ class AnimationWidget(AnimationWidget_UI):
                 return
 
         rrw = app().main_window.results_render_widget
-        LoadingWindow(rrw.set_plot_setup).run(plot_setup)
-        LoadingWindow(rrw.update_plot).run()
+        LoadingWindow(rrw.set_plot_setup, delayed=False).run(plot_setup)
+        LoadingWindow(rrw.update_plot, delayed=False).run()
         # app().main_window.results_widget.update_color_and_deformation(clear_cache=clear_cache)
 
     def reset_sliders(self, plot_setup: None | PlotSetup = None):
