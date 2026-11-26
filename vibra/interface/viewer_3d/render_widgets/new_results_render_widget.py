@@ -44,6 +44,7 @@ class NewResultsRenderWidget(VibraRenderWidget):
         self.plot_setup: PlotSetup = NoPlotSetup()
         self.user_min_color = None
         self.user_max_color = None
+        self.opacity = 1
 
         self.create_actors()
 
@@ -62,6 +63,10 @@ class NewResultsRenderWidget(VibraRenderWidget):
     def set_section_plane(self, section_plane: SectionPlane | None):
         super().set_section_plane(section_plane)
         self.results_actor.section_plane = section_plane
+
+    def set_opacity(self, opacity: float):
+        self.results_actor.set_opacity(opacity)
+        self.render()
 
     @function_timer
     def update_plot(self, reset_camera: bool = False):

@@ -77,6 +77,9 @@ class ResultsDisplayWidget(ResultsDisplayWidget_UI):
 
     def update_transparency_callback(self):
         transparency = self.slider_transparency.value() / 100
+        opacity = 1 - transparency
+        render_widget = app().main_window.results_render_widget
+        render_widget.set_opacity(opacity)
         app().main_window.results_widget.set_analysis_actors_transparency(transparency)
 
     def get_colormap(self) -> str:

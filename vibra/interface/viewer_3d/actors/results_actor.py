@@ -173,3 +173,6 @@ class ResultsActor(MeshActor):
         result_colors = vtk_to_numpy(self.result_colors)
         alpha = 255 if visible else 0
         result_colors[nodes, 3] = alpha
+
+    def set_opacity(self, opacity: float):
+        self.surface_actor.GetProperty().SetOpacity(opacity)
