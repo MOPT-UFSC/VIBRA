@@ -100,11 +100,13 @@ class NewResultsRenderWidget(VibraRenderWidget):
         self._update_surfaces_appearance()
         self._update_solids_appearance()
 
-        self.results_actor.show_volumes()
-        self.results_actor.show_surfaces()
-        if self.entity_visibility_handler is not None:
-            self.results_actor.hide_volumes(self.entity_visibility_handler.get_hidden_volumes())
-            self.results_actor.hide_surfaces(self.entity_visibility_handler.get_hidden_surfaces())
+        if (self.entity_visibility_handler is not None) and self.entity_visibility_handler.has_hidden_entity():
+            # This is terribly slow =(
+            visible_nodes = self.entity_visibility_handler.get_visible_nodes()
+            self.results_actor.hide_results()
+            self.results_actor.show_results(list(visible_nodes))
+        else:
+            self.results_actor.show_results()
 
         pp = self.postprocessed_data
         self.results_actor.show_results_mode()
