@@ -50,8 +50,9 @@ class ResultsDisplayWidget(ResultsDisplayWidget_UI):
 
     def update_min_enabled(self, value):
         if value:
-            render_widget = app().main_window.results_widget
-            self.lineEdit_min_color_value.setText(f"{render_widget.min_value:.1e}")
+            render_widget = app().main_window.results_render_widget
+            min_color = render_widget.postprocessed_data.min_color
+            self.lineEdit_min_color_value.setText(f"{min_color:.1e}")
         else:
             self.lineEdit_min_color_value.clear()
 
@@ -60,8 +61,9 @@ class ResultsDisplayWidget(ResultsDisplayWidget_UI):
 
     def update_max_enabled(self, value):
         if value:
-            render_widget = app().main_window.results_widget
-            self.lineEdit_max_color_value.setText(f"{render_widget.max_value:.1e}")
+            render_widget = app().main_window.results_render_widget
+            max_color = render_widget.postprocessed_data.max_color
+            self.lineEdit_max_color_value.setText(f"{max_color:.1e}")
         else:
             self.lineEdit_max_color_value.clear()
 
@@ -71,10 +73,7 @@ class ResultsDisplayWidget(ResultsDisplayWidget_UI):
     def update_colormap_type(self):
         app().config.user_preferences.color_map = self.get_colormap()
         app().config.update_config_file()
-        try:
-            self.colormap_changed.emit()
-        except AttributeError:
-            pass
+        app().main_window.results_render_widget.update_plot()
 
     def update_transparency_callback(self):
         transparency = self.slider_transparency.value() / 100
@@ -108,18 +107,7 @@ class ResultsDisplayWidget(ResultsDisplayWidget_UI):
             return None
 
     def update_color_ranges(self):
-        min_value = self.min_color_value()
-        max_value = self.max_color_value()
-
-        render_widget = app().main_window.results_widget
-        min_value_changed = min_value != render_widget.user_min_value
-        max_value_changed = max_value != render_widget.user_max_value
-        
-        if min_value_changed:
-            render_widget.set_min_value(min_value)
-
-        if max_value_changed:
-            render_widget.set_max_value(max_value)
-
-        if min_value_changed or max_value_changed:
-            self.min_max_value_changed.emit()
+        render_widget = app().main_window.results_render_widget
+        render_widget.user_min_color = self.min_color_value()
+        render_widget.user_max_color = self.max_color_value()
+        render_widget.update_plot()
