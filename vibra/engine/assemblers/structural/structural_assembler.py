@@ -58,12 +58,11 @@ class StructuralAssembler:
         self.material_map = {}
         self.material_dampings_map = {}
         self.surface_data_for_shell_elements = {}
-
         self.material_dampings = None
+        self.f_eq = 0.
 
         # global matrices and excitation vector
         self.reset_global_matrices_attributes()
-        self.reset_reduced_matrices_attributes()
 
 
     def reset_global_matrices_attributes(self):
@@ -71,15 +70,7 @@ class StructuralAssembler:
         self.data_M = None
         self.cols = None
         self.rows = None
-        self.mass_matrix = None
-        self.stiffness_matrix = None
         self.sparse_matrix_data: dict[str, SparseMatrixData] = {}
-
-
-    def reset_reduced_matrices_attributes(self):
-        self.mass_matrix_r = None
-        self.stiffness_matrix_r = None
-        self.damping_matrix_r = None
 
 
     @property
@@ -109,10 +100,6 @@ class StructuralAssembler:
         else:
             self.frequencies = None
             self.number_frequencies = 1
-
-
-    def is_assembled(self):
-        return (self.stiffness_matrix is not None) and (self.mass_matrix is not None)
 
 
     def get_property_data_for_selected_property(self, selected_property: str) -> dict[int, np.ndarray]:
@@ -635,9 +622,6 @@ class StructuralAssembler:
             idx = self.structural_dofs_indices
             M = M[idx, :][:, idx]
 
-        if not self.model.reduced_memory_mode:
-            self.mass_matrix = M
-
         return M
 
 
@@ -651,9 +635,6 @@ class StructuralAssembler:
             idx = self.structural_dofs_indices
             K = K[idx, :][:, idx]
 
-        if not self.model.reduced_memory_mode:
-            self.stiffness_matrix = K
-
         return K
 
 
@@ -662,7 +643,7 @@ class StructuralAssembler:
         This method assembles the global mass matrix.
         """
 
-        if  any(item is None for item in [self.rows, self.cols, self.data_M, self.data_K]):
+        if any(item is None for item in [self.rows, self.cols, self.data_M, self.data_K]):
             self.load_global_matrices_data()
 
         logging.info("Processing global mass matrix... [35/100]")
@@ -676,17 +657,16 @@ class StructuralAssembler:
             M = M[idx, :][:, idx]
             K = K[idx, :][:, idx]
 
-        if not self.model.reduced_memory_mode:
-            self.mass_matrix = M
-            self.stiffness_matrix = K
-
         return M, K
 
 
-    def assemble_global_damping_matrix(self, freq: float, index: int, M: csr_matrix, K: csr_matrix):
+    def assemble_global_damping_matrix(self, freq: float, index: int):
 
         if not freq:
             raise ValueError(f"Unsupported frequency value: {freq} [Hz]")
+
+        if any(item is None for item in [self.rows, self.cols, self.data_M, self.data_K]):
+            self.load_global_matrices_data()
 
         analysis_setup = self.model.analysis_setup
         assert isinstance(analysis_setup, HarmonicAnalysisSetup)
@@ -695,36 +675,26 @@ class StructuralAssembler:
         C_dist = self.assemble_distributed_damping_global_matrix(index=index)
 
         omega = 2 * np.pi * freq
+        alpha, beta, eta = self.model.global_damping
 
-        # compute the damping matrix contribution for structural global dampings
-        if any(self.model.global_damping):
-            alpha, beta, eta = self.model.global_damping
-            C = alpha * M + (beta + eta / omega) * K + C_dist
+        if self.material_dampings_map:
+            alpha += self.material_dampings[:, 0].reshape(-1, 1, 1)
+            beta += self.material_dampings[:, 1].reshape(-1, 1, 1)
+            eta += self.material_dampings[:, 2].reshape(-1, 1, 1)
+
+        if any(self.model.global_damping) or self.material_dampings_map:
+            data_C: np.ndarray = alpha * self.data_M 
+            data_C =+ (beta + eta / omega) * self.data_K
+            C = coo_matrix((data_C.ravel(), (self.rows, self.cols)), shape=self.model.gm_shape).tocsr()
+
         else:
             C = csr_matrix(self.model.gm_shape, dtype=np.float64)
-
-        # process the contribution for structural local dampings
-        if not self.material_dampings_map:
-            if self.model.drop_domain:
-                idx = self.structural_dofs_indices
-                C = C[idx, :][:, idx]
-
-            return C
-
-        # proportional damping constants
-        alpha = self.material_dampings[:, 0].reshape(-1, 1, 1)
-        beta = self.material_dampings[:, 1].reshape(-1, 1, 1)
-
-        # hysteretic structural damping constant
-        eta = self.material_dampings[:, 2].reshape(-1, 1, 1)
-
-        # compute the global damping matrix
-        data = alpha * self.data_M + (beta + eta / omega) * self.data_K 
-        C += coo_matrix((data.ravel(), (self.rows, self.cols)), shape=self.model.gm_shape).tocsr()
 
         if self.model.drop_domain:
             idx = self.structural_dofs_indices
             C = C[idx, :][:, idx]
+
+        C += C_dist
 
         return C
 
@@ -958,19 +928,10 @@ class StructuralAssembler:
         This method assembles the global matrices and excitations of the structural model.
         """
         self.process_global_matrices_data(reorder=reorder, print_log=print_log)
+        t0 = perf_counter()
         self.excitations_assembler.assemble_model_excitations()
-
-
-    def process_reduced_global_matrices(self, C: csr_matrix, M: csr_matrix, K: csr_matrix):
-        """
-        """
-        # prescribed indexes
-        idx = self.prescribed_dof_indices
-
-        logging.info("Processing reduced global matrices... [90/100]")
-        self.damping_matrix_r = C[:, idx]
-        self.mass_matrix_r = M[:, idx]
-        self.stiffness_matrix_r = K[:, idx]
+        dt = perf_counter() - t0
+        print(f"Time to compute excitations: {dt} s")
 
 
     def compute_load_vector(self, index: int) -> np.ndarray:
@@ -990,11 +951,7 @@ class StructuralAssembler:
         """
 
         logging.info("Computing the load vector... [95/100]")
-        # self.f_eq = self.excitations_assembler.get_prescribed_dof_model_excitation(index=index)
         load_vector = self.excitations_assembler.structural_load[:, index] - self.f_eq
-
-        if self.model.reduced_memory_mode:
-            self.f_eq = None
 
         if self.prescribed_dof_indices:
             return load_vector[self.unprescribed_dof_indices]
@@ -1002,7 +959,7 @@ class StructuralAssembler:
         return load_vector
 
 
-    def compute_dynamic_stiffness_matrix(self, freq: float, index: int) -> csr_matrix:
+    def compute_dynamic_stiffness_matrix(self, index: int) -> csr_matrix:
         """
         Use this method to compute the global structural dynamic stiffness matrix.
 
@@ -1024,36 +981,62 @@ class StructuralAssembler:
         analysis_setup = self.model.analysis_setup
         assert isinstance(analysis_setup, HarmonicAnalysisSetup)
 
-        logging.info("Processing global mass and stiffness matrices... [25/100]")
+        # i-th step frequency in Hz
+        freq = self.frequencies[index]
 
-        # reassemble the global distributed mass and stiffness matrices
+        if not freq:
+            raise ValueError(f"Unsupported frequency value: {freq} [Hz]")
+
+        if any(item is None for item in [self.rows, self.cols, self.data_M, self.data_K]):
+            self.load_global_matrices_data()
+
+        logging.info("Processing global matrices for distributed properties... [25/100]")
+        C_dist = self.assemble_distributed_damping_global_matrix(index=index)
         M_dist = self.assemble_distributed_mass_global_matrix(index=index)
         K_dist = self.assemble_distributed_stiffness_global_matrix(index=index)
 
-        if index == 0 or self.model.reduced_memory_mode:
-            M, K = self.assemble_global_mass_and_stiffness_matrices(index=index)
-
-        else:
-            M = self.mass_matrix
-            K = self.stiffness_matrix
-
-        logging.info("Processing global damping matrix... [80/100]")
-        C = self.assemble_global_damping_matrix(freq, index, M, K)
-
-        M += M_dist
-        K += K_dist
-
-        logging.info("Processing dynamic stiffness matrix... [85/100]")
+        # frequency in radians
         omega = 2 * np.pi * freq
-        Kd = -(omega**2) * M + (1j * omega) * C + K
+
+        alpha, beta, eta = self.model.global_damping
+
+        if self.material_dampings_map:
+            alpha += self.material_dampings[:, 0].reshape(-1, 1, 1)
+            beta += self.material_dampings[:, 1].reshape(-1, 1, 1)
+            eta += self.material_dampings[:, 2].reshape(-1, 1, 1)
+
+        logging.info("Processing dynamic stiffness matrix... [50/100]")
+        factor_M = -(omega**2) + alpha * (1j * omega)
+        data_Kd: np.ndarray = factor_M * self.data_M
+
+        if self.model.reduced_memory_mode:
+            self.data_M = None
+
+        logging.info("Processing dynamic stiffness matrix... [65/100]")
+        factor_K = 1 + (beta + eta / omega) * (1j * omega)
+        data_Kd += factor_K * self.data_K
+
+        if self.model.reduced_memory_mode:
+            self.data_K = None
+
+        logging.info("Processing dynamic stiffness matrix... [75/100]")
+        Kd = coo_matrix((data_Kd.ravel(), (self.rows, self.cols)), shape=self.model.gm_shape).tocsr()
+
+        if self.model.reduced_memory_mode:
+            self.rows = None
+            self.cols = None
+
+        if self.model.drop_domain:
+            idx = self.structural_dofs_indices
+            Kd = Kd[idx, :][:, idx]
+
+        logging.info("Processing dynamic stiffness matrix... [90/100]")
+        Kd += -(omega**2) * M_dist + (1j * omega) * C_dist + K_dist
 
         if self.prescribed_values.any():
             self.f_eq = Kd[:, self.prescribed_dof_indices] @ self.prescribed_values[:, index]
         else:
             self.f_eq = 0.
-
-        if self.model.reduced_memory_mode:
-            self.reset_global_matrices_attributes()
 
         if self.prescribed_dof_indices:
             Kd = Kd[self.unprescribed_dof_indices, :][:, self.unprescribed_dof_indices]

@@ -143,10 +143,14 @@ class HarmonicSolver:
                     linear_solver = self._get_linear_solver(eigenvectors)
 
                 # compute the dynamic stiffness matrix
-                Kd = self.assembler.compute_dynamic_stiffness_matrix(freq, i)
+                Kd = self.assembler.compute_dynamic_stiffness_matrix(i)
 
                 # compute the load vector
                 f = self.assembler.compute_load_vector(i)
+
+                # reset global matrices attributes
+                if self.model.reduced_memory_mode:
+                    self.assembler.reset_global_matrices_attributes()
 
                 logging.info(f"Solving the {analysis_label} for step {i + 1} and frequency {freq} Hz [{i + 1}/{len(frequencies)}]")
 
@@ -280,9 +284,10 @@ class HarmonicSolver:
                 if is_resume and i != 0 and isinstance(self._file_writer, LazyHDF5MatrixWriter) and self._file_writer.has_column(i):
                     continue
 
-                # compute the equivalent load for prescribed dofs
-                self.assembler.compute_dynamic_stiffness_matrix(freq, i)
+                # call this method to compute the equivalent load for prescribed dofs
+                self.assembler.compute_dynamic_stiffness_matrix(i)
 
+                # compute the load vector
                 f = self.assembler.compute_load_vector(i)
 
                 omega = 2 * np.pi * freq

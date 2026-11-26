@@ -1,6 +1,7 @@
 import logging
 import sys
 from time import perf_counter
+import gc
 
 import numpy as np
 from scipy.sparse import block_array, coo_matrix, csr_matrix
@@ -40,9 +41,10 @@ class AcousticAssembler:
         self.element_2d = None
         self.element_3d = None
 
+        self.f_eq = 0.
+
         # global matrices and excitation vector
         self.reset_global_matrices_attributes()
-        self.reset_reduced_matrices_attributes()
 
 
     def reset_global_matrices_attributes(self):
@@ -50,18 +52,7 @@ class AcousticAssembler:
         self.cols = None
         self.int3d_NtN = None
         self.int3d_BtB = None
-        self.mass_matrix = None
-        self.stiffness_matrix = None
-
-        self.damping_matrix_2d = None
-        self.damping_matrix_3d: None
         self.visc_load_matrix: None
-
-
-    def reset_reduced_matrices_attributes(self):
-        self.mass_matrix_r = None
-        self.stiffness_matrix_r = None
-        self.damping_matrix_r = None
 
 
     @property
@@ -90,9 +81,6 @@ class AcousticAssembler:
         else:
             self.frequencies = None
             self.number_frequencies = 1
-
-    def is_assembled(self):
-        return (self.stiffness_matrix is not None) and (self.mass_matrix is not None)
 
 
     def process_prescribed_dof_values(self):
@@ -419,9 +407,6 @@ class AcousticAssembler:
             idx = self.acoustic_dofs_indices
             M = M[idx, :][:, idx]
 
-        if not self.model.reduced_memory_mode:
-            self.mass_matrix = M
-
         return M
 
 
@@ -442,9 +427,6 @@ class AcousticAssembler:
             idx = self.acoustic_dofs_indices
             K = K[idx, :][:, idx]
 
-        if not self.model.reduced_memory_mode:
-            self.stiffness_matrix = K
-
         return K
 
 
@@ -463,10 +445,6 @@ class AcousticAssembler:
             idx = self.acoustic_dofs_indices
             M = M[idx, :][:, idx]
             K = K[idx, :][:, idx]
-
-        if not self.model.reduced_memory_mode:
-            self.mass_matrix = M
-            self.stiffness_matrix = K
 
         return M, K
 
@@ -512,7 +490,7 @@ class AcousticAssembler:
         self.excitations_assembler.assemble_model_excitations()
 
 
-    def assemble_global_matrices_CMK(self, index: int=0):
+    def assemble_global_matrices_CMK(self, index: int=0, eigenproblem: bool = False):
         """
         Use this method to reassemble the global matrices for a specific solution step.
 
@@ -527,44 +505,23 @@ class AcousticAssembler:
             self.load_global_matrices_data()
 
         logging.info("Assembling global matrices... [55/100]")
-        # process the global matrices factors
         factor_K, factor_M, factor_Cvisc, factor_fvisc = self.compute_global_matrices_factors(index=index)
 
         logging.info("Assembling global matrices... [65/100]")
-        # assemble the global mass and stiffness matrices
         M, K = self.assemble_global_mass_and_stiffness_matrices(factor_M, factor_K)
 
-        # assemble global damping matrix
         logging.info("Assembling global matrices... [75/100]")
-        self.damping_matrix_2d = self.impedances_assembler.assemble_global_damping_matrix_2d_elements()
+        damping_matrix_2d = self.impedances_assembler.assemble_global_damping_matrix_2d_elements()
+
+        if eigenproblem:
+            return damping_matrix_2d, M, K
 
         logging.info("Assembling global matrices... [95/100]")
-        self.damping_matrix_3d, self.visc_load_matrix = self.impedances_assembler.assemble_global_damping_matrix_3d_elements(factor_Cvisc, factor_fvisc)
+        damping_matrix_3d, self.visc_load_matrix = self.impedances_assembler.assemble_global_damping_matrix_3d_elements(factor_Cvisc, factor_fvisc)
 
-        C = self.damping_matrix_2d + self.damping_matrix_3d
+        C = damping_matrix_2d + damping_matrix_3d
 
         return C, M, K
-
-
-    def exists_a_non_zero_prescribed_value(self, index: int):
-        """
-        This method checks if there is a non-zero prescribed dof value.
-        """
-        if self.prescribed_values.size == 0:
-            return False
-
-        return np.any(self.prescribed_values[:, index])
-
-
-    def process_reduced_global_matrices(self, C: csr_matrix, M: csr_matrix, K: csr_matrix):
-        """
-        """
-        # prescribed indexes
-        idx = self.prescribed_dof_indices
-
-        self.damping_matrix_r = C[:, idx]
-        self.mass_matrix_r = M[:, idx]
-        self.stiffness_matrix_r = K[:, idx]
 
 
     def compute_load_vector(self, index: int) -> np.ndarray:
@@ -616,25 +573,18 @@ class AcousticAssembler:
         # compute the load vector {f}
         load_vector = f_ms + f_visc - f_mf - self.f_eq
 
-        if self.model.reduced_memory_mode:
-            del f_ms, f_visc, f_mf
-            self.f_eq = None
-
         if self.prescribed_dof_indices:
             return load_vector[self.unprescribed_dof_indices]
 
         return load_vector
 
 
-    def compute_dynamic_stiffness_matrix(self, freq: float, index: int) -> csr_matrix:
+    def compute_dynamic_stiffness_matrix(self, index: int) -> csr_matrix:
         """
         Use this method to compute the global acoustic dynamic stiffness matrix.
 
         Parameters
         ----------
-        freq: float
-            The frequency value in Hz.
-
         index: int
             The column index.
 
@@ -645,26 +595,27 @@ class AcousticAssembler:
 
         """
 
-        if index == 0 or self.frequency_dependent or self.model.reduced_memory_mode:
-            C, M, K = self.assemble_global_matrices_CMK(index)
+        # i-th step frequency in Hz
+        freq = self.frequencies[index]
 
-        else:
-            self.damping_matrix_2d = self.impedances_assembler.assemble_global_damping_matrix_2d_elements(index=index)
-            C = self.damping_matrix_2d + self.damping_matrix_3d
-            M = self.mass_matrix
-            K = self.stiffness_matrix
+        if not freq:
+            raise ValueError(f"Unsupported frequency value: {freq} [Hz]")
+
+        C, M, K = self.assemble_global_matrices_CMK(index)
 
         # compute the dynamic stiffness matrix Kd
         omega = 2 * np.pi * freq
-        Kd = -(omega**2) * M + (1j * omega) * C + K
+        Kd = -(omega**2) * M
+        Kd =+ (1j * omega) * C
+        Kd =+ K
+
+        del C, M, K
+        gc.collect()
 
         if self.prescribed_values.any():
             self.f_eq = Kd[:, self.prescribed_dof_indices] @ self.prescribed_values[:, index]
         else:
             self.f_eq = 0.
-
-        if self.model.reduced_memory_mode:
-            self.reset_global_matrices_attributes()
 
         if self.prescribed_dof_indices:
             Kd = Kd[self.unprescribed_dof_indices, :][:, self.unprescribed_dof_indices]
@@ -674,9 +625,7 @@ class AcousticAssembler:
 
     def build_eigenproblem_system(self):
 
-        _, M, K = self.assemble_global_matrices_CMK()
-
-        C_imp = self.damping_matrix_2d
+        C_imp, M, K = self.assemble_global_matrices_CMK(eigenproblem=True)
 
         if self.prescribed_dof_indices:
             idx = self.unprescribed_dof_indices
