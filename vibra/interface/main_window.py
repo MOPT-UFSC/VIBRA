@@ -140,7 +140,7 @@ class MainWindow(MainWindow_UI):
 
         self.splitter.setSizes([100, 400])
         self.splitter.widget(0).setVisible(False)
-        self.splitter.widget(0).setMinimumWidth(360)
+        # self.splitter.widget(0).setMinimumWidth(360)
 
     def _config_window(self):
         self.setMinimumHeight(768)
