@@ -132,13 +132,13 @@ class AnalysisToolbar(QToolBar):
         self.resume_solution_action.setToolTip("Resume the analysis")
         self.run_analysis_action.setToolTip("Run the analysis")
         self.reset_solution_action.setToolTip("Reset Solution")
-        #
+
         self.reset_solution_action.setDisabled(True)
         self.resume_solution_action.setVisible(False)
 
     def _load_analysis_types(self):
 
-        for analysis_type in ["Harmonic", "Modal"]:
+        for analysis_type in ["Harmonic", "Modal", "Static"]:
             self.combo_box_analysis_type.addItem(analysis_type)
 
         for physical_domain in ["Structural", "Acoustic", "Coupled"]:
@@ -219,10 +219,12 @@ class AnalysisToolbar(QToolBar):
         self.update_fsi_normals_plot_accessibility()
 
         is_analysis_modal = new_analysis_id.is_modal()
+        is_analysis_static = new_analysis_id.is_static()
         is_domain_coupled = self.combo_box_physical_domain.currentText() == "Coupled"
 
-        # hide the coupled item of the physical domains combo box if modal analysis was selected
-        self.combo_box_physical_domain.view().setRowHidden(2, is_analysis_modal)
+        # hide the coupled item of the physical domains combo box according to selected analysis
+        self.combo_box_physical_domain.view().setRowHidden(1, is_analysis_static)
+        self.combo_box_physical_domain.view().setRowHidden(2, is_analysis_modal or is_analysis_static)
 
         if is_domain_coupled and is_analysis_modal:
             self.combo_box_physical_domain.setCurrentIndex(0)

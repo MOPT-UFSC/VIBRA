@@ -9,7 +9,7 @@ import numpy as np
 from scipy.sparse import coo_matrix, csr_matrix
 from tqdm import tqdm
 
-from vibra.engine.analysis_info import HarmonicAnalysisSetup
+from vibra.engine.analysis_info import HarmonicAnalysisSetup, StaticAnalysisSetup
 from vibra.engine.assemblers.structural.structural_excitations_assembler import StructuralExcitationsAssembler
 from vibra.engine.elements.elements_1d.structural.structural_1d_element import Structural1DElement
 from vibra.engine.elements.elements_2d.structural.structural_2d_element import Structural2DElement
@@ -1040,6 +1040,37 @@ class StructuralAssembler:
             Kd = Kd[self.unprescribed_dof_indices, :][:, self.unprescribed_dof_indices]
 
         return Kd
+
+
+    def compute_static_stiffness_matrix(self):
+
+        analysis_setup = self.model.analysis_setup
+        assert isinstance(analysis_setup, StaticAnalysisSetup)
+
+        if any(item is None for item in [self.rows, self.cols, self.data_K]):
+            self.load_global_matrices_data()
+
+        logging.info("Processing global matrices for distributed properties... [25/100]")
+        K = self.assemble_distributed_stiffness_global_matrix()
+
+        logging.info("Processing dynamic stiffness matrix... [75/100]")
+        K += coo_matrix((self.data_K.ravel(), (self.rows, self.cols)), shape=self.model.gm_shape).tocsr()
+
+        if self.model.reduced_memory_mode:
+            self.data_K = None
+            self.rows = None
+            self.cols = None
+
+        if self.model.drop_domain:
+            idx = self.structural_dofs_indices
+            K = K[idx, :][:, idx]
+
+        if self.prescribed_values.any():
+            self.f_eq = K[:, self.prescribed_dof_indices] @ self.prescribed_values[:, 0]
+        else:
+            self.f_eq = 0.
+
+        return K
 
 
     def build_eigenproblem_system(self):

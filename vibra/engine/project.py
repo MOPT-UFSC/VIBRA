@@ -22,7 +22,7 @@ from vibra.engine.serialization.project_paths import ProjectPaths
 from vibra.engine.serialization.project_reader import ProjectReader
 from vibra.engine.serialization.project_writer import ProjectWriter
 from vibra.engine.solution import HarmonicSolution, ModalSolution
-from vibra.engine.solvers import HarmonicSolver, ModalSolver
+from vibra.engine.solvers import HarmonicSolver, ModalSolver, StaticSolver
 
 
 class Project:
@@ -41,7 +41,7 @@ class Project:
         # TODO: Store the Solution, not the solvers and assemblers.
         # Except if it is used to cache a few matrices somehow.
         self.assembler: Optional[AcousticAssembler | StructuralAssembler] = None
-        self.solver: Optional[HarmonicSolver | ModalSolver] = None
+        self.solver: Optional[ModalSolver | HarmonicSolver | StaticSolver] = None
         self.acoustic_postprocessing: Optional[AcousticPostprocessing] = None
         self.structural_postprocessing: Optional[StructuralPostprocessing] = None
 
@@ -143,7 +143,7 @@ class Project:
             structural_postprocessing.min_max_processor.get_values_for_displacement_frequency.cache_clear()
             structural_postprocessing.min_max_processor.get_values_for_displacement_time.cache_clear()
 
-    def run_analysis(self, is_resume: bool = False, print_log: bool = False, reduced_memory: bool = False):
+    def run_analysis(self, is_resume: bool = False, print_log: bool = False):
         """
         It performs the solution of the currently configured model.
         It might raise errors if the analysis is not properly configured.
@@ -155,13 +155,15 @@ class Project:
             case AnalysisID.STRUCTURAL_MODAL:
                 return self.solve_structural_modal_analysis(is_resume=is_resume, print_log=print_log)
             case AnalysisID.STRUCTURAL_HARMONIC:
-                return self.solve_structural_harmonic_analysis(is_resume=is_resume, print_log=print_log, reduced_memory=reduced_memory)
+                return self.solve_structural_harmonic_analysis(is_resume=is_resume, print_log=print_log)
+            case AnalysisID.STRUCTURAL_STATIC:
+                return self.solve_structural_static_analysis(print_log=print_log)
             case AnalysisID.ACOUSTIC_MODAL:
                 return self.solve_acoustic_modal_analysis(is_resume=is_resume, print_log=print_log)
             case AnalysisID.ACOUSTIC_HARMONIC:
-                return self.solve_acoustic_harmonic_analysis(is_resume=is_resume, print_log=print_log, reduced_memory=reduced_memory)
+                return self.solve_acoustic_harmonic_analysis(is_resume=is_resume, print_log=print_log)
             case AnalysisID.COUPLED_HARMONIC:
-                return self.solve_coupled_harmonic_analysis(is_resume=is_resume, print_log=print_log, reduced_memory=reduced_memory)
+                return self.solve_coupled_harmonic_analysis(is_resume=is_resume, print_log=print_log)
             case AnalysisID.NO_ANALYSIS:
                 raise errors.IncompleteSetupError("No AnalysisID was provided.")
             case _:
@@ -380,7 +382,6 @@ class Project:
             self,
             is_resume: bool = False,
             print_log: bool = False,
-            reduced_memory: bool = False,
             update_domain_mappings: bool = True,
             ) -> HarmonicSolution:
 
@@ -425,6 +426,42 @@ class Project:
 
         return self.model.solution
 
+    def solve_structural_static_analysis(
+            self,
+            is_resume: bool = False,
+            print_log: bool = False,
+            update_domain_mappings: bool = True,
+            ) -> HarmonicSolution:
+
+        self.update_project_setup_file()
+
+        checker = AnalysisChecker(self.model)
+        checker.check_analysis_requirements(update_domain_mappings=update_domain_mappings)
+
+        self.assembler = StructuralAssembler(self.model)
+        self.solver = StaticSolver(self.assembler, self.project_paths)
+        self.structural_postprocessing = StructuralPostprocessing(self.model)
+
+        self.assembler.process_global_matrices_data_and_excitations(print_log=print_log)
+
+        t0 = perf_counter()
+
+        self.model.solution = self.solver.solve_direct(print_log=print_log, is_resume=is_resume)
+
+        self.solver.assembler.reset()
+        self.project_writer.write_harmonic_solution(self.model.solution)
+        self.mark_project_as_modified()
+        dt = perf_counter() - t0
+
+        if print_log:
+            print(f"Elapsed time to solve structural static analysis: {dt: .6f} [s]")
+
+        logging.info(f"Elapsed time to solve structural static analysis: {dt: .6f} [s]")
+
+        collect()
+
+        return self.model.solution
+
     def solve_acoustic_modal_analysis(self, is_resume: bool = False, print_log: bool = False) -> ModalSolution:
 
         self.update_project_setup_file()
@@ -455,7 +492,6 @@ class Project:
             self,
             is_resume: bool = False,
             print_log: bool = False,
-            reduced_memory: bool = False,
             ) -> HarmonicSolution:
 
         self.update_project_setup_file()
