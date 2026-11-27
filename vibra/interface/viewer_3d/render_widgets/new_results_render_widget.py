@@ -36,11 +36,42 @@ class PostprocessedData:
     max_color: float = 0
 
 
+class AnimationCache:
+    def __init__(self) -> None:
+        self.color_arrays: dict[int, np.ndarray] = {}
+        self.position_arrays: dict[int, np.ndarray | None] = {}
+        self.min_colors: float = 0
+        self.max_colors: float = 0
+
+    def add_frame(self, frame: int, colors: np.ndarray, positions: np.ndarray | None):
+        self.min_colors = min(self.min_colors, colors.min())
+        self.max_colors = max(self.max_colors, colors.max())
+        self.color_arrays[frame] = colors
+        if positions is not None:
+            self.position_arrays[frame] = positions
+
+    def get_frame(self, frame: int) -> tuple[np.ndarray | None, np.ndarray | None]:
+        return self.color_arrays.get(frame), self.position_arrays.get(frame)
+
+    def clear(self):
+        self.min_colors = 0
+        self.max_colors = 0
+        self.color_arrays.clear()
+        self.position_arrays.clear()
+
+    def __contains__(self, item: int) -> bool:
+        return item in self.color_arrays
+
+    def __bool__(self) -> bool:
+        return bool(self.color_arrays)
+
+
 class NewResultsRenderWidget(VibraRenderWidget):
     def __init__(self):
         super().__init__()
 
         self.postprocessed_data = PostprocessedData()
+        self.frames_data: dict[int, PostprocessedData] = {}
         self.plot_setup: PlotSetup = NoPlotSetup()
         self.user_min_color = None
         self.user_max_color = None
@@ -147,30 +178,33 @@ class NewResultsRenderWidget(VibraRenderWidget):
             assert isinstance(plot_setup, PlotSetup)
             self.plot_setup = plot_setup
 
+        self.postprocessed_data = self._get_postprocessed_data()
+
+    def _get_postprocessed_data(self):
         match self.plot_setup:
             case NoPlotSetup():
-                self.postprocessed_data = PostprocessedData()
+                return PostprocessedData()
 
             case PressureFieldPlotSetupFrequency():
-                self._postprocess_pressure_field_frequency_domain()
+                return self._postprocess_pressure_field_frequency_domain()
 
             case PressureFieldPlotSetupTime():
-                self._postprocess_pressure_field_time_domain()
+                return self._postprocess_pressure_field_time_domain()
 
             case AllowablePulsationForScrewCompressorsPlotSetup():
-                self._postprocess_allowable_pulsation_for_screw_compressor()
+                return self._postprocess_allowable_pulsation_for_screw_compressor()
 
             case DisplacementFieldPlotSetupFrequency():
-                self._postprocess_displacement_field_frequency_domain()
+                return self._postprocess_displacement_field_frequency_domain()
 
             case DisplacementFieldPlotSetupTime():
-                self._postprocess_displacement_field_time_domain()
+                return self._postprocess_displacement_field_time_domain()
 
             case StressFieldPlotSetupFrequency():
-                self._postprocess_stress_field_frequency_domain()
+                return self._postprocess_stress_field_frequency_domain()
 
             case StressFieldPlotSetupTime():
-                self._postprocess_stress_field_time_domain()
+                return self._postprocess_stress_field_time_domain()
 
             case _:
                 raise NotImplementedError(f'Plot setup "{self.plot_setup}" not implemented.')
@@ -192,8 +226,7 @@ class NewResultsRenderWidget(VibraRenderWidget):
 
         logger.info("Postprocessing the pressure field (frequency domain)... [20/100]")
         if data is None:
-            self.postprocessed_data = None
-            return
+            return None
 
         logger.info("Postprocessing the pressure field (frequency domain)... [40/100]")
         color_scalars, min_value, max_value, _ = data
@@ -204,14 +237,12 @@ class NewResultsRenderWidget(VibraRenderWidget):
         _color_scalars[acoustic_nodes] = color_scalars
 
         logger.info("Postprocessing the pressure field (frequency domain)... [80/100]")
-        self.postprocessed_data = PostprocessedData(
+        return PostprocessedData(
             color_scalars=_color_scalars,
             domain_nodes=acoustic_nodes,
             min_color=min_value,
             max_color=max_value,
         )
-
-        logger.info("Postprocessing the pressure field (frequency domain)... [100/100]")
 
     def _postprocess_pressure_field_time_domain(self):
         logger.info("Postprocessing the pressure field (time domain)... [0/100]")
@@ -231,8 +262,7 @@ class NewResultsRenderWidget(VibraRenderWidget):
 
         logger.info("Postprocessing the pressure field (time domain)... [20/100]")
         if data is None:
-            self.postprocessed_data = None
-            return
+            return None
 
         logger.info("Postprocessing the pressure field (time domain)... [40/100]")
         _, color_scalars, min_value, max_value = data
@@ -243,14 +273,12 @@ class NewResultsRenderWidget(VibraRenderWidget):
         _color_scalars[acoustic_nodes] = color_scalars
 
         logger.info("Postprocessing the pressure field (time domain)... [80/100]")
-        self.postprocessed_data = PostprocessedData(
+        return PostprocessedData(
             color_scalars=_color_scalars,
             domain_nodes=acoustic_nodes,
             min_color=min_value,
             max_color=max_value,
         )
-
-        logger.info("Postprocessing the pressure field (time domain)... [100/100]")
 
     def _postprocess_allowable_pulsation_for_screw_compressor(self):
         logger.info("Postprocessing the allowable pulsation for screw compressors... [0/100]")
@@ -266,8 +294,7 @@ class NewResultsRenderWidget(VibraRenderWidget):
 
         logger.info("Postprocessing the allowable pulsation for screw compressors... [20/100]")
         if data is None:
-            self.postprocessed_data = None
-            return
+            return None
 
         logger.info("Postprocessing the allowable pulsation for screw compressors... [40/100]")
         color_scalars, min_value, max_value = data
@@ -283,14 +310,12 @@ class NewResultsRenderWidget(VibraRenderWidget):
         _color_scalars[acoustic_nodes] = color_scalars
 
         logger.info("Postprocessing the allowable pulsation for screw compressors... [80/100]")
-        self.postprocessed_data = PostprocessedData(
+        return PostprocessedData(
             color_scalars=_color_scalars,
             domain_nodes=acoustic_nodes,
             min_color=min_value,
             max_color=max_value,
         )
-
-        logger.info("Postprocessing the allowable pulsation for screw compressors... [100/100]")
 
     def _postprocess_displacement_field_frequency_domain(self):
         logger.info("Postprocessing the displacement field (frequency domain)... [0/100]")
@@ -311,8 +336,7 @@ class NewResultsRenderWidget(VibraRenderWidget):
 
         logger.info("Postprocessing the displacement field (frequency domain)... [20/100]")
         if data is None:
-            self.postprocessed_data = None
-            return
+            return None
 
         logger.info("Postprocessing the displacement field (frequency domain)... [40/100]")
         displacements, color_scalars, min_value, max_value, _ = data
@@ -329,15 +353,13 @@ class NewResultsRenderWidget(VibraRenderWidget):
         _color_scalars[structural_nodes] = color_scalars
 
         logger.info("Postprocessing the displacement field (frequency domain)... [80/100]")
-        self.postprocessed_data = PostprocessedData(
+        return PostprocessedData(
             deformed_coordinates=deformed_coords,
             color_scalars=_color_scalars,
             domain_nodes=structural_nodes,
             min_color=min_value,
             max_color=max_value,
         )
-
-        logger.info("Postprocessing the displacement field (frequency domain)... [100/100]")
 
     def _postprocess_displacement_field_time_domain(self):
         logger.info("Postprocessing the displacement field (time domain)... [0/100]")
@@ -358,8 +380,7 @@ class NewResultsRenderWidget(VibraRenderWidget):
 
         logger.info("Postprocessing the displacement field (time domain)... [20/100]")
         if data is None:
-            self.postprocessed_data = None
-            return
+            return None
 
         logger.info("Postprocessing the displacement field (time domain)... [40/100]")
         _, displacements, color_scalars, min_value, max_value = data
@@ -376,15 +397,13 @@ class NewResultsRenderWidget(VibraRenderWidget):
         _color_scalars[structural_nodes] = color_scalars
 
         logger.info("Postprocessing the displacement field (time domain)... [80/100]")
-        self.postprocessed_data = PostprocessedData(
+        return PostprocessedData(
             deformed_coordinates=deformed_coords,
             color_scalars=_color_scalars,
             domain_nodes=structural_nodes,
             min_color=min_value,
             max_color=max_value,
         )
-
-        logger.info("Postprocessing the displacement field (time domain)... [100/100]")
 
     def _postprocess_stress_field_frequency_domain(self):
         logger.info("Postprocessing the stress field (frequency domain)... [0/100]")
@@ -405,8 +424,7 @@ class NewResultsRenderWidget(VibraRenderWidget):
 
         logger.info("Postprocessing the stress field (frequency domain)... [20/100]")
         if displacement_data is None:
-            self.postprocessed_data = None
-            return
+            return None
 
         logger.info("Postprocessing the stress field (frequency domain)... [40/100]")
         displacements, max_disp = displacement_data
@@ -430,8 +448,7 @@ class NewResultsRenderWidget(VibraRenderWidget):
 
         logger.info("Postprocessing the stress field (frequency domain)... [60/100]")
         if stress_data is None:
-            self.postprocessed_data = None
-            return
+            return None
 
         logger.info("Postprocessing the stress field (frequency domain)... [80/100]")
         color_scalars, min_value, max_value, _ = stress_data
@@ -447,15 +464,13 @@ class NewResultsRenderWidget(VibraRenderWidget):
         _color_scalars[structural_nodes] = color_scalars
 
         logger.info("Postprocessing the stress field (frequency domain)... [90/100]")
-        self.postprocessed_data = PostprocessedData(
+        return PostprocessedData(
             deformed_coordinates=deformed_coords,
             color_scalars=_color_scalars,
             domain_nodes=structural_nodes,
             min_color=min_value,
             max_color=max_value,
         )
-
-        logger.info("Postprocessing the stress field (frequency domain)... [100/100]")
 
     def _postprocess_stress_field_time_domain(self):
         logger.info("Postprocessing the stress field (time domain)... [0/100]")
@@ -477,8 +492,7 @@ class NewResultsRenderWidget(VibraRenderWidget):
 
         logger.info("Postprocessing the stress field (time domain)... [20/100]")
         if displacement_data is None:
-            self.postprocessed_data = None
-            return
+            return None
 
         logger.info("Postprocessing the stress field (time domain)... [40/100]")
         time_vector, displacements, max_disp = displacement_data
@@ -505,8 +519,7 @@ class NewResultsRenderWidget(VibraRenderWidget):
 
         logger.info("Postprocessing the stress field (time domain)... [60/100]")
         if stress_data is None:
-            self.postprocessed_data = None
-            return
+            return None
 
         logger.info("Postprocessing the stress field (time domain)... [80/100]")
         color_scalars, min_value, max_value, _ = stress_data
@@ -522,15 +535,13 @@ class NewResultsRenderWidget(VibraRenderWidget):
         _color_scalars[structural_nodes] = color_scalars
 
         logger.info("Postprocessing the stress field (time domain)... [90/100]")
-        self.postprocessed_data = PostprocessedData(
+        return PostprocessedData(
             deformed_coordinates=deformed_coords,
             color_scalars=_color_scalars,
             domain_nodes=structural_nodes,
             min_color=min_value,
             max_color=max_value,
         )
-
-        logger.info("Postprocessing the stress field (time domain)... [100/100]")
 
     def _update_nodes_appearance(self):
         self.results_actor.set_nodes_visibility(visible=self.visualization_filter.points)
