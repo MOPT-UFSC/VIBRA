@@ -2,6 +2,7 @@ import logging
 from copy import deepcopy
 from enum import IntEnum
 from numbers import Number
+from pathlib import Path
 from typing import Literal
 
 import numpy as np
@@ -9,10 +10,8 @@ from PySide6.QtWidgets import QDialog, QLineEdit, QPushButton, QWidget
 
 from vibra import app
 from vibra.engine.analysis_info import AnalysisID, FrequencySpacing
-from vibra.extensions import SUPPORTED_OUTPUT_DATA_EXTENSIONS, SUPPORTED_TEXT_EXTENSIONS
-from pathlib import Path
-
 from vibra.engine.solution import ModalSolution
+from vibra.extensions import SUPPORTED_OUTPUT_DATA_EXTENSIONS, SUPPORTED_TEXT_EXTENSIONS
 from vibra.interface import error_title, warning_title
 from vibra.interface.data.data_manager import is_frequencies_vector_equally_distributed
 from vibra.interface.general.get_user_confirmation_input import GetUserConfirmationInput
@@ -20,6 +19,7 @@ from vibra.interface.general.print_message_input import PrintMessageInput
 from vibra.interface.loading_window import LoadingWindow
 from vibra.interface.model_inputs.general.mesher_setup_inputs import MesherSetupInputs
 from vibra.interface.user_input.data_handler.file_dialog_service import FileDialogService
+from vibra.interface.user_input.data_handler.file_handlers.file_handler import FileHandler
 from vibra.utils.subprocess.subprocess_handler import SubProcessHandler, SubProcessStatus
 
 
@@ -538,13 +538,11 @@ def export_modal_analysis_results(parent: QDialog | QWidget, modes_to_frequencie
         np.savetxt(export_path, modal_data_to_export, fmt=fmt, delimiter=",", header=header)
 
     else:
-        from pandas import ExcelWriter
         from polars import DataFrame
 
-        with ExcelWriter(export_path) as writer:
-            header = header.split(",")
-            df = DataFrame(modal_data_to_export, schema=header)
-            df.to_pandas().to_excel(writer, sheet_name="Exported modal results", index=False)
+        header = header.split(",")
+        df = DataFrame(modal_data_to_export, schema=header, orient="row")
+        FileHandler.save_spreadsheet_file(export_path, sheetname="Exported modal results", data=df)
 
 
 def update_entities_selection(line_edit: QLineEdit, selection_label: str, selected_ids: list[int]):
