@@ -184,7 +184,7 @@ class MeshActor(vtkPropAssembly):
         if not self._mesh_updated():
             return
 
-        self.points.SetData(numpy_to_vtk(self.mesh.nodal_coordinates[:, 1:]))
+        self.points.SetData(numpy_to_vtk(self.mesh.nodal_coordinates[:, 1:].astype(np.float32)))
         self.points.Modified()
 
         self._node_ids = np.unique(self.mesh.faces_connectivity[:, 4:])
@@ -221,7 +221,7 @@ class MeshActor(vtkPropAssembly):
         if not self._mesh_updated():
             return
 
-        self.points.SetData(numpy_to_vtk(self.mesh.nodal_coordinates[:, 1:]))
+        self.points.SetData(numpy_to_vtk(self.mesh.nodal_coordinates[:, 1:].astype(np.float32)))
         self.points.Modified()
 
         faces_connectivity = self.mesh.faces_connectivity[:, 4:]

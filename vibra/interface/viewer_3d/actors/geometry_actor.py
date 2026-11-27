@@ -200,7 +200,7 @@ class GeometryActor(vtkPropAssembly):
             return
 
         nodal_coordinates, faces_connectivity = self._decouple_faces_connectivity()
-        self.points.SetData(numpy_to_vtk(nodal_coordinates[:, 1:]))
+        self.points.SetData(numpy_to_vtk(nodal_coordinates[:, 1:].astype(np.float32)))
         self.points.Modified()
 
         nodes = np.array(list(self.mesh.nodes_from_points.values()))

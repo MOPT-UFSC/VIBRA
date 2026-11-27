@@ -126,7 +126,7 @@ class ResultsActor(MeshActor):
         self.volume_mapper.SetScalarModeToUseCellData()
 
     def set_coordinates(self, nodal_coordinates: np.ndarray):
-        self.points.SetData(numpy_to_vtk(nodal_coordinates))
+        self.points.SetData(numpy_to_vtk(nodal_coordinates.astype(np.float32)))
 
     def reset_coordinates(self):
         if self.mesh is None:
@@ -135,7 +135,7 @@ class ResultsActor(MeshActor):
         if self.mesh.nodal_coordinates is None:
             return
 
-        nodal_coordinates = self.mesh.nodal_coordinates[:, 1:]
+        nodal_coordinates = self.mesh.nodal_coordinates[:, 1:].astype(np.float32)
         self.points.SetData(numpy_to_vtk(nodal_coordinates))
 
     def set_color_scalars(
