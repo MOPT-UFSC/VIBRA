@@ -227,6 +227,7 @@ class Project:
         """
         Packs the data from the working directory into a `.vibra` file.
         """
+        self.project_paths.remove_temporary_folder()
         self.save_path = Path(path)
         self.model.name = name
         self.write_to_working_dir()

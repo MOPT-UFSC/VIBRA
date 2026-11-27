@@ -424,7 +424,7 @@ class ProjectReader:
         """
         Use this method to read temporary array data from disc.
         """
-        path = self.project_paths.temporary_arrays_folder / filename
+        path = self.project_paths.temporary_folder_path / filename
         return np.load(path, mmap_mode="r")
 
     def read_thumbnail(self) -> Optional[Image]:
