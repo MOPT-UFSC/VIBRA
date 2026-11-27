@@ -1,3 +1,4 @@
+from vibra.utils.time_utils import context_timer
 import logging
 from dataclasses import dataclass
 
@@ -36,34 +37,10 @@ class PostprocessedData:
     max_color: float = 0
 
 
-class AnimationCache:
-    def __init__(self) -> None:
-        self.color_arrays: dict[int, np.ndarray] = {}
-        self.position_arrays: dict[int, np.ndarray | None] = {}
-        self.min_colors: float = 0
-        self.max_colors: float = 0
-
-    def add_frame(self, frame: int, colors: np.ndarray, positions: np.ndarray | None):
-        self.min_colors = min(self.min_colors, colors.min())
-        self.max_colors = max(self.max_colors, colors.max())
-        self.color_arrays[frame] = colors
-        if positions is not None:
-            self.position_arrays[frame] = positions
-
-    def get_frame(self, frame: int) -> tuple[np.ndarray | None, np.ndarray | None]:
-        return self.color_arrays.get(frame), self.position_arrays.get(frame)
-
-    def clear(self):
-        self.min_colors = 0
-        self.max_colors = 0
-        self.color_arrays.clear()
-        self.position_arrays.clear()
-
-    def __contains__(self, item: int) -> bool:
-        return item in self.color_arrays
-
-    def __bool__(self) -> bool:
-        return bool(self.color_arrays)
+@dataclass(kw_only=True, frozen=True)
+class FrameIndex:
+    index: int
+    total: int
 
 
 class NewResultsRenderWidget(VibraRenderWidget):
@@ -175,6 +152,8 @@ class NewResultsRenderWidget(VibraRenderWidget):
         self.render()
 
     def set_plot_setup(self, plot_setup: PlotSetup | None):
+        self.clear_cache()
+
         if (plot_setup is None) or isinstance(plot_setup, NoPlotSetup):
             self.plot_setup = NoPlotSetup()
         else:
@@ -183,45 +162,97 @@ class NewResultsRenderWidget(VibraRenderWidget):
 
         self.postprocessed_data = self._get_postprocessed_data()
 
-    def _get_postprocessed_data(self):
+    def show_frame(self, frame: int):
+        data = self.frames_data.get(frame)
+        if data is None:
+            return
+
+        self.results_actor.show_results_mode()
+
+        if data.deformed_coordinates is None:
+            self.results_actor.reset_coordinates()
+        else:
+            self.results_actor.set_coordinates(data.deformed_coordinates)
+
+        if data.color_scalars is None:
+            self.results_actor.reset_color_scalars()
+            self.colorbar_actor.VisibilityOff()
+        else:
+            min_color = data.min_color
+            if self.user_min_color:
+                min_color = self.user_min_color
+
+            max_color = data.max_color
+            if self.user_max_color is not None:
+                max_color = self.user_max_color
+
+            color_table = self.results_actor.set_color_scalars(
+                data.color_scalars,
+                min_color,
+                max_color,
+                colormap=self.user_preferences.color_map,
+            )
+            self.colorbar_actor.SetLookupTable(color_table)
+            self.colorbar_actor.VisibilityOn()
+
+        self.results_actor.update_caches()
+        with context_timer("render"):
+            self.render()
+
+    def clear_cache(self):
+        self.frames_data.clear()
+
+    def cache_frames(self, total_frames: int):
+        for frame in range(total_frames):
+            if frame in self.frames_data:
+                continue
+            data = self._get_postprocessed_data(frame, total_frames)
+            self.frames_data[frame] = data
+
+    def _get_postprocessed_data(self, frame: int | None = None, total_frames: int | None = None):
+        phase = None
+        if (frame is not None) and (total_frames is not None):
+            phase = frame / total_frames * 2 * np.pi
+
         match self.plot_setup:
             case NoPlotSetup():
                 return PostprocessedData()
 
             case PressureFieldPlotSetupFrequency():
-                return self._postprocess_pressure_field_frequency_domain()
+                return self._postprocess_pressure_field_frequency_domain(phase)
 
             case PressureFieldPlotSetupTime():
-                return self._postprocess_pressure_field_time_domain()
+                return self._postprocess_pressure_field_time_domain(frame)
 
             case AllowablePulsationForScrewCompressorsPlotSetup():
                 return self._postprocess_allowable_pulsation_for_screw_compressor()
 
             case DisplacementFieldPlotSetupFrequency():
-                return self._postprocess_displacement_field_frequency_domain()
+                return self._postprocess_displacement_field_frequency_domain(phase)
 
             case DisplacementFieldPlotSetupTime():
-                return self._postprocess_displacement_field_time_domain()
+                return self._postprocess_displacement_field_time_domain(frame)
 
             case StressFieldPlotSetupFrequency():
-                return self._postprocess_stress_field_frequency_domain()
+                return self._postprocess_stress_field_frequency_domain(phase)
 
             case StressFieldPlotSetupTime():
-                return self._postprocess_stress_field_time_domain()
+                return self._postprocess_stress_field_time_domain(frame)
 
             case _:
                 raise NotImplementedError(f'Plot setup "{self.plot_setup}" not implemented.')
 
-    def _postprocess_pressure_field_frequency_domain(self):
+    def _postprocess_pressure_field_frequency_domain(self, phase: float | None = None):
         logger.info("Postprocessing the pressure field (frequency domain)... [0/100]")
         assert isinstance(self.plot_setup, PressureFieldPlotSetupFrequency)
         assert self.model is not None
 
         postprocessor = AcousticPostprocessing(self.model)
         analysis_id = self.model.analysis_id
+        phase = self.plot_setup.phase if (phase is None) else (phase)
         data = postprocessor.compute_acoustic_pressures_for_3d_plot_frequency(
             self.plot_setup.index,
-            self.plot_setup.phase,
+            phase,
             self.plot_setup.plot_type,
             unit_factor=self.plot_setup.unit_factor,
             is_modal=analysis_id.is_modal(),
@@ -247,15 +278,16 @@ class NewResultsRenderWidget(VibraRenderWidget):
             max_color=max_value,
         )
 
-    def _postprocess_pressure_field_time_domain(self):
+    def _postprocess_pressure_field_time_domain(self, time_index: int | None = None):
         logger.info("Postprocessing the pressure field (time domain)... [0/100]")
         assert isinstance(self.plot_setup, PressureFieldPlotSetupTime)
         assert self.model is not None
 
         postprocessor = AcousticPostprocessing(self.model)
 
+        time_index = self.plot_setup.time_index if (time_index is None) else time_index
         data = postprocessor.compute_acoustic_pressures_for_3d_plot_time(
-            self.plot_setup.time_index,
+            time_index,
             self.plot_setup.plot_type,
             unit_factor=self.plot_setup.unit_factor,
             n_div=self.plot_setup.n_div,
@@ -320,7 +352,7 @@ class NewResultsRenderWidget(VibraRenderWidget):
             max_color=max_value,
         )
 
-    def _postprocess_displacement_field_frequency_domain(self):
+    def _postprocess_displacement_field_frequency_domain(self, phase: float | None = None):
         logger.info("Postprocessing the displacement field (frequency domain)... [0/100]")
         assert isinstance(self.plot_setup, DisplacementFieldPlotSetupFrequency)
         assert self.model is not None
@@ -328,9 +360,10 @@ class NewResultsRenderWidget(VibraRenderWidget):
         postprocessor = StructuralPostprocessing(self.model)
         analysis_id = self.model.analysis_id
 
+        phase = self.plot_setup.phase if (phase is None) else phase
         data = postprocessor.compute_displacements_for_3d_plot_frequency(
             self.plot_setup.index,
-            self.plot_setup.phase,
+            phase,
             self.plot_setup.plot_type,
             n_diff=self.plot_setup.n_diff,
             unit_factor=self.plot_setup.unit_factor,
@@ -364,15 +397,16 @@ class NewResultsRenderWidget(VibraRenderWidget):
             max_color=max_value,
         )
 
-    def _postprocess_displacement_field_time_domain(self):
+    def _postprocess_displacement_field_time_domain(self, time_index: int | None = None):
         logger.info("Postprocessing the displacement field (time domain)... [0/100]")
         assert isinstance(self.plot_setup, DisplacementFieldPlotSetupTime)
         assert self.model is not None
 
         postprocessor = StructuralPostprocessing(self.model)
 
+        time_index = self.plot_setup.time_index if (time_index is None) else time_index
         data = postprocessor.compute_displacements_for_3d_plot_time(
-            self.plot_setup.time_index,
+            time_index,
             self.plot_setup.plot_type,
             unit_factor=self.plot_setup.unit_factor,
             n_diff=self.plot_setup.n_diff,
@@ -408,7 +442,7 @@ class NewResultsRenderWidget(VibraRenderWidget):
             max_color=max_value,
         )
 
-    def _postprocess_stress_field_frequency_domain(self):
+    def _postprocess_stress_field_frequency_domain(self, phase: float | None = None):
         logger.info("Postprocessing the stress field (frequency domain)... [0/100]")
         assert isinstance(self.plot_setup, StressFieldPlotSetupFrequency)
         assert self.model is not None
@@ -416,9 +450,10 @@ class NewResultsRenderWidget(VibraRenderWidget):
         postprocessor = StructuralPostprocessing(self.model)
         analysis_id = self.model.analysis_id
 
+        phase = self.plot_setup.phase if (phase is None) else phase
         displacement_data = postprocessor.compute_displacements_for_3d_plot_frequency(
             self.plot_setup.index,
-            self.plot_setup.phase,
+            phase,
             self.plot_setup.plot_type,
             n_diff=self.plot_setup.n_diff,
             is_modal=analysis_id.is_modal(),
@@ -435,7 +470,7 @@ class NewResultsRenderWidget(VibraRenderWidget):
         if StressType(self.plot_setup.stress_type).is_normal_or_shear_stress():
             stress_data = postprocessor.compute_structural_stresses_for_3d_plot_frequency(
                 self.plot_setup.index,
-                self.plot_setup.phase,
+                phase,
                 self.plot_setup.stress_type,
                 self.plot_setup.plot_type,
                 unit_factor=self.plot_setup.unit_factor,
@@ -443,7 +478,7 @@ class NewResultsRenderWidget(VibraRenderWidget):
         else:
             stress_data = postprocessor.compute_advanced_structural_stresses_for_3d_plot_frequency(
                 self.plot_setup.index,
-                self.plot_setup.phase,
+                phase,
                 self.plot_setup.stress_type,
                 self.plot_setup.plot_type,
                 unit_factor=self.plot_setup.unit_factor,
@@ -475,15 +510,16 @@ class NewResultsRenderWidget(VibraRenderWidget):
             max_color=max_value,
         )
 
-    def _postprocess_stress_field_time_domain(self):
+    def _postprocess_stress_field_time_domain(self, time_index: int | None = None):
         logger.info("Postprocessing the stress field (time domain)... [0/100]")
         assert isinstance(self.plot_setup, StressFieldPlotSetupTime)
         assert self.model is not None
 
         postprocessor = StructuralPostprocessing(self.model)
 
+        time_index = self.plot_setup.time_index if (time_index is None) else time_index
         displacement_data = postprocessor.compute_displacements_for_3d_plot_time(
-            self.plot_setup.time_index,
+            time_index,
             self.plot_setup.plot_type,
             unit_factor=self.plot_setup.unit_factor,
             n_diff=self.plot_setup.n_diff,
@@ -502,7 +538,7 @@ class NewResultsRenderWidget(VibraRenderWidget):
 
         if StressType(self.plot_setup.stress_type).is_normal_or_shear_stress():
             stress_data = postprocessor.compute_structural_stresses_for_3d_plot_time(
-                self.plot_setup.time_index,
+                time_index,
                 time_vector,
                 self.plot_setup.stress_type,
                 self.plot_setup.plot_type,
@@ -512,7 +548,7 @@ class NewResultsRenderWidget(VibraRenderWidget):
             )
         else:
             stress_data = postprocessor.compute_advanced_structural_stresses_for_3d_plot_time(
-                self.plot_setup.time_index,
+                time_index,
                 self.plot_setup.stress_type,
                 self.plot_setup.plot_type,
                 unit_factor=self.plot_setup.unit_factor,

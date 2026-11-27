@@ -163,7 +163,7 @@ class ResultsRenderWidget(AnimatedRenderWidget):
         *,
         plot_setup: PlotSetup | None = None,
     ):
-        
+
         if plot_setup is None:
             self.reset_plot_setup()
         else:
@@ -794,7 +794,7 @@ class ResultsRenderWidget(AnimatedRenderWidget):
         self.colorbar_actor.SetLookupTable(self.analysis_actor.color_table)
         self.update()
 
-    def update_animation_parameters(self, time_vector: np.ndarray):   
+    def update_animation_parameters(self, time_vector: np.ndarray):
         if self.animation_widget is None:
             return
 
@@ -866,7 +866,7 @@ class ResultsRenderWidget(AnimatedRenderWidget):
     def stop_animation(self, *args, **kwargs):
         if self.animation_widget is not None:
             self.animation_widget.pushButton_animate.setChecked(False)
-            self.animation_widget.update_animate_button_icons(False)
+            self.animation_widget.update_animate_button_icons()
         super().stop_animation(*args, **kwargs)
 
     def update_animation(self, frame):

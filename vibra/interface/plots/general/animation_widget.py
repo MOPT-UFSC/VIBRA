@@ -1,6 +1,7 @@
+from vibra.utils.interface_utils import block_signals
 import numpy as np
 from molde.render_widgets.animated_render_widget import AnimatedRenderWidget
-from PySide6.QtCore import QSize, Qt
+from PySide6.QtCore import QSize, Qt, QTimer
 from PySide6.QtGui import QFont
 from PySide6.QtWidgets import QLabel, QPushButton, QSpinBox
 
@@ -69,6 +70,11 @@ class AnimationWidget(AnimationWidget_UI):
         self.frames_number = 1
         self.sampling_time = 1
         self.current_render_widget = None
+
+        self._current_frame = 0
+        self.animation_timer = QTimer(self)
+        self.animation_timer.setInterval(33)
+        self.animation_timer.timeout.connect(self.animation_timer_callback)
 
     def _configure_icons(self):
         self.play_icon = Icon(":/icons/play.png")
@@ -195,7 +201,6 @@ class AnimationWidget(AnimationWidget_UI):
         self.setMovable(visible)
 
     def frames_value_changed(self):
-        self.frames = self.spinBox_frames.value()
         self.update_phase_slider_steps()
         app().main_window.results_widget.stop_animation()
         app().main_window.results_widget.clear_cache()
@@ -217,7 +222,7 @@ class AnimationWidget(AnimationWidget_UI):
         self.phase_slider.valueChanged.connect(self.time_frame_slider_callback)
 
     def update_multiplication_factor(self, value: float):
-        self.lineEdit_multiplication_factor.setText(f"{value : .6e}")
+        self.lineEdit_multiplication_factor.setText(f"{value: .6e}")
 
     def update_animation_parameters(self, sampling_time: float, frames_number: int):
         self.sampling_time = sampling_time
@@ -275,7 +280,7 @@ class AnimationWidget(AnimationWidget_UI):
         self.phase_slider.blockSignals(False)
 
     def pause_animation(self):
-        self.update_animate_button_icons(False)
+        self.update_animate_button_icons()
 
         if not isinstance(self.current_render_widget, AnimatedRenderWidget):
             return
@@ -284,25 +289,61 @@ class AnimationWidget(AnimationWidget_UI):
             self.current_render_widget.stop_animation()
 
     def process_animation(self, button_pressed: bool):
-        self.update_animation_settings()
-        self.update_animate_button_icons(button_pressed)
 
         if button_pressed:
-            cycles = 0 if self.pushButton_animation_loop.isChecked() else self.cycles
-            app().main_window.results_widget.start_animation(fps=30, frames=self.frames, cycles=cycles)
+            self.start_animation()
+        else:
+            self.stop_animation()
+
+    def start_animation(self):
+        LoadingWindow(app().main_window.results_render_widget.cache_frames).run(self.frames)
+
+        with block_signals(self.pushButton_animate):
+            self.pushButton_animate.setChecked(True)
+            self.update_animate_button_icons()
+
+        self._current_frame = 0
+        self.animation_timer.start()
+
+    def stop_animation(self):
+        with block_signals(self.pushButton_animate):
+            self.pushButton_animate.setChecked(False)
+            self.update_animate_button_icons()
+
+        self.animation_timer.stop()
+
+    def animation_timer_callback(self):
+        frame = self._current_frame % self.frames
+        cycle = self._current_frame // self.frames
+
+        if (not self.in_loop) and (cycle >= self.cycles):
+            self.stop_animation()
             return
 
-        app().main_window.results_widget.stop_animation()
+        app().main_window.results_render_widget.show_frame(frame)
+        self._current_frame += 1
 
-    def update_animate_button_icons(self, button_pressed: bool):
-        if button_pressed:
+    def update_animate_button_icons(self):
+        if self.pushButton_animate.isChecked():
             self.pushButton_animate.setIcon(self.pause_icon)
         else:
             self.pushButton_animate.setIcon(self.play_icon)
 
-    def update_animation_settings(self):
-        self.frames = self.spinBox_frames.value()
-        self.cycles = self.spinBox_cycles.value()
+    @property
+    def frames(self) -> int:
+        return self.spinBox_frames.value()
+
+    @property
+    def cycles(self) -> int:
+        return self.spinBox_cycles.value()
+
+    @property
+    def in_loop(self) -> bool:
+        return self.pushButton_animation_loop.isChecked()
+
+    # def update_animation_settings(self):
+    #     self.frames = self.spinBox_frames.value()
+    #     self.cycles = self.spinBox_cycles.value()
 
     def update_degree_label(self):
         value = self.phase_slider.value()
@@ -318,16 +359,12 @@ class AnimationWidget(AnimationWidget_UI):
 
     def save_animation(self):
         extensions = SUPPORTED_VIDEO_EXTENSIONS + SUPPORTED_ANIMATION_EXTENSIONS
-        file_path = FileDialogService.save_file(
-            file_extensions=extensions,
-            caption="Save As",
-            last_folder="exported_animation_folder"
-        )
+        file_path = FileDialogService.save_file(file_extensions=extensions, caption="Save As", last_folder="exported_animation_folder")
 
         if file_path is None:
             return
 
-        self.update_animation_settings()
+        # self.update_animation_settings()
         self.current_render_widget._animation_total_frames = self.frames
 
         try:
