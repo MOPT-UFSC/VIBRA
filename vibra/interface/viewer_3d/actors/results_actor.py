@@ -67,6 +67,10 @@ class ResultsActor(MeshActor):
         self.result_colors.SetName("result_color")
         self.result_colors.SetNumberOfComponents(4)
 
+        self.node_data.GetPointData().SetScalars(self.result_colors)
+        self.node_mapper.SetScalarModeToUsePointData()
+
+        self.edge_data.GetPointData().SetScalars(self.result_colors)
         self.edge_mapper.SetScalarModeToUsePointData()
 
         self.surface_data.GetPointData().SetScalars(self.result_colors)

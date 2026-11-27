@@ -126,10 +126,13 @@ class NewResultsRenderWidget(VibraRenderWidget):
         self.renderer.SetBackground(self.user_preferences.renderer_background_color_1.to_rgb_f())
         self.renderer.SetBackground2(self.user_preferences.renderer_background_color_2.to_rgb_f())
 
-        self._update_nodes_appearance()
-        self._update_edges_appearance()
-        self._update_surfaces_appearance()
-        self._update_solids_appearance()
+        self.results_actor.set_nodes_visibility(visible=self.visualization_filter.points)
+        self.results_actor.set_edges_visibility(visible=self.visualization_filter.lines)
+        self.results_actor.set_surfaces_visibility(visible=self.visualization_filter.faces)
+        self.results_actor.set_solids_visibility(visible=self.visualization_filter.faces)
+
+        self.results_actor.set_nodes_size(self.user_preferences.nodes_size)
+        self.results_actor.set_nodes_size(self.user_preferences.nodes_size)
 
         if (self.entity_visibility_handler is not None) and self.entity_visibility_handler.has_hidden_entity():
             # This is terribly slow =(
@@ -542,33 +545,3 @@ class NewResultsRenderWidget(VibraRenderWidget):
             min_color=min_value,
             max_color=max_value,
         )
-
-    def _update_nodes_appearance(self):
-        self.results_actor.set_nodes_visibility(visible=self.visualization_filter.points)
-        if not self.visualization_filter.points:
-            return
-
-        self.results_actor.set_node_color(self.user_preferences.nodes_points_color)
-        self.results_actor.set_nodes_size(self.user_preferences.nodes_size)
-
-    def _update_edges_appearance(self):
-        self.results_actor.set_edges_visibility(visible=self.visualization_filter.lines)
-        if not self.visualization_filter.lines:
-            return
-
-        self.results_actor.set_edge_color(self.user_preferences.edges_color)
-        self.results_actor.set_edge_thickness(self.user_preferences.edges_thickness)
-
-    def _update_surfaces_appearance(self):
-        self.results_actor.set_surfaces_visibility(visible=self.visualization_filter.faces)
-        if not self.visualization_filter.faces:
-            return
-
-        self.results_actor.set_surface_color(self.user_preferences.faces_color)
-
-    def _update_solids_appearance(self):
-        self.results_actor.set_solids_visibility(visible=self.visualization_filter.faces)
-        if not self.visualization_filter.faces:
-            return
-
-        self.results_actor.set_volume_color(self.user_preferences.volumes_color)
