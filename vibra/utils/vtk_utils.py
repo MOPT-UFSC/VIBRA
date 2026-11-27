@@ -3,8 +3,10 @@ from itertools import combinations, pairwise
 from pathlib import Path
 
 import numpy as np
-from vtkmodules.util.numpy_support import numpy_to_vtkIdTypeArray
+from vtkmodules.util.numpy_support import numpy_to_vtk, numpy_to_vtkIdTypeArray
 from vtkmodules.vtkCommonCore import (
+    VTK_TYPE_INT32,
+    vtkAffineIntArray,
     vtkFloatArray,
     vtkIdList,
     vtkIntArray,
@@ -123,11 +125,17 @@ def create_cells(connectivity: np.ndarray) -> vtkCellArray:
     if connectivity.ndim == 1:
         connectivity = connectivity.reshape(-1, 1)
 
-    helper = np.insert(connectivity, 0, connectivity.shape[1], axis=1)
-    vtk_id_array = numpy_to_vtkIdTypeArray(helper.ravel())
-    cell_array = vtkCellArray()
-    cell_array.SetCells(connectivity.shape[0], vtk_id_array)
-    return cell_array
+    n_cells, n_nodes = connectivity.shape
+    connectivity = np.ascontiguousarray(connectivity, dtype=np.int32)
+    offsets = np.arange(0, (n_cells + 1) * n_nodes, n_nodes, dtype=np.int32)
+
+    cells = vtkCellArray()
+    cells.SetData(
+        numpy_to_vtk(offsets),
+        numpy_to_vtk(connectivity.ravel()),
+    )
+
+    return cells
 
 
 def linearize_2d_cells(connectivity: np.ndarray) -> np.ndarray:
